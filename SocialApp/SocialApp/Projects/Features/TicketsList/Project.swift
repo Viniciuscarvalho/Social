@@ -12,7 +12,8 @@ let project = Project(
             sources: ["Sources/**"],
             dependencies: [
                 .project(target: "Events", path: "../Events", status: .required),
-                .project(target: "TicketDetail", path: "../TicketDetail", status: .required)
+                .project(target: "TicketDetail", path: "../TicketDetail", status: .required),
+                .external(name: "ComposableArchitecture")
             ]
         )
     ]
