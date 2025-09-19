@@ -10,7 +10,10 @@ let project = Project(
             bundleId: "dev.tuist.TicketsList",
             infoPlist: .default,
             sources: ["Sources/**"],
-            dependencies: []
+            dependencies: [
+                .target(name: "Events", path: "../Events", status: .required),
+                .target(name: "TicketDetail", path: "../TicketDetail", status: .required)
+            ]
         )
     ]
 )
