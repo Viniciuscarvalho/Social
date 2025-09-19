@@ -14,10 +14,36 @@ import PackageDescription
 
 let package = Package(
     name: "SocialApp",
+    platforms: [.iOS(.v16)],
+    products: [
+        .library(name: "SocialApp", targets: ["SocialApp"])
+    ],
     dependencies: [
-        // Add your own dependencies here:
-        // .package(url: "https://github.com/Alamofire/Alamofire", from: "5.0.0"),
-        // You can read more about dependencies here: https://docs.tuist.io/documentation/tuist/dependencies
         .package(url: "https://github.com/pointfreeco/swift-composable-architecture", from: "1.0.0"),
+        // Local packages
+        .package(path: "../Events"),
+        .package(path: "../TicketsList"),
+        .package(path: "../SellerProfile"),
+        .package(path: "../TicketDetail")
+    ],
+    targets: [
+        .target(
+            name: "SocialApp",
+            dependencies: [
+                .product(name: "ComposableArchitecture", package: "swift-composable-architecture"),
+                "Events",
+                "TicketsList",
+                "TicketDetail",
+                "SellerProfile"
+            ],
+            resources: [
+                .process("Resources/events.json"),
+                .process("Resources/user.json")
+            ]
+        ),
+        .testTarget(
+            name: "SocialAppTests",
+            dependencies: ["SocialApp"]
+        )
     ]
 )

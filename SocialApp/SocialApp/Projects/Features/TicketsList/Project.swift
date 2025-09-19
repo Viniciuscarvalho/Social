@@ -11,8 +11,8 @@ let project = Project(
             infoPlist: .default,
             sources: ["Sources/**"],
             dependencies: [
-                .target(name: "Events", path: "../Events", status: .required),
-                .target(name: "TicketDetail", path: "../TicketDetail", status: .required)
+                .project(target: "Events", path: "../Events", status: .required),
+                .project(target: "TicketDetail", path: "../TicketDetail", status: .required)
             ]
         )
     ]

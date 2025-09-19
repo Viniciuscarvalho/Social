@@ -1,4 +1,5 @@
 import Foundation
+import Events
 
 public struct Ticket: Codable, Identifiable, Equatable {
     public let id: UUID

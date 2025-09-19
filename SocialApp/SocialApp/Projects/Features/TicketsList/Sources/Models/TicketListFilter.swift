@@ -1,4 +1,8 @@
 import Foundation
+import Events
+import TicketsList
+import TicketDetail
+import SellerProfile
 
 public struct TicketsListFilter: Codable, Equatable {
     public var category: EventCategory?

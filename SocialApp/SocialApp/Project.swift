@@ -9,16 +9,15 @@ let project = Project(
             product: .app,
             bundleId: "dev.tuist.SocialApp",
             infoPlist: .default,
-            sources: [
-                "SocialApp/Sources/**"
-            ],
-            resources: [
-                "SocialApp/Resources/**"
+            buildableFolders: [
+                "SocialApp/Sources",
+                "SocialApp/Resources",
             ],
             dependencies: [
-                .project(target: "TicketsList", path: "Projects/Features/TicketsList", status: .required),
-                .project(target: "TicketDetail", path: "Projects/Features/TicketDetail", status: .required),
-                .project(target: "SellerProfile", path: "Projects/Features/SellerProfile", status: .required),
+                .project(target: "Events", path: "Projects/Features/Events"),
+                .project(target: "TicketsList", path: "Projects/Features/TicketsList"),
+                .project(target: "TicketDetail", path: "Projects/Features/TicketDetail"),
+                .project(target: "SellerProfile", path: "Projects/Features/SellerProfile"),
                 .external(name: "ComposableArchitecture")
             ]
         ),
