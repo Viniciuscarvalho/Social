@@ -1,13 +1,13 @@
 import ProjectDescription
 
 let project = Project(
-    name: "Parties",
+    name: "Events",
     targets: [
         .target(
-            name: "Parties",
+            name: "Events",
             destinations: .iOS,
             product: .framework,
-            bundleId: "dev.tuist.Parties",
+            bundleId: "dev.tuist.Events",
             infoPlist: .default,
             sources: ["Sources/**"],
             dependencies: []
