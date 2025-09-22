@@ -10,7 +10,9 @@ let project = Project(
             bundleId: "dev.tuist.Events",
             infoPlist: .default,
             sources: ["Sources/**"],
-            dependencies: []
+            dependencies: [
+                .external(name: "ComposableArchitecture")
+            ]
         )
     ]
 )

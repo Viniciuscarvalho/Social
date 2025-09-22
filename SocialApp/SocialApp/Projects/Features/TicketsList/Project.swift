@@ -11,8 +11,6 @@ let project = Project(
             infoPlist: .default,
             sources: ["Sources/**"],
             dependencies: [
-                .project(target: "Events", path: "../Events", status: .required),
-                .project(target: "TicketDetail", path: "../TicketDetail", status: .required),
                 .external(name: "ComposableArchitecture")
             ]
         )

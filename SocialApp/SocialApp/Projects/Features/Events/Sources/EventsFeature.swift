@@ -2,46 +2,30 @@ import ComposableArchitecture
 import Foundation
 import SwiftUI
 
-@Reducer
+Reducer
 public struct EventsFeature {
     @ObservableState
     public struct State: Equatable {
-        public var user: User?
         public var events: [Event] = []
-        public var filteredEvents: [Event] = []
-        public var recommendedEvents: [Event] = []
-        public var popularCategories: [EventCategory] = []
         public var searchText: String = ""
-        public var selectedFilter: SearchFilter = SearchFilter()
+        public var selectedCategory: EventCategory?
         public var isLoading: Bool = false
         public var errorMessage: String?
         
-        public init() {
-            self.popularCategories = Array(EventCategory.allCases.prefix(4))
-        }
-        
-        // Computed property para eventos filtrados
-        public var displayEvents: [Event] {
-            filteredEvents.isEmpty ? events : filteredEvents
-        }
+        public init() {}
     }
     
     public enum Action: Equatable {
         case onAppear
         case loadEvents
-        case loadUser
         case eventsResponse(Result<[Event], APIError>)
-        case userResponse(Result<User, APIError>)
         case searchTextChanged(String)
         case categorySelected(EventCategory?)
-        case showAllCategoriesPressed
-        case eventSelected(Event.ID)
-        case favoriteToggled(Event.ID)
+        case eventSelected(UUID) // Comunica com parent via action
         case refreshRequested
     }
     
     @Dependency(\.eventsClient) var eventsClient
-    @Dependency(\.userClient) var userClient
     
     public init() {}
     
@@ -49,10 +33,7 @@ public struct EventsFeature {
         Reduce { state, action in
             switch action {
             case .onAppear:
-                return .merge(
-                    .send(.loadUser),
-                    .send(.loadEvents)
-                )
+                return .send(.loadEvents)
                 
             case .loadEvents:
                 state.isLoading = true
@@ -63,18 +44,9 @@ public struct EventsFeature {
                     ))
                 }
                 
-            case .loadUser:
-                return .run { send in
-                    await send(.userResponse(
-                        Result { try await userClient.fetchCurrentUser() }
-                    ))
-                }
-                
             case let .eventsResponse(.success(events)):
                 state.isLoading = false
                 state.events = events
-                state.recommendedEvents = events.filter(\.isRecommended)
-                state.filteredEvents = filterEvents(events, with: state.selectedFilter, searchText: state.searchText)
                 return .none
                 
             case let .eventsResponse(.failure(error)):
@@ -82,66 +54,22 @@ public struct EventsFeature {
                 state.errorMessage = error.message
                 return .none
                 
-            case let .userResponse(.success(user)):
-                state.user = user
-                return .none
-                
-            case let .userResponse(.failure(error)):
-                state.errorMessage = error.message
-                return .none
-                
             case let .searchTextChanged(text):
                 state.searchText = text
-                state.filteredEvents = filterEvents(state.events, with: state.selectedFilter, searchText: text)
+                // Perform search logic
                 return .none
                 
             case let .categorySelected(category):
-                state.selectedFilter.category = category
-                state.filteredEvents = filterEvents(state.events, with: state.selectedFilter, searchText: state.searchText)
+                state.selectedCategory = category
                 return .none
                 
-            case .showAllCategoriesPressed:
-                // Navigate to categories screen
-                return .none
-                
-            case let .eventSelected(eventID):
-                // Navigate to event detail
-                return .none
-                
-            case let .favoriteToggled(eventID):
-                if let index = state.events.firstIndex(where: { $0.id == eventID }) {
-                    // Toggle favorite logic would be handled by a favorites client
-                }
+            case .eventSelected:
+                // Action será capturada pelo parent (SocialAppFeature)
                 return .none
                 
             case .refreshRequested:
                 return .send(.loadEvents)
             }
         }
-    }
-    
-    private func filterEvents(_ events: [Event], with filter: SearchFilter, searchText: String) -> [Event] {
-        var filtered = events
-        
-        // Filter by category
-        if let category = filter.category {
-            filtered = filtered.filter { $0.category == category }
-        }
-        
-        // Filter by search text
-        if !searchText.isEmpty {
-            filtered = filtered.filter { event in
-                event.name.localizedCaseInsensitiveContains(searchText) ||
-                event.description?.localizedCaseInsensitiveContains(searchText) == true ||
-                event.location.name.localizedCaseInsensitiveContains(searchText)
-            }
-        }
-        
-        // Filter by recommended only
-        if filter.isRecommendedOnly {
-            filtered = filtered.filter(\.isRecommended)
-        }
-        
-        return filtered
     }
 }

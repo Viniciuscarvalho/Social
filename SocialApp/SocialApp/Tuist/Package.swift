@@ -19,22 +19,13 @@ let package = Package(
         .library(name: "SocialApp", targets: ["SocialApp"])
     ],
     dependencies: [
-        .package(url: "https://github.com/pointfreeco/swift-composable-architecture", from: "1.0.0"),
-        // Local packages
-        .package(path: "../Events"),
-        .package(path: "../TicketsList"),
-        .package(path: "../SellerProfile"),
-        .package(path: "../TicketDetail")
+        .package(url: "https://github.com/pointfreeco/swift-composable-architecture", from: "1.0.0")
     ],
     targets: [
         .target(
             name: "SocialApp",
             dependencies: [
-                .product(name: "ComposableArchitecture", package: "swift-composable-architecture"),
-                "Events",
-                "TicketsList",
-                "TicketDetail",
-                "SellerProfile"
+                .product(name: "ComposableArchitecture", package: "swift-composable-architecture")
             ],
             resources: [
                 .process("Resources/events.json"),
