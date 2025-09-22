@@ -1,4 +1,6 @@
 import SwiftUI
+import CoreLocation
+import SharedModels
 
 struct EventCard: View {
     let event: Event

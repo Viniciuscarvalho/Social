@@ -1,4 +1,5 @@
 import Foundation
+import SharedModels
 
 enum JSONLoaderError: Error {
     case fileNotFound(String)
@@ -19,6 +20,23 @@ func loadEventsFromJSON() async throws -> [Event] {
         return events
     } catch {
         throw JSONLoaderError.decodingFailed("Failed to decode events: \(error.localizedDescription)")
+    }
+}
+
+func loadTicketsFromJSON() async throws -> [Ticket] {
+    guard let url = Bundle.main.url(forResource: "tickets", withExtension: "json") else {
+        throw APIError(message: "tickets.json not found", code: 404)
+    }
+    
+    let data = try Data(contentsOf: url)
+    let decoder = JSONDecoder()
+    decoder.dateDecodingStrategy = .iso8601
+    
+    do {
+        let tickets = try decoder.decode([Ticket].self, from: data)
+        return tickets
+    } catch {
+        throw APIError(message: "Failed to decode tickets: \(error.localizedDescription)", code: 500)
     }
 }
 

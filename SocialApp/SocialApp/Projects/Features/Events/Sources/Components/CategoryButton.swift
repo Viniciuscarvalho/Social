@@ -1,4 +1,5 @@
 import SwiftUI
+import SharedModels
 
 struct CategoryButton: View {
     let category: EventCategory

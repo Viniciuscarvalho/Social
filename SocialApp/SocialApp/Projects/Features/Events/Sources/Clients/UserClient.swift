@@ -1,5 +1,6 @@
 import ComposableArchitecture
 import Foundation
+import SharedModels
 
 @DependencyClient
 public struct UserClient {
@@ -11,7 +12,9 @@ extension UserClient: DependencyKey {
     public static let liveValue = UserClient(
         fetchCurrentUser: {
             try await Task.sleep(for: .milliseconds(500))
-            return try await loadCurrentUserFromJSON()
+            // For now, return the same sample user as used in tests
+            // In a real app, this would fetch from a network API
+            return MockEventData.sampleUser
         },
         updateUser: { user in
             // Logic to update user
@@ -20,7 +23,7 @@ extension UserClient: DependencyKey {
     )
     
     public static let testValue = UserClient(
-        fetchCurrentUser: { MockData.sampleUser },
+        fetchCurrentUser: { MockEventData.sampleUser },
         updateUser: { user in user }
     )
 }

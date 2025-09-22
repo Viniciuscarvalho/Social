@@ -32,7 +32,11 @@ public struct EventsView: View {
     
     private var headerSection: some View {
         HStack {
-            AsyncImage(url: URL(string: store.user?.profileImageURL ?? "")) { image in
+            AsyncImage(
+                url: URL(
+                    string: store.user?.profileImageURL ?? ""
+                )
+            ) { image in
                 image
                     .resizable()
                     .aspectRatio(contentMode: .fill)
@@ -56,7 +60,12 @@ public struct EventsView: View {
             Image(systemName: "magnifyingglass")
                 .foregroundColor(.gray)
             
-            TextField("Campo de busca", text: $store.searchText)
+            TextField(
+                "Campo de busca",
+                text: $store.searchText.sending(
+                    \.searchTextChanged
+                )
+            )
                 .textFieldStyle(PlainTextFieldStyle())
         }
         .padding(.horizontal, 12)

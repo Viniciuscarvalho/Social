@@ -1,6 +1,7 @@
 import Foundation
+import SharedModels
 
-public enum MockData {
+public enum MockEventData {
     public static let sampleUser = User(
         name: "João Silva",
         profileImageURL: "https://example.com/avatar.jpg",

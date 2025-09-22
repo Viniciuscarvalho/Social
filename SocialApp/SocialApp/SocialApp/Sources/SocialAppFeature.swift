@@ -1,5 +1,6 @@
 import ComposableArchitecture
 import Events
+import SharedModels
 import SwiftUI
 import TicketsList
 
@@ -12,6 +13,11 @@ public struct SocialAppFeature {
         public var ticketsListFeature = TicketsListFeature.State()
         // public var favoritesFeature = FavoritesFeature.State()
         // public var profileFeature = ProfileFeature.State()
+        public var navigationPath = NavigationPath()
+
+        public var selectedEventId: UUID?
+        public var selectedTicketId: UUID?
+        public var selectedSellerId: UUID?
         
         public init() {}
     }
@@ -22,6 +28,12 @@ public struct SocialAppFeature {
         case ticketsListFeature(TicketsListFeature.Action)
         // case favoritesFeature(FavoritesFeature.Action)
         // case profileFeature(ProfileFeature.Action)
+
+        // Navigation actions
+        case navigateToEventDetail(UUID)
+        case navigateToTicketDetail(UUID)
+        case navigateToSellerProfile(UUID)
+        case dismissNavigation
     }
     
     public init() {}
@@ -40,6 +52,31 @@ public struct SocialAppFeature {
             case let .tabSelected(tab):
                 state.selectedTab = tab
                 return .none
+                
+            case let .navigateToEventDetail(eventId):
+                state.selectedEventId = eventId
+                return .none
+                
+            case let .navigateToTicketDetail(ticketId):
+                state.selectedTicketId = ticketId
+                return .none
+                
+            case let .navigateToSellerProfile(sellerId):
+                state.selectedSellerId = sellerId
+                return .none
+                
+            case .dismissNavigation:
+                state.selectedEventId = nil
+                state.selectedTicketId = nil
+                state.selectedSellerId = nil
+                return .none
+                
+            // Handle child feature actions that need navigation
+            case let .eventsFeature(.eventSelected(eventId)):
+                return .send(.navigateToEventDetail(eventId))
+                
+            case let .ticketsListFeature(.ticketSelected(ticketId)):
+                return .send(.navigateToTicketDetail(ticketId))
                 
             case .eventsFeature:
                 return .none

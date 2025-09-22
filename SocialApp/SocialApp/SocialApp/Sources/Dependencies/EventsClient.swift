@@ -1,5 +1,6 @@
 import ComposableArchitecture
 import Foundation
+import SharedModels
 
 @DependencyClient
 public struct EventsClient {

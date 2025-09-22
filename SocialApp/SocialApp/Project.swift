@@ -14,13 +14,15 @@ let project = Project(
                 "SocialApp/Resources",
             ],
             dependencies: [
+                .project(target: "SharedModels", path: "SharedModels"),
                 .project(target: "Events", path: "Projects/Features/Events"),
                 .project(target: "TicketsList", path: "Projects/Features/TicketsList"),
-                .project(target: "TicketDetail", path: "Projects/Features/TicketDetail"),
                 .project(target: "SellerProfile", path: "Projects/Features/SellerProfile"),
+                .project(target: "TicketDetail", path: "Projects/Features/TicketDetail"),
                 .external(name: "ComposableArchitecture")
             ]
         ),
+
         .target(
             name: "SocialAppTests",
             destinations: .iOS,

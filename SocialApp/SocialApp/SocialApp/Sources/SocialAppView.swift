@@ -1,7 +1,5 @@
 import ComposableArchitecture
-import Events
 import SwiftUI
-import TicketsList
 
 public struct SocialAppView: View {
     @Bindable var store: StoreOf<SocialAppFeature>
@@ -11,36 +9,34 @@ public struct SocialAppView: View {
     }
     
     public var body: some View {
-        TabView(selection: $store.selectedTab) {
-            EventsView(store: store.scope(state: \.eventsFeature, action: \.eventsFeature))
-                .tabItem {
-                    Image(systemName: AppTab.events.icon)
-                    Text(AppTab.events.displayName)
-                }
-                .tag(AppTab.events)
-            
-            TicketsListView(store: store.scope(state: \.ticketsListFeature, action: \.ticketsListFeature))
-                .tabItem {
-                    Image(systemName: AppTab.tickets.icon)
-                    Text(AppTab.tickets.displayName)
-                }
-                .tag(AppTab.tickets)
-            
-            FavoritesPlaceholderView()
-                .tabItem {
-                    Image(systemName: AppTab.favorites.icon)
-                    Text(AppTab.favorites.displayName)
-                }
-                .tag(AppTab.favorites)
-            
-            ProfilePlaceholderView()
-                .tabItem {
-                    Image(systemName: AppTab.profile.icon)
-                    Text(AppTab.profile.displayName)
-                }
-                .tag(AppTab.profile)
+        NavigationStack {
+            TabView(selection: $store.selectedTab) {
+                EventsView(store: store.scope(state: \.eventsFeature, action: \.eventsFeature))
+                    .tabItem {
+                        Image(systemName: AppTab.events.icon)
+                        Text(AppTab.events.displayName)
+                    }
+                    .tag(AppTab.events)
+                
+                TicketsListView(store: store.scope(state: \.ticketsListFeature, action: \.ticketsListFeature))
+                    .tabItem {
+                        Image(systemName: AppTab.tickets.icon)
+                        Text(AppTab.tickets.displayName)
+                    }
+                    .tag(AppTab.tickets)
+                
+                // Outras tabs...
+            }
+            .navigationDestination(item: $store.selectedEventId) { eventId in
+                EventDetailView(eventId: eventId)
+            }
+            .navigationDestination(item: $store.selectedTicketId) { ticketId in
+                TicketDetailView(ticketId: ticketId)
+            }
+            .navigationDestination(item: $store.selectedSellerId) { sellerId in
+                SellerProfileView(sellerId: sellerId)
+            }
         }
-        .accentColor(.blue)
     }
 }
 
@@ -76,5 +72,41 @@ struct ProfilePlaceholderView: View {
             }
             .navigationTitle("Perfil")
         }
+    }
+}
+
+struct EventDetailView: View {
+    let eventId: UUID
+    
+    var body: some View {
+        VStack {
+            Text("Event Detail")
+            Text("Event ID: \(eventId)")
+        }
+        .navigationTitle("Detalhes do Evento")
+    }
+}
+
+struct TicketDetailView: View {
+    let ticketId: UUID
+    
+    var body: some View {
+        VStack {
+            Text("Ticket Detail")
+            Text("Ticket ID: \(ticketId)")
+        }
+        .navigationTitle("Detalhes do Ingresso")
+    }
+}
+
+struct SellerProfileView: View {
+    let sellerId: UUID
+    
+    var body: some View {
+        VStack {
+            Text("Seller Profile")
+            Text("Seller ID: \(sellerId)")
+        }
+        .navigationTitle("Perfil do Vendedor")
     }
 }

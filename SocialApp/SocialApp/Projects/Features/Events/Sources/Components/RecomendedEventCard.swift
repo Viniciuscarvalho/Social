@@ -1,4 +1,5 @@
 import SwiftUI
+import SharedModels
 
 struct RecommendedEventCard: View {
     let event: Event
