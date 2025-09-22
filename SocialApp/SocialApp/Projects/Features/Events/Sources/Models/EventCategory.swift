@@ -1,5 +1,3 @@
-import Foudantion
-
 public enum EventCategory: String, CaseIterable, Codable, Equatable {
     case adventure = "adventure"
     case culture = "culture"

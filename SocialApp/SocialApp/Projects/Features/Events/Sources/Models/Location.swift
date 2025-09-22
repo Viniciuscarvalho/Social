@@ -1,4 +1,5 @@
 import Foundation
+import CoreLocation
 
 public struct Location: Codable, Equatable {
     public var name: String
@@ -16,5 +17,19 @@ public struct Location: Codable, Equatable {
         self.state = state
         self.country = country
         self.coordinate = coordinate
+    }
+}
+
+public struct Coordinate: Codable, Equatable {
+    public let latitude: Double
+    public let longitude: Double
+    
+    public var clLocationCoordinate2D: CLLocationCoordinate2D {
+        CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
+    }
+    
+    public init(latitude: Double, longitude: Double) {
+        self.latitude = latitude
+        self.longitude = longitude
     }
 }
