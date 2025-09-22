@@ -1,4 +1,6 @@
 import ComposableArchitecture
+import SharedModels
+import Foundation
 
 @DependencyClient
 public struct NavigationClient {
@@ -6,6 +8,7 @@ public struct NavigationClient {
     public var navigateToTicketDetail: (UUID) async -> Void
     public var navigateToSellerProfile: (UUID) async -> Void
     public var navigateToTicketsList: (EventCategory?) async -> Void
+    
 }
 
 extension NavigationClient: DependencyKey {

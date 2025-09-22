@@ -86,7 +86,7 @@ public struct EventsFeature {
             case .eventSelected:
                 return .none
                 
-            case let .favoriteToggled(eventId):
+            case .favoriteToggled(_):
                 // Handle favorite toggling - for now just a placeholder
                 // In a real app, this would make an API call to toggle favorite status
                 return .none

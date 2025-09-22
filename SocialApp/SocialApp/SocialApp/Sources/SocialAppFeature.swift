@@ -33,7 +33,9 @@ public struct SocialAppFeature {
         case navigateToEventDetail(UUID)
         case navigateToTicketDetail(UUID)
         case navigateToSellerProfile(UUID)
-        case dismissNavigation
+        case dismissEventNavigation(UUID?)
+        case dismissTicketNavigation(UUID?)
+        case dismissSellerNavigation(UUID?)
     }
     
     public init() {}
@@ -65,9 +67,15 @@ public struct SocialAppFeature {
                 state.selectedSellerId = sellerId
                 return .none
                 
-            case .dismissNavigation:
+            case .dismissEventNavigation:
                 state.selectedEventId = nil
+                return .none
+                
+            case .dismissTicketNavigation:
                 state.selectedTicketId = nil
+                return .none
+                
+            case .dismissSellerNavigation:
                 state.selectedSellerId = nil
                 return .none
                 
