@@ -1,11 +1,17 @@
 import SwiftUI
-import ComposableArchitecture
+import SharedModels
 
 public struct EventsView: View {
-    @Bindable var store: StoreOf<EventsFeature>
+    @Binding var state: EventsFeature.State
     
-    public init(store: StoreOf<EventsFeature>) {
-        self.store = store
+    let sendAction: (EventsFeature.Action) -> Void
+    
+    public init(
+        state: Binding<EventsFeature.State>,
+        sendAction: @escaping (EventsFeature.Action) -> Void
+    ) {
+        self._state = state
+        self.sendAction = sendAction
     }
     
     public var body: some View {
@@ -22,21 +28,17 @@ public struct EventsView: View {
             }
             .navigationBarHidden(true)
             .refreshable {
-                store.send(.refreshRequested)
+                sendAction(.refreshRequested)
             }
             .onAppear {
-                store.send(.onAppear)
+                sendAction(.onAppear)
             }
         }
     }
     
     private var headerSection: some View {
         HStack {
-            AsyncImage(
-                url: URL(
-                    string: store.user?.profileImageURL ?? ""
-                )
-            ) { image in
+            AsyncImage(url: URL(string: state.user?.profileImageURL ?? "")) { image in
                 image
                     .resizable()
                     .aspectRatio(contentMode: .fill)
@@ -47,7 +49,7 @@ public struct EventsView: View {
             .frame(width: 40, height: 40)
             .clipShape(Circle())
             
-            Text(store.user?.name ?? "Nome Usuário")
+            Text(state.user?.name ?? "Nome Usuário")
                 .font(.headline)
             
             Spacer()
@@ -60,13 +62,11 @@ public struct EventsView: View {
             Image(systemName: "magnifyingglass")
                 .foregroundColor(.gray)
             
-            TextField(
-                "Campo de busca",
-                text: $store.searchText.sending(
-                    \.searchTextChanged
-                )
-            )
-                .textFieldStyle(PlainTextFieldStyle())
+            TextField("Campo de busca", text: Binding(
+                get: { state.searchText },
+                set: { sendAction(.searchTextChanged($0)) }
+            ))
+            .textFieldStyle(PlainTextFieldStyle())
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 10)
@@ -83,19 +83,19 @@ public struct EventsView: View {
                 Spacer()
                 
                 Button("show all") {
-                    store.send(.showAllCategoriesPressed)
+                    sendAction(.showAllCategoriesPressed)
                 }
                 .font(.caption)
                 .foregroundColor(.blue)
             }
             
             LazyHGrid(rows: Array(repeating: GridItem(.flexible(), spacing: 8), count: 2), spacing: 8) {
-                ForEach(store.popularCategories, id: \.self) { category in
+                ForEach(state.popularCategories, id: \.self) { category in
                     CategoryButton(
                         category: category,
-                        isSelected: store.selectedFilter.category == category
+                        isSelected: state.selectedFilter.category == category
                     ) {
-                        store.send(.categorySelected(category))
+                        sendAction(.categorySelected(category))
                     }
                 }
             }
@@ -107,14 +107,14 @@ public struct EventsView: View {
             Text("Recommended")
                 .font(.headline)
             
-            if !store.recommendedEvents.isEmpty {
+            if !state.recommendedEvents.isEmpty {
                 ScrollView(.horizontal, showsIndicators: false) {
                     LazyHStack(spacing: 12) {
-                        ForEach(store.recommendedEvents) { event in
+                        ForEach(state.recommendedEvents) { event in
                             RecommendedEventCard(event: event) {
-                                store.send(.eventSelected(event.id))
+                                sendAction(.eventSelected(event.id))
                             } onFavorite: {
-                                store.send(.favoriteToggled(event.id))
+                                sendAction(.favoriteToggled(event.id))
                             }
                         }
                     }
@@ -126,11 +126,11 @@ public struct EventsView: View {
     
     private var eventsListSection: some View {
         LazyVStack(spacing: 12) {
-            ForEach(store.displayEvents) { event in
+            ForEach(state.displayEvents) { event in
                 EventCard(event: event) {
-                    store.send(.eventSelected(event.id))
+                    sendAction(.eventSelected(event.id))
                 } onFavorite: {
-                    store.send(.favoriteToggled(event.id))
+                    sendAction(.favoriteToggled(event.id))
                 }
             }
         }

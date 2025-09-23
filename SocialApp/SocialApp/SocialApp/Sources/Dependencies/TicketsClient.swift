@@ -6,6 +6,7 @@ import SharedModels
 public struct TicketsClient {
     public var fetchTickets: () async throws -> [Ticket]
     public var fetchTicketsByEvent: (UUID) async throws -> [Ticket]
+    public var fetchTicketDetail: (UUID) async throws -> TicketDetail
     public var purchaseTicket: (UUID) async throws -> Ticket
     public var toggleFavorite: (UUID) async throws -> Void
 }
@@ -34,7 +35,13 @@ extension TicketsClient: DependencyKey {
         }
     )
     
-    public static let testValue = TicketsClient()
+    public static let testValue = TicketsClient(
+        fetchTickets: { SharedMockData.sampleTickets },
+        fetchTicketsByEvent: { _ in SharedMockData.sampleTickets },
+        fetchTicketDetail: { ticketId in SharedMockData.sampleTicketDetail(for: ticketId) },
+        purchaseTicket: { _ in SharedMockData.sampleTickets[0] },
+        toggleFavorite: { _ in }
+    )
 }
 
 extension DependencyValues {

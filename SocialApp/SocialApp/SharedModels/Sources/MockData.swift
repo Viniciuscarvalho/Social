@@ -41,9 +41,6 @@ public enum SharedMockData {
             isRecommended: false
         )
     ]
-            sellerId: sampleSellerProfiles[0].id,
-            name: "Ingresso VIP - Cliff Front",
-            price: 240.0,
     
     // MARK: - Seller Profiles
     public static let sampleSellerProfiles: [SellerProfile] = [
@@ -56,6 +53,9 @@ public enum SharedMockData {
     public static let sampleTickets: [Ticket] = [
         Ticket(
             eventId: sampleEvents[0].id,
+            sellerId: sampleSellerProfiles[0].id,
+            name: "Ingresso VIP - Cliff Front",
+            price: 240.0,
             ticketType: .vip,
             validUntil: Date().addingTimeInterval(86400 * 30)
         ),
@@ -95,4 +95,3 @@ public enum SharedMockData {
         sampleTickets.randomElement() ?? sampleTickets[0]
     }
 }
-

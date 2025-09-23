@@ -2,6 +2,19 @@ import ProjectDescription
 
 let project = Project(
     name: "SocialApp",
+    settings: .settings(
+        configurations: [
+            .debug(
+                name: "Debug",
+                settings: [
+                    "ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES": "YES",
+                    // Configuração crítica para evitar símbolos duplicados
+                    "LD_RUNPATH_SEARCH_PATHS": "$(inherited) @executable_path/Frameworks",
+                    "FRAMEWORK_SEARCH_PATHS": "$(inherited) $(PLATFORM_DIR)/Developer/Library/Frameworks"
+                ]
+            )
+        ]
+    ),
     targets: [
         .target(
             name: "SocialApp",

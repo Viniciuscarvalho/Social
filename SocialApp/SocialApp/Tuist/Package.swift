@@ -1,4 +1,4 @@
-// swift-tools-version: 6.0
+// swift-tools-version: 5.9
 import PackageDescription
 
 #if TUIST
@@ -19,7 +19,7 @@ let package = Package(
         .library(name: "SocialApp", targets: ["SocialApp"])
     ],
     dependencies: [
-        .package(url: "https://github.com/pointfreeco/swift-composable-architecture", from: "1.0.0")
+        .package(url: "https://github.com/pointfreeco/swift-composable-architecture", exact: "1.22.3")
     ],
     targets: [
         .target(

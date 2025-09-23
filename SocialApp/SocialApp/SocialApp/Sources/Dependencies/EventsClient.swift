@@ -35,7 +35,12 @@ extension EventsClient: DependencyKey {
         }
     )
     
-    public static let testValue = EventsClient()
+    public static let testValue = EventsClient(
+        fetchEvents: { SharedMockData.sampleEvents },
+        searchEvents: { _ in SharedMockData.sampleEvents },
+        fetchEventsByCategory: { _ in SharedMockData.sampleEvents },
+        fetchEventDetail: { _ in SharedMockData.sampleEvents[0] }
+    )
 }
 
 extension DependencyValues {

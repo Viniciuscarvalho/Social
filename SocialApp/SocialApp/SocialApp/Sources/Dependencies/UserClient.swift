@@ -2,6 +2,10 @@ import ComposableArchitecture
 import Foundation
 import SharedModels
 
+enum UserClientError: Error {
+    case missingSampleUser
+}
+
 @DependencyClient
 public struct UserClient {
     public var fetchCurrentUser: () async throws -> User
@@ -14,7 +18,10 @@ extension UserClient: DependencyKey {
             try await Task.sleep(for: .milliseconds(500))
             // For now, return the same sample user as used in tests
             // In a real app, this would fetch from a network API
-            return SharedMockData.sampleUsers
+            guard let user = SharedMockData.sampleUsers.first else {
+                throw UserClientError.missingSampleUser
+            }
+            return user
         },
         updateUser: { user in
             // Logic to update user
@@ -23,7 +30,12 @@ extension UserClient: DependencyKey {
     )
     
     public static let testValue = UserClient(
-        fetchCurrentUser: { SharedMockData.sampleUsers },
+        fetchCurrentUser: {
+            guard let user = SharedMockData.sampleUsers.first else {
+                throw UserClientError.missingSampleUser
+            }
+            return user
+        },
         updateUser: { user in user }
     )
 }
