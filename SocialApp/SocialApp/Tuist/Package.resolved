@@ -1,5 +1,5 @@
 {
-  "originHash" : "7d01d7f76af74669daf308d1f86c276bcf9eaaab376dec8509c19671230b477d",
+  "originHash" : "a68e013e8ca30aab1da1a36218016ca174ff06889a9aca64b7942210eac69a3a",
   "pins" : [
     {
       "identity" : "combine-schedulers",
@@ -70,7 +70,7 @@
       "location" : "https://github.com/pointfreeco/swift-dependencies",
       "state" : {
         "revision" : "a10f9feeb214bc72b5337b6ef6d5a029360db4cc",
-        "version" : "1.9.5"
+        "version" : "1.10.0"
       }
     },
     {

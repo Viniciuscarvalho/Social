@@ -14,7 +14,7 @@ extension UserClient: DependencyKey {
             try await Task.sleep(for: .milliseconds(500))
             // For now, return the same sample user as used in tests
             // In a real app, this would fetch from a network API
-            return MockEventData.sampleUser
+            return SharedMockData.sampleUsers
         },
         updateUser: { user in
             // Logic to update user
@@ -23,7 +23,7 @@ extension UserClient: DependencyKey {
     )
     
     public static let testValue = UserClient(
-        fetchCurrentUser: { MockEventData.sampleUser },
+        fetchCurrentUser: { SharedMockData.sampleUsers },
         updateUser: { user in user }
     )
 }

@@ -11,7 +11,8 @@ let project = Project(
             infoPlist: .default,
             sources: ["Sources/**"],
             dependencies: [
-                .external(name: "ComposableArchitecture")
+                .external(name: "ComposableArchitecture"),
+                .project(target: "SharedModels", path: "../../../SharedModels", status: .required)
             ]
         )
     ]

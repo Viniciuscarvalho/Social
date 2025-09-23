@@ -27,7 +27,9 @@ public struct TicketsListFeature {
     public init() {}
     
     public var body: some ReducerOf<Self> {
-        Reduce { state, action in
+        Reduce {
+            state,
+            action in
             switch action {
             case .onAppear:
                 return .send(.loadTickets)
@@ -40,7 +42,16 @@ public struct TicketsListFeature {
                         let tickets: [Ticket] = [] // Mock data aqui
                         await send(.ticketsResponse(.success(tickets)))
                     } catch {
-                        await send(.ticketsResponse(.failure(APIError(message: error.localizedDescription, code: 500))))
+                        await send(
+                            .ticketsResponse(
+                                .failure(
+                                    APIError(
+                                        message: error.localizedDescription,
+                                        code: 500
+                                    )
+                                )
+                            )
+                        )
                     }
                 }
                 

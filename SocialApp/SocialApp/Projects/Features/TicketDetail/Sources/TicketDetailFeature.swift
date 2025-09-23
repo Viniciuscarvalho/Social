@@ -32,18 +32,7 @@ public struct TicketDetailFeature {
                 return .run { send in
                     do {
                         try await Task.sleep(for: .seconds(1))
-                        // Mock ticket detail
-                        let event = MockEventData.sampleEvents[0]
-                        let seller = SellerProfile(name: "João Silva")
-                        let ticketDetail = TicketDetail(
-                            ticketId: ticketId,
-                            event: event,
-                            seller: seller,
-                            price: 240.0,
-                            quantity: 1,
-                            ticketType: .general,
-                            validUntil: Date().addingTimeInterval(86400 * 30)
-                        )
+                        let ticketDetail = SharedMockData.sampleTicketDetail(for: ticketId)
                         await send(.ticketDetailResponse(.success(ticketDetail)))
                     } catch {
                         await send(.ticketDetailResponse(.failure(APIError(message: error.localizedDescription, code: 500))))
