@@ -1,7 +1,7 @@
 import Foundation
 
 public struct Effect<Action> {
-    private let operation: (@escaping (Action) async -> Void) async -> Void
+    public let operation: (@escaping (Action) async -> Void) async -> Void
     
     public init(operation: @escaping (@escaping (Action) async -> Void) async -> Void) {
         self.operation = operation

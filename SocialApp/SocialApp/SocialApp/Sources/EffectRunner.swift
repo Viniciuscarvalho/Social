@@ -1,7 +1,8 @@
 import Foundation
 import ComposableArchitecture
+import SharedModels
 
-extension Effect where Action: Equatable {
+extension SharedModels.Effect where Action: Equatable {
     func run(send: @escaping (Action) -> Void) {
         Task {
             await operation { action in
