@@ -12,8 +12,9 @@ O SocialApp é uma plataforma que conecta usuários a eventos sociais, permitind
 
 ## 🏗️ Arquitetura
 
-O projeto utiliza uma arquitetura modular baseada no **Tuist** com as seguintes features:
+O projeto utiliza uma arquitetura modular baseada no **Tuist** com as seguintes componentes:
 
+- **SharedModels**: Modelos de dados compartilhados e efeitos comuns
 - **Events**: Gerenciamento de eventos e categorias
 - **TicketsList**: Lista e filtros de tickets
 - **TicketDetail**: Detalhes específicos de cada ticket
@@ -22,7 +23,9 @@ O projeto utiliza uma arquitetura modular baseada no **Tuist** com as seguintes 
 ### Stack Tecnológica
 
 - **SwiftUI**: Interface do usuário
-- **The Composable Architecture (TCA)**: Gerenciamento de estado
+- **The Composable Architecture (TCA) v1.22.3**: Gerenciamento de estado
+- **Swift Navigation v1.0+**: Navegação entre telas
+- **Swift Dependencies v1.0+**: Injeção de dependências
 - **Tuist**: Gerenciamento de projeto modular
 - **iOS 16+**: Plataforma mínima suportada
 
@@ -83,18 +86,63 @@ open SocialApp.xcworkspace
 SocialApp/
 ├── Project.swift                 # Configuração principal do Tuist
 ├── Tuist/
+│   ├── Dependencies.swift       # Configuração de dependências externas
 │   ├── Package.swift            # Dependências Swift Package Manager
 │   └── Package.resolved         # Versões fixas das dependências
+├── SharedModels/                # Módulo de modelos compartilhados
+│   ├── Project.swift
+│   └── Sources/
+│       ├── Models.swift         # Modelos de dados
+│       ├── MockData.swift       # Dados de teste
+│       ├── Effect.swift         # Efeitos compartilhados
+│       └── EffectRunner.swift   # Executor de efeitos
 ├── Projects/
 │   └── Features/                # Features modulares
 │       ├── Events/              # Módulo de eventos
+│       │   ├── Project.swift
+│       │   └── Sources/
+│       │       ├── EventsFeature.swift
+│       │       ├── EventsView.swift
+│       │       └── Components/
+│       │           ├── CategoryButton.swift
+│       │           ├── EventCard.swift
+│       │           └── RecomendedEventCard.swift
 │       ├── TicketsList/         # Módulo de lista de tickets
+│       │   ├── Project.swift
+│       │   └── Sources/
+│       │       ├── TicketsListFeature.swift
+│       │       ├── TicketsListView.swift
+│       │       └── TicketCard.swift
 │       ├── TicketDetail/        # Módulo de detalhes do ticket
+│       │   ├── Project.swift
+│       │   └── Sources/
+│       │       └── TicketDetailFeature.swift
 │       └── SellerProfile/       # Módulo de perfil do vendedor
+│           ├── Project.swift
+│           └── Sources/
+│               └── SellerProfileFeature.swift
 └── SocialApp/                   # App principal
-    ├── Sources/                 # Código fonte
+    ├── Sources/
+    │   ├── SocialApp.swift      # Ponto de entrada da aplicação
+    │   ├── SocialAppFeature.swift # Feature principal
+    │   ├── SocialAppView.swift  # View principal
+    │   ├── ContentView.swift    # View de conteúdo
+    │   ├── TCAProvider.swift    # Configuração do TCA
+    │   ├── Dependencies/        # Clientes de dependências
+    │   │   ├── EventsClient.swift
+    │   │   ├── TicketsClient.swift
+    │   │   └── UserClient.swift
+    │   ├── Navigation/          # Configuração de navegação
+    │   │   └── NavigationClient.swift
+    │   └── Services/            # Implementações de serviços
+    │       ├── JSONLoader.swift
+    │       └── ServiceImplementations.swift
     ├── Resources/               # Recursos (JSONs, Assets)
+    │   ├── Assets.xcassets/
+    │   ├── events.json
+    │   └── user.json
     └── Tests/                   # Testes unitários
+        └── SocialAppTests.swift
 ```
 
 ### Comandos Úteis
@@ -146,33 +194,50 @@ O projeto não requer variáveis de ambiente especiais. Todos os dados são mock
 
 ### Dependências Externas
 
-- **Swift Composable Architecture**: Framework para gerenciamento de estado
+- **Swift Composable Architecture v1.22.3**: Framework para gerenciamento de estado
+- **Swift Navigation v1.0+**: Framework para navegação entre telas
+- **Swift Dependencies v1.0+**: Framework para injeção de dependências
 - **SwiftUI**: Framework nativo para UI
 
 ## 📊 Features Implementadas
 
+### ✅ SharedModels
+- [x] Modelos de dados compartilhados (Event, Ticket, User, Seller)
+- [x] Dados mockados para desenvolvimento e testes
+- [x] Efeitos compartilhados entre features
+- [x] Executor de efeitos centralizado
+
 ### ✅ Events
 - [x] Modelo de dados para eventos
-- [x] Categorias de eventos
-- [x] Filtros de busca
-- [x] Integração com localização
+- [x] Categorias de eventos (CategoryButton)
+- [x] Cards de eventos (EventCard, RecommendedEventCard)
+- [x] Feature completa com TCA (EventsFeature)
+- [x] Interface SwiftUI (EventsView)
 
 ### ✅ TicketsList
 - [x] Lista de tickets disponíveis
-- [x] Filtros por categoria, preço e tipo
-- [x] Ordenação por diferentes critérios
-- [x] Sistema de favoritos
+- [x] Cards de tickets (TicketCard)
+- [x] Feature completa com TCA (TicketsListFeature)
+- [x] Interface SwiftUI (TicketsListView)
+- [x] Filtros e ordenação
 
 ### ✅ TicketDetail
-- [x] Detalhes completos do ticket
-- [x] Informações do vendedor
-- [x] Status do ticket
-- [x] Validade e preços
+- [x] Detalhes específicos do ticket
+- [x] Feature completa com TCA (TicketDetailFeature)
+- [x] Integração com dados do ticket
 
 ### ✅ SellerProfile
 - [x] Perfil do vendedor
-- [x] Histórico de tickets
-- [x] Sistema de verificação
+- [x] Feature completa com TCA (SellerProfileFeature)
+- [x] Informações do organizador
+
+### ✅ SocialApp (App Principal)
+- [x] Configuração principal com TCA (SocialAppFeature)
+- [x] Navegação entre features
+- [x] Clientes de dependências (EventsClient, TicketsClient, UserClient)
+- [x] Serviços de dados (JSONLoader, ServiceImplementations)
+- [x] Configuração de navegação (NavigationClient)
+- [x] Provider do TCA (TCAProvider)
 
 ## 🚧 Roadmap
 
