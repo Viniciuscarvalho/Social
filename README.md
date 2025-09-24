@@ -85,8 +85,6 @@ SocialApp/
 │   └── Sources/
 │       ├── Models.swift         # Modelos de dados
 │       ├── MockData.swift       # Dados de teste
-│       ├── Effect.swift         # Efeitos compartilhados
-│       └── EffectRunner.swift   # Executor de efeitos
 ├── Projects/
 │   └── Features/                # Features modulares (sem Project.swift separados)
 │       ├── Events/              # Módulo de eventos
@@ -114,7 +112,6 @@ SocialApp/
     │   ├── SocialAppFeature.swift # Feature principal
     │   ├── SocialAppView.swift  # View principal
     │   ├── ContentView.swift    # View de conteúdo
-    │   ├── TCAProvider.swift    # Configuração do TCA
     │   ├── Dependencies/        # Clientes de dependências
     │   │   ├── EventsClient.swift
     │   │   ├── TicketsClient.swift
@@ -123,7 +120,6 @@ SocialApp/
     │   │   └── NavigationClient.swift
     │   └── Services/            # Implementações de serviços
     │       ├── JSONLoader.swift
-    │       └── ServiceImplementations.swift
     ├── Resources/               # Recursos (JSONs, Assets)
     │   ├── Assets.xcassets/
     │   ├── events.json
