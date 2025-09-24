@@ -1,14 +1,10 @@
+import ComposableArchitecture
 import Foundation
 import SharedModels
 
-// Protocolo para dependency injection
-public protocol EventsService {
-    func fetchEvents() async throws -> [Event]
-    func searchEvents(_ query: String) async throws -> [Event]
-    func fetchEventsByCategory(_ category: EventCategory) async throws -> [Event]
-}
-
+@Reducer
 public struct EventsFeature {
+    @ObservableState
     public struct State: Equatable {
         public var events: [Event] = []
         public var filteredEvents: [Event] = []
@@ -42,84 +38,73 @@ public struct EventsFeature {
         case showAllCategoriesPressed
     }
     
-    // Service injetado
-    private let eventsService: EventsService
+    @Dependency(\.eventsClient) var eventsClient
     
-    public init(eventsService: EventsService) {
-        self.eventsService = eventsService
-    }
+    public init() {}
     
-    // Reducer manual sem macro
-    public func reduce(into state: inout State, action: Action) -> Effect<Action> {
-        switch action {
-        case .onAppear:
-            return Effect.send(.loadEvents)
-            
-        case .loadEvents:
-            state.isLoading = true
-            state.errorMessage = nil
-            return Effect.run { send in
-                do {
-                    let events = try await eventsService.fetchEvents()
-                    await send(.eventsResponse(.success(events)))
-                } catch {
-                    await send(.eventsResponse(.failure(APIError(message: error.localizedDescription, code: 500))))
+    public var body: some ReducerOf<Self> {
+        Reduce { state, action in
+            switch action {
+            case .onAppear:
+                return .send(.loadEvents)
+                
+            case .loadEvents:
+                state.isLoading = true
+                state.errorMessage = nil
+                return .run { send in
+                    await send(.eventsResponse(
+                        Result { try await eventsClient.fetchEvents() }
+                    ))
                 }
-            }
-            
-        case let .eventsResponse(.success(events)):
-            state.isLoading = false
-            state.events = events
-            state.recommendedEvents = events.filter(\.isRecommended)
-            state.filteredEvents = filterEvents(events, with: state.selectedFilter, searchText: state.searchText)
-            return Effect.none
-            
-        case let .eventsResponse(.failure(error)):
-            state.isLoading = false
-            state.errorMessage = error.message
-            return Effect.none
-            
-        case let .searchTextChanged(text):
-            state.searchText = text
-            if !text.isEmpty {
-                return Effect.run { send in
-                    do {
-                        let events = try await eventsService.searchEvents(text)
-                        await send(.eventsResponse(.success(events)))
-                    } catch {
-                        await send(.eventsResponse(.failure(APIError(message: error.localizedDescription, code: 500))))
+                
+            case let .eventsResponse(.success(events)):
+                state.isLoading = false
+                state.events = events
+                state.recommendedEvents = events.filter(\.isRecommended)
+                state.filteredEvents = filterEvents(events, with: state.selectedFilter, searchText: state.searchText)
+                return .none
+                
+            case let .eventsResponse(.failure(error)):
+                state.isLoading = false
+                state.errorMessage = error.message
+                return .none
+                
+            case let .searchTextChanged(text):
+                state.searchText = text
+                if !text.isEmpty {
+                    return .run { send in
+                        await send(.eventsResponse(
+                            Result { try await eventsClient.searchEvents(text) }
+                        ))
                     }
+                } else {
+                    return .send(.loadEvents)
                 }
-            } else {
-                return Effect.send(.loadEvents)
-            }
-            
-        case let .categorySelected(category):
-            state.selectedFilter.category = category
-            if let category = category {
-                return Effect.run { send in
-                    do {
-                        let events = try await eventsService.fetchEventsByCategory(category)
-                        await send(.eventsResponse(.success(events)))
-                    } catch {
-                        await send(.eventsResponse(.failure(APIError(message: error.localizedDescription, code: 500))))
+                
+            case let .categorySelected(category):
+                state.selectedFilter.category = category
+                if let category = category {
+                    return .run { send in
+                        await send(.eventsResponse(
+                            Result { try await eventsClient.fetchEventsByCategory(category) }
+                        ))
                     }
+                } else {
+                    return .send(.loadEvents)
                 }
-            } else {
-                return Effect.send(.loadEvents)
+                
+            case .eventSelected:
+                return .none
+                
+            case .favoriteToggled:
+                return .none
+                
+            case .showAllCategoriesPressed:
+                return .none
+                
+            case .refreshRequested:
+                return .send(.loadEvents)
             }
-            
-        case .eventSelected:
-            return Effect.none
-            
-        case .favoriteToggled:
-            return Effect.none
-            
-        case .showAllCategoriesPressed:
-            return Effect.none
-            
-        case .refreshRequested:
-            return Effect.send(.loadEvents)
         }
     }
     

@@ -1,13 +1,10 @@
+import ComposableArchitecture
 import Foundation
 import SharedModels
 
-public protocol TicketsService {
-    func fetchTickets() async throws -> [Ticket]
-    func fetchTicketsByEvent(_ eventId: UUID) async throws -> [Ticket]
-    func toggleFavorite(_ ticketId: UUID) async throws -> Void
-}
-
+@Reducer
 public struct TicketsListFeature {
+    @ObservableState
     public struct State: Equatable {
         public var tickets: [Ticket] = []
         public var filteredTickets: [Ticket] = []
@@ -32,60 +29,57 @@ public struct TicketsListFeature {
         case refreshRequested
     }
     
-    private let ticketsService: TicketsService
+    @Dependency(\.ticketsClient) var ticketsClient
     
-    public init(ticketsService: TicketsService) {
-        self.ticketsService = ticketsService
-    }
+    public init() {}
     
-    public func reduce(into state: inout State, action: Action) -> Effect<Action> {
-        switch action {
-        case .onAppear:
-            return Effect.send(.loadTickets)
-            
-        case .loadTickets:
-            state.isLoading = true
-            state.errorMessage = nil
-            return Effect.run { send in
-                do {
-                    let tickets = try await ticketsService.fetchTickets()
-                    await send(.ticketsResponse(.success(tickets)))
-                } catch {
-                    await send(.ticketsResponse(.failure(APIError(message: error.localizedDescription, code: 500))))
+    public var body: some ReducerOf<Self> {
+        Reduce { state, action in
+            switch action {
+            case .onAppear:
+                return .send(.loadTickets)
+                
+            case .loadTickets:
+                state.isLoading = true
+                state.errorMessage = nil
+                return .run { send in
+                    await send(.ticketsResponse(
+                        Result { try await ticketsClient.fetchTickets() }
+                    ))
                 }
-            }
-            
-        case let .ticketsResponse(.success(tickets)):
-            state.isLoading = false
-            state.tickets = tickets
-            state.filteredTickets = filterTickets(tickets, with: state.selectedFilter)
-            return Effect.none
-            
-        case let .ticketsResponse(.failure(error)):
-            state.isLoading = false
-            state.errorMessage = error.message
-            return Effect.none
-            
-        case .ticketSelected:
-            return Effect.none
-            
-        case let .favoriteToggled(ticketId):
-            return Effect.run { send in
-                do {
-                    try await ticketsService.toggleFavorite(ticketId)
-                    await send(.loadTickets) // Refresh após toggle
-                } catch {
-                    await send(.ticketsResponse(.failure(APIError(message: error.localizedDescription, code: 500))))
+                
+            case let .ticketsResponse(.success(tickets)):
+                state.isLoading = false
+                state.tickets = tickets
+                state.filteredTickets = filterTickets(tickets, with: state.selectedFilter)
+                return .none
+                
+            case let .ticketsResponse(.failure(error)):
+                state.isLoading = false
+                state.errorMessage = error.message
+                return .none
+                
+            case .ticketSelected:
+                return .none
+                
+            case let .favoriteToggled(ticketId):
+                return .run { send in
+                    do {
+                        try await ticketsClient.toggleFavorite(ticketId)
+                        await send(.loadTickets)
+                    } catch {
+                        await send(.ticketsResponse(.failure(APIError(message: error.localizedDescription, code: 500))))
+                    }
                 }
+                
+            case let .filterChanged(filter):
+                state.selectedFilter = filter
+                state.filteredTickets = filterTickets(state.tickets, with: filter)
+                return .none
+                
+            case .refreshRequested:
+                return .send(.loadTickets)
             }
-            
-        case let .filterChanged(filter):
-            state.selectedFilter = filter
-            state.filteredTickets = filterTickets(state.tickets, with: filter)
-            return Effect.none
-            
-        case .refreshRequested:
-            return Effect.send(.loadTickets)
         }
     }
     
@@ -110,7 +104,6 @@ public struct TicketsListFeature {
             filtered = filtered.filter(\.isFavorited)
         }
         
-        // Sort
         switch filter.sortBy {
         case .dateCreated:
             filtered = filtered.sorted { $0.createdAt > $1.createdAt }

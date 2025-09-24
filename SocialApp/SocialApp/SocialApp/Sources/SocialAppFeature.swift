@@ -1,10 +1,6 @@
 import ComposableArchitecture
-import Events
-import SharedModels
 import SwiftUI
-import TicketsList
-import SellerProfile
-import TicketDetail
+import SharedModels
 
 @Reducer
 public struct SocialAppFeature {
@@ -35,30 +31,31 @@ public struct SocialAppFeature {
         case navigateToEventDetail(UUID)
         case navigateToTicketDetail(UUID)
         case navigateToSellerProfile(UUID)
-        case dismissEventNavigation
-        case dismissTicketNavigation
-        case dismissSellerNavigation
+        
+        case dismissEventNavigation(UUID?)
+        case dismissTicketNavigation(UUID?)
+        case dismissSellerNavigation(UUID?)
     }
     
-    // Services injetados
-    private let eventsService: EventsService
-    private let ticketsService: TicketsService
-    private let sellerProfileService: SellerProfileService
-    private let ticketDetailService: TicketDetailService
-    
-    public init(
-        eventsService: EventsService = EventsServiceImpl(),
-        ticketsService: TicketsService = TicketsServiceImpl(),
-        sellerProfileService: SellerProfileService = SellerProfileServiceImpl(),
-        ticketDetailService: TicketDetailService = TicketDetailServiceImpl()
-    ) {
-        self.eventsService = eventsService
-        self.ticketsService = ticketsService
-        self.sellerProfileService = sellerProfileService
-        self.ticketDetailService = ticketDetailService
-    }
+    public init() {}
     
     public var body: some ReducerOf<Self> {
+        Scope(state: \.eventsFeature, action: \.eventsFeature) {
+            EventsFeature()
+        }
+        
+        Scope(state: \.ticketsListFeature, action: \.ticketsListFeature) {
+            TicketsListFeature()
+        }
+        
+        Scope(state: \.sellerProfileFeature, action: \.sellerProfileFeature) {
+            SellerProfileFeature()
+        }
+        
+        Scope(state: \.ticketDetailFeature, action: \.ticketDetailFeature) {
+            TicketDetailFeature()
+        }
+        
         Reduce { state, action in
             switch action {
             case let .tabSelected(tab):
@@ -96,26 +93,18 @@ public struct SocialAppFeature {
             case let .ticketsListFeature(.ticketSelected(ticketId)):
                 return .send(.navigateToTicketDetail(ticketId))
                 
-            // Forward actions para features usando dependency injection
-            case let .eventsFeature(eventsAction):
-                let eventsFeature = EventsFeature(eventsService: eventsService)
-                let effect = eventsFeature.reduce(into: &state.eventsFeature, action: eventsAction)
-                return effect.map(Action.eventsFeature)
+            // Outras actions das features são tratadas pelos seus próprios reducers
+            case .eventsFeature:
+                return .none
                 
-            case let .ticketsListFeature(ticketsAction):
-                let ticketsFeature = TicketsListFeature(ticketsService: ticketsService)
-                let effect = ticketsFeature.reduce(into: &state.ticketsListFeature, action: ticketsAction)
-                return effect.map(Action.ticketsListFeature)
+            case .ticketsListFeature:
+                return .none
                 
-            case let .sellerProfileFeature(sellerAction):
-                let sellerFeature = SellerProfileFeature(sellerProfileService: sellerProfileService)
-                let effect = sellerFeature.reduce(into: &state.sellerProfileFeature, action: sellerAction)
-                return effect.map(Action.sellerProfileFeature)
+            case .sellerProfileFeature:
+                return .none
                 
-            case let .ticketDetailFeature(ticketAction):
-                let ticketFeature = TicketDetailFeature(ticketDetailService: ticketDetailService)
-                let effect = ticketFeature.reduce(into: &state.ticketDetailFeature, action: ticketAction)
-                return effect.map(Action.ticketDetailFeature)
+            case .ticketDetailFeature:
+                return .none
             }
         }
     }

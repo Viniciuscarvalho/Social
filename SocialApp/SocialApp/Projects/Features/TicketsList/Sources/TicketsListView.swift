@@ -1,36 +1,40 @@
-import SharedModels
 import SwiftUI
+import ComposableArchitecture
+import SharedModels
 
 public struct TicketsListView: View {
-    @Binding var state: TicketsListFeature.State
+    @Bindable var store: StoreOf<TicketsListFeature>
     
-    let sendAction: (TicketsListFeature.Action) -> Void
-    
-    public init(
-        state: Binding<TicketsListFeature.State>,
-        sendAction: @escaping (TicketsListFeature.Action) -> Void
-    ) {
-        self._state = state
-        self.sendAction = sendAction
+    public init(store: StoreOf<TicketsListFeature>) {
+        self.store = store
     }
     
     public var body: some View {
         NavigationView {
             VStack {
-                if state.isLoading {
+                if store.isLoading {
                     loadingView
-                } else if state.tickets.isEmpty {
+                } else if store.tickets.isEmpty {
                     emptyStateView
                 } else {
                     ticketsContentView
                 }
             }
             .navigationTitle("Ingressos")
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Menu {
+                        filterMenu
+                    } label: {
+                        Image(systemName: "line.3.horizontal.decrease.circle")
+                    }
+                }
+            }
             .onAppear {
-                sendAction(.onAppear)
+                store.send(.onAppear)
             }
             .refreshable {
-                sendAction(.refreshRequested)
+                store.send(.refreshRequested)
             }
         }
     }
@@ -60,7 +64,7 @@ public struct TicketsListView: View {
                 .foregroundColor(.secondary)
             
             Button("Buscar Eventos") {
-                // Could trigger navigation to events tab
+                // Could trigger tab change to events
             }
             .buttonStyle(.borderedProminent)
         }
@@ -70,15 +74,70 @@ public struct TicketsListView: View {
     private var ticketsContentView: some View {
         ScrollView {
             LazyVStack(spacing: 12) {
-                ForEach(state.displayTickets) { ticket in
+                ForEach(store.displayTickets) { ticket in
                     TicketCard(
                         ticket: ticket,
-                        onTap: { sendAction(.ticketSelected(ticket.id)) },
-                        onFavorite: { sendAction(.favoriteToggled(ticket.id)) }
+                        onTap: { store.send(.ticketSelected(ticket.id)) },
+                        onFavorite: { store.send(.favoriteToggled(ticket.id)) }
                     )
                 }
             }
             .padding(.horizontal, 16)
+        }
+    }
+    
+    private var filterMenu: some View {
+        VStack {
+            Menu("Tipo de Ingresso") {
+                Button("Todos") {
+                    var filter = store.selectedFilter
+                    filter.ticketType = nil
+                    store.send(.filterChanged(filter))
+                }
+                
+                ForEach(TicketType.allCases, id: \.self) { type in
+                    Button(type.displayName) {
+                        var filter = store.selectedFilter
+                        filter.ticketType = type
+                        store.send(.filterChanged(filter))
+                    }
+                }
+            }
+            
+            Menu("Status") {
+                Button("Todos") {
+                    var filter = store.selectedFilter
+                    filter.status = nil
+                    store.send(.filterChanged(filter))
+                }
+                
+                ForEach(TicketStatus.allCases, id: \.self) { status in
+                    Button(status.displayName) {
+                        var filter = store.selectedFilter
+                        filter.status = status
+                        store.send(.filterChanged(filter))
+                    }
+                }
+            }
+            
+            Menu("Ordenar Por") {
+                ForEach(TicketSortOption.allCases, id: \.self) { sortOption in
+                    Button(sortOption.displayName) {
+                        var filter = store.selectedFilter
+                        filter.sortBy = sortOption
+                        store.send(.filterChanged(filter))
+                    }
+                }
+            }
+            
+            Toggle("Apenas Favoritos", isOn: Binding(
+                get: { store.selectedFilter.showFavoritesOnly },
+                set: { newValue in
+                    var filter = store.selectedFilter
+                    filter.showFavoritesOnly = newValue
+                    store.send(.filterChanged(filter))
+                }
+            ))
         }
     }
 }
