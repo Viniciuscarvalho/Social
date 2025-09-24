@@ -1,50 +1,242 @@
 [
-    {
-      "id": "550e8400-e29b-41d4-a716-446655440000",
-      "name": "Cliff Front Pandawa Beach",
-      "description": "Grand Canyon National Park, located in Arizona, is one of the most breathtaking natural wonders on the planet. Carved by the Colorado River over millions of years, the Grand Canyon is a breathtaking natural wonder.",
-      "imageURL": "https://example.com/pandawa-beach.jpg",
-      "startPrice": 240.0,
-      "location": {
-        "name": "Grand Canyon National Park",
-        "address": "Arizona, United States",
-        "city": "Arizona",
-        "state": "United States", 
-        "country": "USA",
-        "coordinate": {
-          "latitude": 36.1069,
-          "longitude": -112.1129
-        }
-      },
-      "category": "nature",
-      "isRecommended": true,
-      "rating": 4.9,
-      "reviewCount": 485,
-      "createdAt": "2024-01-15T10:30:00Z",
-      "eventDate": "2024-03-20T14:00:00Z"
+  {
+    "id": "550e8400-e29b-41d4-a716-446655440000",
+    "name": "Cliff Front Pandawa Beach",
+    "description": "Grand Canyon National Park, located in Arizona, is one of the most breathtaking natural wonders on the planet. Carved by the Colorado River over millions of years, the Grand Canyon is a breathtaking natural wonder.",
+    "imageURL": "https://example.com/pandawa-beach.jpg",
+    "startPrice": 240.0,
+    "location": {
+      "name": "Grand Canyon National Park",
+      "address": "Arizona, United States",
+      "city": "Arizona",
+      "state": "United States", 
+      "country": "USA",
+      "coordinate": {
+        "latitude": 36.1069,
+        "longitude": -112.1129
+      }
     },
-    {
-      "id": "550e8400-e29b-41d4-a716-446655440001",
-      "name": "Festival de Música Eletrônica",
-      "description": "O maior festival de música eletrônica do Brasil",
-      "imageURL": "https://example.com/electronic-festival.jpg",
-      "startPrice": 180.0,
-      "location": {
-        "name": "Allianz Parque",
-        "address": "Av. Francisco Matarazzo, 1705",
-        "city": "São Paulo",
-        "state": "SP",
-        "country": "Brasil",
-        "coordinate": {
-          "latitude": -23.5278,
-          "longitude": -46.6682
-        }
-      },
-      "category": "music",
-      "isRecommended": false,
-      "rating": 4.5,
-      "reviewCount": 320,
-      "createdAt": "2024-01-10T08:15:00Z",
-      "eventDate": "2024-04-15T20:00:00Z"
-    }
+    "category": "nature",
+    "isRecommended": true,
+    "rating": 4.9,
+    "reviewCount": 485,
+    "createdAt": "2024-01-15T10:30:00Z",
+    "eventDate": "2024-03-20T14:00:00Z"
+  },
+  {
+    "id": "550e8400-e29b-41d4-a716-446655440001",
+    "name": "Festival de Música Eletrônica",
+    "description": "O maior festival de música eletrônica do Brasil com os melhores DJs internacionais",
+    "imageURL": "https://example.com/electronic-festival.jpg",
+    "startPrice": 180.0,
+    "location": {
+      "name": "Allianz Parque",
+      "address": "Av. Francisco Matarazzo, 1705",
+      "city": "São Paulo",
+      "state": "SP",
+      "country": "Brasil",
+      "coordinate": {
+        "latitude": -23.5278,
+        "longitude": -46.6682
+      }
+    },
+    "category": "music",
+    "isRecommended": false,
+    "rating": 4.5,
+    "reviewCount": 320,
+    "createdAt": "2024-01-10T08:15:00Z",
+    "eventDate": "2024-04-15T20:00:00Z"
+  },
+  {
+    "id": "550e8400-e29b-41d4-a716-446655440002",
+    "name": "Rock in Rio 2024",
+    "description": "O maior festival de rock do mundo retorna ao Brasil com lineup espetacular",
+    "imageURL": "https://example.com/rock-in-rio.jpg",
+    "startPrice": 320.0,
+    "location": {
+      "name": "Cidade do Rock",
+      "address": "Av. Salvador Allende, s/n",
+      "city": "Rio de Janeiro",
+      "state": "RJ",
+      "country": "Brasil",
+      "coordinate": {
+        "latitude": -22.9068,
+        "longitude": -43.1729
+      }
+    },
+    "category": "music",
+    "isRecommended": true,
+    "rating": 4.8,
+    "reviewCount": 1250,
+    "createdAt": "2024-01-20T16:45:00Z",
+    "eventDate": "2024-09-15T18:00:00Z"
+  },
+  {
+    "id": "550e8400-e29b-41d4-a716-446655440003",
+    "name": "Copa do Mundo FIFA 2026 - Semifinal",
+    "description": "Partida semifinal da Copa do Mundo FIFA 2026 no Maracanã",
+    "imageURL": "https://example.com/fifa-world-cup.jpg",
+    "startPrice": 850.0,
+    "location": {
+      "name": "Estádio do Maracanã",
+      "address": "Av. Pres. Castelo Branco, Portão 2",
+      "city": "Rio de Janeiro",
+      "state": "RJ",
+      "country": "Brasil",
+      "coordinate": {
+        "latitude": -22.9121,
+        "longitude": -43.2302
+      }
+    },
+    "category": "sports",
+    "isRecommended": true,
+    "rating": 5.0,
+    "reviewCount": 2800,
+    "createdAt": "2024-02-01T12:00:00Z",
+    "eventDate": "2026-07-14T16:00:00Z"
+  },
+  {
+    "id": "550e8400-e29b-41d4-a716-446655440004",
+    "name": "Festival de Gastronomia de São Paulo",
+    "description": "Descubra os sabores únicos da culinária paulistana com os melhores chefs",
+    "imageURL": "https://example.com/gastronomy-festival.jpg",
+    "startPrice": 120.0,
+    "location": {
+      "name": "Ibirapuera Park",
+      "address": "Av. Paulista, 1578",
+      "city": "São Paulo",
+      "state": "SP",
+      "country": "Brasil",
+      "coordinate": {
+        "latitude": -23.5875,
+        "longitude": -46.6575
+      }
+    },
+    "category": "food",
+    "isRecommended": false,
+    "rating": 4.3,
+    "reviewCount": 180,
+    "createdAt": "2024-01-25T09:20:00Z",
+    "eventDate": "2024-05-10T11:00:00Z"
+  },
+  {
+    "id": "550e8400-e29b-41d4-a716-446655440005",
+    "name": "Tech Summit Brasil 2024",
+    "description": "O maior evento de tecnologia do Brasil reunindo startups, investidores e inovadores",
+    "imageURL": "https://example.com/tech-summit.jpg",
+    "startPrice": 450.0,
+    "location": {
+      "name": "Centro de Convenções Frei Caneca",
+      "address": "Rua Frei Caneca, 569",
+      "city": "São Paulo",
+      "state": "SP",
+      "country": "Brasil",
+      "coordinate": {
+        "latitude": -23.5489,
+        "longitude": -46.6388
+      }
+    },
+    "category": "technology",
+    "isRecommended": true,
+    "rating": 4.7,
+    "reviewCount": 890,
+    "createdAt": "2024-02-05T14:30:00Z",
+    "eventDate": "2024-08-20T09:00:00Z"
+  },
+  {
+    "id": "550e8400-e29b-41d4-a716-446655440006",
+    "name": "Bienal de Arte de São Paulo",
+    "description": "Exposição internacional de arte contemporânea com artistas de todo o mundo",
+    "imageURL": "https://example.com/art-biennale.jpg",
+    "startPrice": 60.0,
+    "location": {
+      "name": "Pavilhão da Bienal",
+      "address": "Av. Pedro Álvares Cabral, s/n",
+      "city": "São Paulo",
+      "state": "SP",
+      "country": "Brasil",
+      "coordinate": {
+        "latitude": -23.5873,
+        "longitude": -46.6573
+      }
+    },
+    "category": "culture",
+    "isRecommended": false,
+    "rating": 4.2,
+    "reviewCount": 420,
+    "createdAt": "2024-01-30T11:15:00Z",
+    "eventDate": "2024-10-05T10:00:00Z"
+  },
+  {
+    "id": "550e8400-e29b-41d4-a716-446655440007",
+    "name": "Conferência Empreendedorismo Digital",
+    "description": "Aprenda estratégias de negócios digitais com especialistas renomados",
+    "imageURL": "https://example.com/business-conference.jpg",
+    "startPrice": 280.0,
+    "location": {
+      "name": "World Trade Center",
+      "address": "Av. das Nações Unidas, 12551",
+      "city": "São Paulo",
+      "state": "SP",
+      "country": "Brasil",
+      "coordinate": {
+        "latitude": -23.6109,
+        "longitude": -46.6970
+      }
+    },
+    "category": "business",
+    "isRecommended": true,
+    "rating": 4.6,
+    "reviewCount": 340,
+    "createdAt": "2024-02-08T15:45:00Z",
+    "eventDate": "2024-06-25T08:30:00Z"
+  },
+  {
+    "id": "550e8400-e29b-41d4-a716-446655440008",
+    "name": "Aventura na Chapada Diamantina",
+    "description": "Expedição de 3 dias pela Chapada Diamantina com trilhas e cachoeiras",
+    "imageURL": "https://example.com/chapada-adventure.jpg",
+    "startPrice": 680.0,
+    "location": {
+      "name": "Vale do Pati",
+      "address": "Chapada Diamantina",
+      "city": "Lençóis",
+      "state": "BA",
+      "country": "Brasil",
+      "coordinate": {
+        "latitude": -12.4696,
+        "longitude": -41.3893
+      }
+    },
+    "category": "adventure",
+    "isRecommended": true,
+    "rating": 4.9,
+    "reviewCount": 95,
+    "createdAt": "2024-01-28T13:20:00Z",
+    "eventDate": "2024-07-12T06:00:00Z"
+  },
+  {
+    "id": "550e8400-e29b-41d4-a716-446655440009",
+    "name": "Formula 1 GP do Brasil",
+    "description": "Grande Prêmio de Formula 1 no circuito de Interlagos",
+    "imageURL": "https://example.com/f1-brasil.jpg",
+    "startPrice": 750.0,
+    "location": {
+      "name": "Autódromo José Carlos Pace",
+      "address": "Av. Sen. Teotônio Vilela, 261",
+      "city": "São Paulo",
+      "state": "SP",
+      "country": "Brasil",
+      "coordinate": {
+        "latitude": -23.7008,
+        "longitude": -46.6977
+      }
+    },
+    "category": "sports",
+    "isRecommended": true,
+    "rating": 4.8,
+    "reviewCount": 1560,
+    "createdAt": "2024-02-12T10:00:00Z",
+    "eventDate": "2024-11-03T14:00:00Z"
+  }
 ]

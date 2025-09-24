@@ -21,6 +21,8 @@ public struct TicketDetailFeature {
         case purchaseResponse(Result<TicketDetail, APIError>)
     }
     
+    @Dependency(\.ticketsClient) var ticketsClient
+    
     public init() {}
     
     public var body: some ReducerOf<Self> {
@@ -34,11 +36,11 @@ public struct TicketDetailFeature {
                 state.errorMessage = nil
                 return .run { send in
                     do {
-                        try await Task.sleep(for: .seconds(1))
-                        let ticketDetail = SharedMockData.sampleTicketDetail(for: ticketId)
+                        let ticketDetail = try await ticketsClient.fetchTicketDetail(ticketId)
                         await send(.ticketDetailResponse(.success(ticketDetail)))
                     } catch {
-                        await send(.ticketDetailResponse(.failure(APIError(message: error.localizedDescription, code: 500))))
+                        let apiError = error as? APIError ?? APIError(message: error.localizedDescription, code: 500)
+                        await send(.ticketDetailResponse(.failure(apiError)))
                     }
                 }
                 
@@ -57,7 +59,7 @@ public struct TicketDetailFeature {
                 return .run { send in
                     do {
                         try await Task.sleep(for: .seconds(2))
-                        var ticketDetail = SharedMockData.sampleTicketDetail(for: ticketId)
+                        var ticketDetail = try await ticketsClient.fetchTicketDetail(ticketId)
                         ticketDetail.status = .sold
                         await send(.purchaseResponse(.success(ticketDetail)))
                     } catch {

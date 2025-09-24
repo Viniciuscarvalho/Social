@@ -23,18 +23,28 @@ func loadEventsFromJSON() async throws -> [Event] {
 }
 
 func loadTicketsFromJSON() async throws -> [Ticket] {
+    print("📁 Tentando carregar tickets.json...")
     guard let url = Bundle.main.url(forResource: "tickets", withExtension: "json") else {
+        print("❌ tickets.json não encontrado no bundle")
         throw APIError(message: "tickets.json not found", code: 404)
     }
     
+    print("✅ Arquivo encontrado: \(url.path)")
     let data = try Data(contentsOf: url)
+    print("📊 Tamanho dos dados: \(data.count) bytes")
+    
     let decoder = JSONDecoder()
     decoder.dateDecodingStrategy = .iso8601
     
     do {
         let tickets = try decoder.decode([Ticket].self, from: data)
+        print("✅ Tickets decodificados com sucesso: \(tickets.count) tickets")
         return tickets
     } catch {
+        print("❌ Erro ao decodificar tickets: \(error.localizedDescription)")
+        if let decodingError = error as? DecodingError {
+            print("🔍 Detalhes do erro de decodificação: \(decodingError)")
+        }
         throw APIError(message: "Failed to decode tickets: \(error.localizedDescription)", code: 500)
     }
 }

@@ -12,7 +12,7 @@ public struct SocialAppView: View {
         NavigationStack {
             tabView
                 .navigationDestination(item: $store.selectedEventId.sending(\.dismissEventNavigation)) { eventId in
-                    EventDetailDestinationView(eventId: eventId)
+                    EventDetailView(eventId: eventId)
                 }
                 .navigationDestination(item: $store.selectedTicketId.sending(\.dismissTicketNavigation)) { ticketId in
                     TicketDetailView(
