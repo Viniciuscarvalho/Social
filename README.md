@@ -23,9 +23,7 @@ O projeto utiliza uma arquitetura modular baseada no **Tuist** com as seguintes 
 ### Stack Tecnológica
 
 - **SwiftUI**: Interface do usuário
-- **The Composable Architecture (TCA) v1.22.3**: Gerenciamento de estado
-- **Swift Navigation v1.0+**: Navegação entre telas
-- **Swift Dependencies v1.0+**: Injeção de dependências
+- **The Composable Architecture (TCA) v1.0+**: Gerenciamento de estado
 - **Tuist**: Gerenciamento de projeto modular
 - **iOS 16+**: Plataforma mínima suportada
 
@@ -64,9 +62,6 @@ brew install tuist/tuist/tuist
 # Navegue até a pasta do projeto
 cd SocialApp
 
-# Instale as dependências do Tuist
-tuist install
-
 # Gere o workspace Xcode
 tuist generate
 ```
@@ -85,10 +80,6 @@ open SocialApp.xcworkspace
 ```
 SocialApp/
 ├── Project.swift                 # Configuração principal do Tuist
-├── Tuist/
-│   ├── Dependencies.swift       # Configuração de dependências externas
-│   ├── Package.swift            # Dependências Swift Package Manager
-│   └── Package.resolved         # Versões fixas das dependências
 ├── SharedModels/                # Módulo de modelos compartilhados
 │   ├── Project.swift
 │   └── Sources/
@@ -97,9 +88,8 @@ SocialApp/
 │       ├── Effect.swift         # Efeitos compartilhados
 │       └── EffectRunner.swift   # Executor de efeitos
 ├── Projects/
-│   └── Features/                # Features modulares
+│   └── Features/                # Features modulares (sem Project.swift separados)
 │       ├── Events/              # Módulo de eventos
-│       │   ├── Project.swift
 │       │   └── Sources/
 │       │       ├── EventsFeature.swift
 │       │       ├── EventsView.swift
@@ -108,17 +98,14 @@ SocialApp/
 │       │           ├── EventCard.swift
 │       │           └── RecomendedEventCard.swift
 │       ├── TicketsList/         # Módulo de lista de tickets
-│       │   ├── Project.swift
 │       │   └── Sources/
 │       │       ├── TicketsListFeature.swift
 │       │       ├── TicketsListView.swift
 │       │       └── TicketCard.swift
 │       ├── TicketDetail/        # Módulo de detalhes do ticket
-│       │   ├── Project.swift
 │       │   └── Sources/
 │       │       └── TicketDetailFeature.swift
 │       └── SellerProfile/       # Módulo de perfil do vendedor
-│           ├── Project.swift
 │           └── Sources/
 │               └── SellerProfileFeature.swift
 └── SocialApp/                   # App principal
@@ -153,6 +140,7 @@ tuist generate
 
 # Limpar cache e regenerar
 tuist clean
+tuist install
 tuist generate
 
 # Executar testes
@@ -164,9 +152,9 @@ tuist graph
 
 ### Adicionando uma Nova Feature
 
-1. Crie uma nova pasta em `Projects/Features/[NomeDaFeature]/`
-2. Adicione um `Project.swift` para a feature
-3. Atualize o `Project.swift` principal com a nova dependência
+1. Crie uma nova pasta em `Projects/Features/[NomeDaFeature]/Sources/`
+2. Adicione os arquivos Swift da feature
+3. Atualize o `Project.swift` principal incluindo o novo caminho em `sources`
 4. Execute `tuist generate`
 
 ## 🧪 Testes
@@ -175,8 +163,8 @@ tuist graph
 # Executar todos os testes
 tuist test
 
-# Executar testes de uma feature específica
-tuist test --path Projects/Features/Events
+# Executar testes específicos
+tuist test --path SocialApp/Tests
 ```
 
 ## 📱 Executando o App
@@ -194,9 +182,7 @@ O projeto não requer variáveis de ambiente especiais. Todos os dados são mock
 
 ### Dependências Externas
 
-- **Swift Composable Architecture v1.22.3**: Framework para gerenciamento de estado
-- **Swift Navigation v1.0+**: Framework para navegação entre telas
-- **Swift Dependencies v1.0+**: Framework para injeção de dependências
+- **Swift Composable Architecture v1.0+**: Framework para gerenciamento de estado
 - **SwiftUI**: Framework nativo para UI
 
 ## 📊 Features Implementadas
@@ -246,7 +232,6 @@ O projeto não requer variáveis de ambiente especiais. Todos os dados são mock
 - [ ] Integração com API real
 - [ ] Sistema de pagamentos
 - [ ] Notificações push
-- [ ] Chat com vendedores
 - [ ] Sistema de avaliações
 
 ## 🤝 Contribuindo
