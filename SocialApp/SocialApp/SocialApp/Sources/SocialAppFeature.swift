@@ -1,6 +1,5 @@
 import ComposableArchitecture
 import SwiftUI
-import SharedModels
 
 @Reducer
 public struct SocialAppFeature {

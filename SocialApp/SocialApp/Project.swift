@@ -2,17 +2,16 @@ import ProjectDescription
 
 let project = Project(
     name: "SocialApp",
+    packages: [
+        .remote(
+            url: "https://github.com/pointfreeco/swift-composable-architecture",
+            requirement: .upToNextMajor(from: "1.0.0")
+        )
+    ],
     settings: .settings(
         configurations: [
-            .debug(
-                name: "Debug",
-                settings: [
-                    "ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES": "YES",
-                    // Configuração crítica para evitar símbolos duplicados
-                    "LD_RUNPATH_SEARCH_PATHS": "$(inherited) @executable_path/Frameworks",
-                    "FRAMEWORK_SEARCH_PATHS": "$(inherited) $(PLATFORM_DIR)/Developer/Library/Frameworks"
-                ]
-            )
+            .debug(name: "Debug"),
+            .release(name: "Release")
         ]
     ),
     targets: [
@@ -22,18 +21,24 @@ let project = Project(
             product: .app,
             bundleId: "dev.tuist.SocialApp",
             infoPlist: .default,
-            buildableFolders: [
-                "SocialApp/Sources",
-                "SocialApp/Resources",
+            sources: [
+                "./SocialApp/Sources/**",
+                "./SharedModels/Sources/**",
+                "./Projects/Features/Events/Sources/**",
+                "./Projects/Features/TicketsList/Sources/**", 
+                "./Projects/Features/SellerProfile/Sources/**",
+                "./Projects/Features/TicketDetail/Sources/**"
             ],
+            resources: ["SocialApp/Resources/**"],
             dependencies: [
-                .project(target: "SharedModels", path: "SharedModels"),
-                .project(target: "Events", path: "Projects/Features/Events"),
-                .project(target: "TicketsList", path: "Projects/Features/TicketsList"),
-                .project(target: "SellerProfile", path: "Projects/Features/SellerProfile"),
-                .project(target: "TicketDetail", path: "Projects/Features/TicketDetail"),
-                .external(name: "ComposableArchitecture")
-            ]
+                .package(product: "ComposableArchitecture")
+            ],
+            settings: .settings(
+                configurations: [
+                    .debug(name: "Debug"),
+                    .release(name: "Release")
+                ]
+            )
         ),
 
         .target(
@@ -46,6 +51,7 @@ let project = Project(
                 "SocialApp/Tests"
             ],
             dependencies: [.target(name: "SocialApp")]
-        ),
+        )
     ]
+    
 )

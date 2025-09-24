@@ -1,6 +1,5 @@
 import ComposableArchitecture
 import SwiftUI
-import SharedModels
 
 public struct SellerProfileView: View {
     @Bindable var store: StoreOf<SellerProfileFeature>

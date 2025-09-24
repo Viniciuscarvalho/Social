@@ -1,5 +1,4 @@
 import SwiftUI
-import SharedModels
 
 struct TicketCard: View {
     let ticket: Ticket

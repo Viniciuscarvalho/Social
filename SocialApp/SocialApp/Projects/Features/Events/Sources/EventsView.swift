@@ -1,6 +1,5 @@
 import SwiftUI
 import ComposableArchitecture
-import SharedModels
 
 public struct EventsView: View {
     @Bindable var store: StoreOf<EventsFeature>

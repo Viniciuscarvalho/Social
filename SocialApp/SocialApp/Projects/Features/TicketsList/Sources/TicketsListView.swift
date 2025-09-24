@@ -1,6 +1,5 @@
 import SwiftUI
 import ComposableArchitecture
-import SharedModels
 
 public struct TicketsListView: View {
     @Bindable var store: StoreOf<TicketsListFeature>

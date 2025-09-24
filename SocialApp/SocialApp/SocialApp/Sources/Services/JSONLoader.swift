@@ -1,5 +1,4 @@
 import Foundation
-import SharedModels
 
 enum JSONLoaderError: Error {
     case fileNotFound(String)

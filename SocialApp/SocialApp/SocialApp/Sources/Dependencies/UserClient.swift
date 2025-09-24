@@ -1,6 +1,5 @@
 import ComposableArchitecture
 import Foundation
-import SharedModels
 
 enum UserClientError: Error {
     case missingSampleUser

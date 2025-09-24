@@ -1,6 +1,5 @@
 import ComposableArchitecture
 import Foundation
-import SharedModels
 
 @Reducer
 public struct EventsFeature {
@@ -52,9 +51,12 @@ public struct EventsFeature {
                 state.isLoading = true
                 state.errorMessage = nil
                 return .run { send in
-                    await send(.eventsResponse(
-                        Result { try await eventsClient.fetchEvents() }
-                    ))
+                    do {
+                        let events = try await eventsClient.fetchEvents()
+                        await send(.eventsResponse(.success(events)))
+                    } catch {
+                        await send(.eventsResponse(.failure(APIError(message: error.localizedDescription, code: 500))))
+                    }
                 }
                 
             case let .eventsResponse(.success(events)):
@@ -73,9 +75,12 @@ public struct EventsFeature {
                 state.searchText = text
                 if !text.isEmpty {
                     return .run { send in
-                        await send(.eventsResponse(
-                            Result { try await eventsClient.searchEvents(text) }
-                        ))
+                        do {
+                            let events = try await eventsClient.searchEvents(text)
+                            await send(.eventsResponse(.success(events)))
+                        } catch {
+                            await send(.eventsResponse(.failure(APIError(message: error.localizedDescription, code: 500))))
+                        }
                     }
                 } else {
                     return .send(.loadEvents)
@@ -85,9 +90,13 @@ public struct EventsFeature {
                 state.selectedFilter.category = category
                 if let category = category {
                     return .run { send in
-                        await send(.eventsResponse(
-                            Result { try await eventsClient.fetchEventsByCategory(category) }
-                        ))
+                        do {
+                            let events = try await eventsClient.fetchEventsByCategory(category)
+                            await send(.eventsResponse(.success(events)))
+                        } catch {
+                            let apiError = error as? APIError ?? APIError(message: error.localizedDescription, code: 500)
+                            await send(.eventsResponse(.failure(apiError)))
+                        }
                     }
                 } else {
                     return .send(.loadEvents)

@@ -1,10 +1,5 @@
 import ComposableArchitecture
-import Events
-import SharedModels
 import SwiftUI
-import TicketsList
-import SellerProfile
-import TicketDetail
 
 public struct SocialAppView: View {
     @Bindable var store: StoreOf<SocialAppFeature>

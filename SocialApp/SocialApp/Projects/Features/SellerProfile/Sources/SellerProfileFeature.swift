@@ -1,6 +1,5 @@
 import ComposableArchitecture
 import Foundation
-import SharedModels
 
 @Reducer
 public struct SellerProfileFeature {

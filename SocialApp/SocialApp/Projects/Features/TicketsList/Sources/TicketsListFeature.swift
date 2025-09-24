@@ -1,6 +1,5 @@
 import ComposableArchitecture
 import Foundation
-import SharedModels
 
 @Reducer
 public struct TicketsListFeature {
@@ -43,9 +42,12 @@ public struct TicketsListFeature {
                 state.isLoading = true
                 state.errorMessage = nil
                 return .run { send in
-                    await send(.ticketsResponse(
-                        Result { try await ticketsClient.fetchTickets() }
-                    ))
+                    do {
+                        let tickets = try await ticketsClient.fetchTickets()
+                        await send(.ticketsResponse(.success(tickets)))
+                    } catch {
+                        await send(.ticketsResponse(.failure(APIError(message: error.localizedDescription, code: 500))))
+                    }
                 }
                 
             case let .ticketsResponse(.success(tickets)):
