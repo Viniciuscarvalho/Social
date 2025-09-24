@@ -30,7 +30,6 @@ public struct TicketsListView: View {
                 }
             }
             .onAppear {
-                print("🎫 TicketsListView apareceu - Estado atual: loading=\(store.isLoading), tickets=\(store.tickets.count), displayTickets=\(store.displayTickets.count)")
                 store.send(.onAppear)
             }
             .refreshable {

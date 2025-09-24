@@ -43,9 +43,7 @@ public struct TicketsListFeature {
                 state.errorMessage = nil
                 return .run { send in
                     do {
-                        print("🔄 Carregando tickets...")
                         let tickets = try await ticketsClient.fetchTickets()
-                        print("✅ Tickets carregados: \(tickets.count) tickets")
                         await send(.ticketsResponse(.success(tickets)))
                     } catch {
                         print("❌ Erro ao carregar tickets: \(error.localizedDescription)")
@@ -54,11 +52,9 @@ public struct TicketsListFeature {
                 }
                 
             case let .ticketsResponse(.success(tickets)):
-                print("📊 Processando resposta: \(tickets.count) tickets recebidos")
                 state.isLoading = false
                 state.tickets = tickets
                 state.filteredTickets = filterTickets(tickets, with: state.selectedFilter)
-                print("🎯 Tickets finais para exibição: \(state.displayTickets.count)")
                 return .none
                 
             case let .ticketsResponse(.failure(error)):
