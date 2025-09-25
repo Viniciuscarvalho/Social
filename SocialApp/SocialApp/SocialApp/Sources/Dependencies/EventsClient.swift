@@ -12,16 +12,12 @@ public struct EventsClient {
 extension EventsClient: DependencyKey {
     public static let liveValue = EventsClient(
         fetchEvents: {
-            print("🚀 EventsClient.fetchEvents chamado")
             try await Task.sleep(for: .seconds(1))
             
             do {
                 let events = try await loadEventsFromJSON()
-                print("🎯 EventsClient retornando \(events.count) events do JSON")
                 return events
             } catch {
-                print("⚠️ Erro ao carregar JSON, usando dados mockados: \(error)")
-                print("🎯 EventsClient retornando \(SharedMockData.sampleEvents.count) events mockados")
                 return SharedMockData.sampleEvents
             }
         },
@@ -32,7 +28,6 @@ extension EventsClient: DependencyKey {
                     event.name.localizedCaseInsensitiveContains(query)
                 }
             } catch {
-                print("⚠️ Erro ao carregar JSON para busca, usando dados mockados")
                 return SharedMockData.sampleEvents.filter { event in
                     event.name.localizedCaseInsensitiveContains(query)
                 }
@@ -43,7 +38,6 @@ extension EventsClient: DependencyKey {
                 let allEvents = try await loadEventsFromJSON()
                 return allEvents.filter { $0.category == category }
             } catch {
-                print("⚠️ Erro ao carregar JSON para categoria, usando dados mockados")
                 return SharedMockData.sampleEvents.filter { $0.category == category }
             }
         },
@@ -55,7 +49,6 @@ extension EventsClient: DependencyKey {
                 }
                 return event
             } catch {
-                print("⚠️ Erro ao carregar JSON para detalhe, usando dados mockados")
                 guard let event = SharedMockData.sampleEvents.first(where: { $0.id == eventId }) else {
                     throw APIError(message: "Event not found", code: 404)
                 }
