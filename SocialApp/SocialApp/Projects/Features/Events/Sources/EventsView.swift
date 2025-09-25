@@ -9,49 +9,47 @@ public struct EventsView: View {
     }
     
     public var body: some View {
-        NavigationStack {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 24) {
-                    
-                    // MARK: - Header (Search + Profile)
-                    headerSection
-                    
-                    // MARK: - Today Section
-                    if let todayEvent = store.todayEvent {
-                        SectionHeader(title: "Today")
-                        EventCardLarge(event: todayEvent) {
-                            store.send(.eventSelected(todayEvent.id))
-                        } onJoin: {
-                            store.send(.eventSelected(todayEvent.id))
-                        }
-                    }
-                    
-                    // MARK: - Upcoming Section
-                    if !store.upcomingEvents.isEmpty {
-                        SectionHeader(title: "Upcoming")
-                        
-                        ScrollView(.horizontal, showsIndicators: false) {
-                            HStack(spacing: 16) {
-                                ForEach(store.upcomingEvents) { event in
-                                    EventCardSmall(event: event) {
-                                        store.send(.eventSelected(event.id))
-                                    }
-                                }
-                            }
-                            .padding(.horizontal, 4)
-                        }
+        ScrollView {
+            VStack(alignment: .leading, spacing: 24) {
+                
+                // MARK: - Header (Search + Profile)
+                headerSection
+                
+                // MARK: - Today Section
+                if let todayEvent = store.todayEvent {
+                    SectionHeader(title: "Today")
+                    EventCardLarge(event: todayEvent) {
+                        store.send(.eventSelected(todayEvent.id))
+                    } onJoin: {
+                        store.send(.eventSelected(todayEvent.id))
                     }
                 }
-                .padding()
+                
+                // MARK: - Upcoming Section
+                if !store.upcomingEvents.isEmpty {
+                    SectionHeader(title: "Upcoming")
+                    
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 16) {
+                            ForEach(store.upcomingEvents) { event in
+                                EventCardSmall(event: event) {
+                                    store.send(.eventSelected(event.id))
+                                }
+                            }
+                        }
+                        .padding(.horizontal, 4)
+                    }
+                }
             }
-            .navigationTitle("Events")
-            .navigationBarTitleDisplayMode(.inline)
-            .refreshable {
-                store.send(.refreshRequested)
-            }
-            .onAppear {
-                store.send(.onAppear)
-            }
+            .padding()
+        }
+        .navigationTitle("Events")
+        .navigationBarTitleDisplayMode(.large)
+        .refreshable {
+            store.send(.refreshRequested)
+        }
+        .onAppear {
+            store.send(.onAppear)
         }
     }
     

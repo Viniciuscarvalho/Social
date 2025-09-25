@@ -35,6 +35,7 @@ public struct SocialAppView: View {
                     }
                 }
         }
+        .ignoresSafeArea(.keyboard, edges: .bottom) // Para melhor comportamento do teclado
     }
     
     @ViewBuilder

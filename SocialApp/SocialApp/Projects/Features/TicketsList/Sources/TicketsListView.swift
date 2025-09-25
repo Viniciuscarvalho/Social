@@ -9,32 +9,31 @@ public struct TicketsListView: View {
     }
     
     public var body: some View {
-        NavigationView {
-            VStack {
-                if store.isLoading {
-                    loadingView
-                } else if store.tickets.isEmpty {
-                    emptyStateView
-                } else {
-                    ticketsContentView
+        VStack {
+            if store.isLoading {
+                loadingView
+            } else if store.tickets.isEmpty {
+                emptyStateView
+            } else {
+                ticketsContentView
+            }
+        }
+        .navigationTitle("Ingressos")
+        .navigationBarTitleDisplayMode(.large)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Menu {
+                    filterMenu
+                } label: {
+                    Image(systemName: "line.3.horizontal.decrease.circle")
                 }
             }
-            .navigationTitle("Ingressos")
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Menu {
-                        filterMenu
-                    } label: {
-                        Image(systemName: "line.3.horizontal.decrease.circle")
-                    }
-                }
-            }
-            .onAppear {
-                store.send(.onAppear)
-            }
-            .refreshable {
-                store.send(.refreshRequested)
-            }
+        }
+        .onAppear {
+            store.send(.onAppear)
+        }
+        .refreshable {
+            store.send(.refreshRequested)
         }
     }
     
