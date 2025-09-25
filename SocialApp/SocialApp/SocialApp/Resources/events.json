@@ -1,27 +1,23 @@
 [
   {
-    "id": "550e8400-e29b-41d4-a716-446655440000",
-    "name": "Cliff Front Pandawa Beach",
-    "description": "Grand Canyon National Park, located in Arizona, is one of the most breathtaking natural wonders on the planet. Carved by the Colorado River over millions of years, the Grand Canyon is a breathtaking natural wonder.",
-    "imageURL": "https://example.com/pandawa-beach.jpg",
-    "startPrice": 240.0,
-    "location": {
-      "name": "Grand Canyon National Park",
-      "address": "Arizona, United States",
-      "city": "Arizona",
-      "state": "United States", 
-      "country": "USA",
-      "coordinate": {
-        "latitude": 36.1069,
-        "longitude": -112.1129
-      }
-    },
-    "category": "nature",
+    "id": "123e4567-e89b-12d3-a456-426614174000",
+    "name": "Evento de Hoje",
+    "description": "Um evento que acontece hoje",
+    "startPrice": 50.0,
+    "category": "music",
     "isRecommended": true,
-    "rating": 4.9,
-    "reviewCount": 485,
-    "createdAt": "2024-01-15T10:30:00Z",
-    "eventDate": "2024-03-20T14:00:00Z"
+    "eventDate": "2024-12-19T14:00:00Z", // Data de hoje no formato ISO8601
+    "createdAt": "2024-12-18T10:00:00Z",
+    "location": {
+      "name": "Local do Evento",
+      "city": "São Paulo",
+      "state": "SP", 
+      "country": "Brasil",
+      "coordinate": {
+        "latitude": -23.5505,
+        "longitude": -46.6333
+      }
+    }
   },
   {
     "id": "550e8400-e29b-41d4-a716-446655440001",

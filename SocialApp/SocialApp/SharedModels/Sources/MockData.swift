@@ -23,7 +23,8 @@ public enum SharedMockData {
                 coordinate: Coordinate(latitude: 36.1069, longitude: -112.1129)
             ),
             category: .nature,
-            isRecommended: true
+            isRecommended: true,
+            eventDate: Date() // Evento de HOJE
         ),
         Event(
             name: "Festival de Música Eletrônica",
@@ -38,7 +39,24 @@ public enum SharedMockData {
                 coordinate: Coordinate(latitude: -23.5278, longitude: -46.6682)
             ),
             category: .music,
-            isRecommended: false
+            isRecommended: false,
+            eventDate: Calendar.current.date(byAdding: .day, value: 2, to: Date()) // Evento em 2 dias
+        ),
+        Event(
+            name: "Workshop de SwiftUI",
+            description: "Aprenda SwiftUI do zero ao avançado",
+            imageURL: "https://example.com/swiftui-workshop.jpg",
+            startPrice: 150.0,
+            location: Location(
+                name: "Centro de Convenções",
+                city: "São Paulo",
+                state: "SP",
+                country: "Brasil",
+                coordinate: Coordinate(latitude: -23.5505, longitude: -46.6333)
+            ),
+            category: .technology,
+            isRecommended: true,
+            eventDate: Calendar.current.date(byAdding: .hour, value: 2, to: Date()) // Evento HOJE em 2 horas
         )
     ]
     

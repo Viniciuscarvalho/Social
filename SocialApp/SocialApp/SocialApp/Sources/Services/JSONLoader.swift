@@ -6,18 +6,28 @@ enum JSONLoaderError: Error {
 }
 
 func loadEventsFromJSON() async throws -> [Event] {
+    print("📁 Tentando carregar events.json...")
     guard let url = Bundle.main.url(forResource: "events", withExtension: "json") else {
+        print("❌ events.json não encontrado no bundle")
         throw JSONLoaderError.fileNotFound("events.json not found")
     }
     
+    print("✅ Arquivo encontrado: \(url.path)")
     let data = try Data(contentsOf: url)
+    print("📊 Tamanho dos dados: \(data.count) bytes")
+    
     let decoder = JSONDecoder()
     decoder.dateDecodingStrategy = .iso8601
     
     do {
         let events = try decoder.decode([Event].self, from: data)
+        print("✅ Events decodificados com sucesso: \(events.count) events")
         return events
     } catch {
+        print("❌ Erro ao decodificar events: \(error.localizedDescription)")
+        if let decodingError = error as? DecodingError {
+            print("🔍 Detalhes do erro de decodificação: \(decodingError)")
+        }
         throw JSONLoaderError.decodingFailed("Failed to decode events: \(error.localizedDescription)")
     }
 }

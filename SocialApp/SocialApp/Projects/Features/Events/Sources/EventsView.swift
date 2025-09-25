@@ -1,5 +1,5 @@
-import SwiftUI
 import ComposableArchitecture
+import SwiftUI
 
 public struct EventsView: View {
     @Bindable var store: StoreOf<EventsFeature>
@@ -11,16 +11,41 @@ public struct EventsView: View {
     public var body: some View {
         NavigationStack {
             ScrollView {
-                LazyVStack(spacing: 16) {
+                VStack(alignment: .leading, spacing: 24) {
+                    
+                    // MARK: - Header (Search + Profile)
                     headerSection
-                    searchSection
-                    popularCategoriesSection
-                    recommendedSection
-                    eventsListSection
+                    
+                    // MARK: - Today Section
+                    if let todayEvent = store.todayEvent {
+                        SectionHeader(title: "Today")
+                        EventCardLarge(event: todayEvent) {
+                            store.send(.eventSelected(todayEvent.id))
+                        } onJoin: {
+                            store.send(.eventSelected(todayEvent.id))
+                        }
+                    }
+                    
+                    // MARK: - Upcoming Section
+                    if !store.upcomingEvents.isEmpty {
+                        SectionHeader(title: "Upcoming")
+                        
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 16) {
+                                ForEach(store.upcomingEvents) { event in
+                                    EventCardSmall(event: event) {
+                                        store.send(.eventSelected(event.id))
+                                    }
+                                }
+                            }
+                            .padding(.horizontal, 4)
+                        }
+                    }
                 }
-                .padding(.horizontal, 16)
+                .padding()
             }
-            .navigationBarHidden(true)
+            .navigationTitle("Events")
+            .navigationBarTitleDisplayMode(.inline)
             .refreshable {
                 store.send(.refreshRequested)
             }
@@ -31,99 +56,28 @@ public struct EventsView: View {
     }
     
     private var headerSection: some View {
-        HStack {
+        HStack(spacing: 16) {
+            Button(action: {
+                store.send(.searchTapped)
+            }) {
+                Image(systemName: "magnifyingglass")
+                    .foregroundColor(.gray)
+                    .padding(8)
+                    .background(Color.gray.opacity(0.1))
+                    .clipShape(Circle())
+            }
+            
+            Spacer()
+            
             AsyncImage(url: URL(string: store.user?.profileImageURL ?? "")) { image in
                 image
                     .resizable()
                     .aspectRatio(contentMode: .fill)
             } placeholder: {
-                Circle()
-                    .fill(Color.gray.opacity(0.3))
+                Circle().fill(Color.gray.opacity(0.3))
             }
-            .frame(width: 40, height: 40)
+            .frame(width: 36, height: 36)
             .clipShape(Circle())
-            
-            Text(store.user?.name ?? "Nome Usuário")
-                .font(.headline)
-            
-            Spacer()
-        }
-        .padding(.top, 8)
-    }
-    
-    private var searchSection: some View {
-        HStack {
-            Image(systemName: "magnifyingglass")
-                .foregroundColor(.gray)
-            
-            TextField("Campo de busca", text: $store.searchText.sending(\.searchTextChanged))
-                .textFieldStyle(PlainTextFieldStyle())
-        }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 10)
-        .background(Color.gray.opacity(0.1))
-        .cornerRadius(8)
-    }
-    
-    private var popularCategoriesSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                Text("Popular")
-                    .font(.headline)
-                
-                Spacer()
-                
-                Button("show all") {
-                    store.send(.showAllCategoriesPressed)
-                }
-                .font(.caption)
-                .foregroundColor(.blue)
-            }
-            
-            LazyHGrid(rows: Array(repeating: GridItem(.flexible(), spacing: 8), count: 2), spacing: 8) {
-                ForEach(store.popularCategories, id: \.self) { category in
-                    CategoryButton(
-                        category: category,
-                        isSelected: store.selectedFilter.category == category
-                    ) {
-                        store.send(.categorySelected(category))
-                    }
-                }
-            }
-        }
-    }
-    
-    private var recommendedSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Recommended")
-                .font(.headline)
-            
-            if !store.recommendedEvents.isEmpty {
-                ScrollView(.horizontal, showsIndicators: false) {
-                    LazyHStack(spacing: 12) {
-                        ForEach(store.recommendedEvents) { event in
-                            RecommendedEventCard(event: event) {
-                                store.send(.eventSelected(event.id))
-                            } onFavorite: {
-                                store.send(.favoriteToggled(event.id))
-                            }
-                        }
-                    }
-                    .padding(.horizontal, 16)
-                }
-            }
-        }
-    }
-    
-    private var eventsListSection: some View {
-        LazyVStack(spacing: 12) {
-            ForEach(store.displayEvents) { event in
-                EventCard(event: event) {
-                    store.send(.eventSelected(event.id))
-                } onFavorite: {
-                    store.send(.favoriteToggled(event.id))
-                }
-            }
         }
     }
 }

@@ -46,6 +46,7 @@ public struct Coordinate: Codable, Equatable {
 }
 
 // MARK: - Event Domain Models
+
 public struct Event: Codable, Identifiable, Equatable {
     public let id: UUID
     public var name: String
@@ -75,6 +76,34 @@ public struct Event: Codable, Identifiable, Equatable {
         self.reviewCount = nil
         self.createdAt = Date()
         self.eventDate = eventDate
+    }
+}
+
+extension Event {
+    var dateFormatted: String {
+        guard let eventDate = eventDate else {
+            return "TBD"
+        }
+        
+        let formatter = DateFormatter()
+        formatter.dateFormat = "dd MMM"
+        formatter.locale = Locale(identifier: "pt_BR")
+        return formatter.string(from: eventDate).uppercased()
+    }
+    
+    var timeRange: String {
+        guard let eventDate = eventDate else {
+            return "Horário a definir"
+        }
+        
+        let formatter = DateFormatter()
+        formatter.dateFormat = "HH:mm"
+        let startTime = formatter.string(from: eventDate)
+        
+        let endDate = Calendar.current.date(byAdding: .hour, value: 3, to: eventDate) ?? eventDate
+        let endTime = formatter.string(from: endDate)
+        
+        return "\(startTime) - \(endTime)"
     }
 }
 
@@ -116,6 +145,7 @@ public enum EventCategory: String, CaseIterable, Codable, Equatable {
 }
 
 // MARK: - Filter Models (usados por Events)
+
 public struct SearchFilter: Codable, Equatable {
     public var category: EventCategory?
     public var priceRange: PriceRange?
@@ -153,6 +183,7 @@ public struct DateRange: Codable, Equatable {
 }
 
 // MARK: - Ticket Domain Models
+
 public struct Ticket: Codable, Identifiable, Equatable {
     public let id: UUID
     public var eventId: UUID
@@ -236,6 +267,7 @@ public enum TicketStatus: String, CaseIterable, Codable, Equatable {
 }
 
 // MARK: - TicketDetail Domain Models
+
 public struct TicketDetail: Codable, Identifiable, Equatable {
     public let id: UUID
     public var ticketId: UUID
@@ -268,6 +300,7 @@ public struct TicketDetail: Codable, Identifiable, Equatable {
 }
 
 // MARK: - TicketsList Filter Models
+
 public struct TicketsListFilter: Codable, Equatable {
     public var category: EventCategory?
     public var priceRange: PriceRange?
@@ -305,6 +338,7 @@ public enum TicketSortOption: String, CaseIterable, Codable, Equatable {
 }
 
 // MARK: - SellerProfile Domain Models
+
 public struct SellerProfile: Codable, Identifiable, Equatable {
     public let id: UUID
     public var name: String
@@ -330,6 +364,7 @@ public struct SellerProfile: Codable, Identifiable, Equatable {
 }
 
 // MARK: - Navigation Models
+
 public enum AppTab: String, CaseIterable, Equatable {
     case events = "events"
     case tickets = "tickets"
@@ -356,6 +391,7 @@ public enum AppTab: String, CaseIterable, Equatable {
 }
 
 // MARK: - API Models
+
 public struct APIError: Error, Codable, Equatable {
     public let message: String
     public let code: Int
