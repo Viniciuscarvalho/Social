@@ -75,8 +75,7 @@ public struct TicketsListView: View {
                 ForEach(store.displayTickets) { ticket in
                     TicketCard(
                         ticket: ticket,
-                        onTap: { store.send(.ticketSelected(ticket.id)) },
-                        onFavorite: { store.send(.favoriteToggled(ticket.id)) }
+                        onTap: { store.send(.ticketSelected(ticket.id)) }
                     )
                 }
             }
@@ -127,15 +126,6 @@ public struct TicketsListView: View {
                     }
                 }
             }
-            
-            Toggle("Apenas Favoritos", isOn: Binding(
-                get: { store.selectedFilter.showFavoritesOnly },
-                set: { newValue in
-                    var filter = store.selectedFilter
-                    filter.showFavoritesOnly = newValue
-                    store.send(.filterChanged(filter))
-                }
-            ))
         }
     }
 }

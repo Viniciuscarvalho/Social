@@ -3,7 +3,6 @@ import SwiftUI
 struct TicketCard: View {
     let ticket: Ticket
     let onTap: () -> Void
-    let onFavorite: () -> Void
 
     var body: some View {
         Button(action: onTap) {
@@ -23,12 +22,6 @@ struct TicketCard: View {
                             .lineLimit(1)
 
                         Spacer()
-
-                        Button(action: onFavorite) {
-                            Image(systemName: ticket.isFavorited ? "heart.fill" : "heart")
-                                .foregroundColor(ticket.isFavorited ? .red : .secondary)
-                        }
-                        .buttonStyle(.plain)
                     }
 
                     HStack(spacing: 8) {
