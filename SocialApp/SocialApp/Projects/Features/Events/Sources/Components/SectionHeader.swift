@@ -1,10 +1,15 @@
 import SwiftUI
 
-struct SectionHeader: View {
+public struct SectionHeader: View {
     let title: String
-    var body: some View {
-        Text(title)
-            .font(.title3.bold())
-            .foregroundColor(.primary)
+    
+    public var body: some View {
+        HStack {
+            Text(title)
+                .font(.title2)
+                .fontWeight(.bold)
+            
+            Spacer()
+        }
     }
 }

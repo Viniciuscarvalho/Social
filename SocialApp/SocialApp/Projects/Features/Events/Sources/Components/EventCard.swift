@@ -1,10 +1,10 @@
 import SwiftUI
 import CoreLocation
+import ComposableArchitecture
 
 struct EventCard: View {
     let event: Event
     let onTap: () -> Void
-    let onFavorite: () -> Void
     
     var body: some View {
         Button(action: onTap) {
@@ -46,10 +46,11 @@ struct EventCard: View {
                 
                 Spacer()
                 
-                Button(action: onFavorite) {
-                    Image(systemName: "heart")
-                        .foregroundColor(.gray)
-                }
+                EventFavoriteView(
+                    store: Store(initialState: EventFavoriteFeature.State(event: event)) {
+                        EventFavoriteFeature()
+                    }
+                )
             }
             .padding()
             .background(Color.white)

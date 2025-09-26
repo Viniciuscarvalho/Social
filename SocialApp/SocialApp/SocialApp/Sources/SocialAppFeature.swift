@@ -8,6 +8,7 @@ public struct SocialAppFeature {
         public var selectedTab: AppTab = .events
         public var eventsFeature = EventsFeature.State()
         public var ticketsListFeature = TicketsListFeature.State()
+        public var favoritesFeature = FavoritesFeature.State()
         public var sellerProfileFeature = SellerProfileFeature.State()
         public var ticketDetailFeature = TicketDetailFeature.State()
         public var navigationPath = NavigationPath()
@@ -23,6 +24,7 @@ public struct SocialAppFeature {
         case tabSelected(AppTab)
         case eventsFeature(EventsFeature.Action)
         case ticketsListFeature(TicketsListFeature.Action)
+        case favoritesFeature(FavoritesFeature.Action)
         case sellerProfileFeature(SellerProfileFeature.Action)
         case ticketDetailFeature(TicketDetailFeature.Action)
 
@@ -45,6 +47,10 @@ public struct SocialAppFeature {
         
         Scope(state: \.ticketsListFeature, action: \.ticketsListFeature) {
             TicketsListFeature()
+        }
+        
+        Scope(state: \.favoritesFeature, action: \.favoritesFeature) {
+            FavoritesFeature()
         }
         
         Scope(state: \.sellerProfileFeature, action: \.sellerProfileFeature) {
@@ -92,11 +98,17 @@ public struct SocialAppFeature {
             case let .ticketsListFeature(.ticketSelected(ticketId)):
                 return .send(.navigateToTicketDetail(ticketId))
                 
+            case let .favoritesFeature(.eventSelected(eventId)):
+                return .send(.navigateToEventDetail(eventId))
+                
             // Outras actions das features são tratadas pelos seus próprios reducers
             case .eventsFeature:
                 return .none
                 
             case .ticketsListFeature:
+                return .none
+                
+            case .favoritesFeature:
                 return .none
                 
             case .sellerProfileFeature:

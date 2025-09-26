@@ -9,33 +9,31 @@ public struct SocialAppView: View {
     }
     
     public var body: some View {
-        NavigationStack {
-            tabView
-                .navigationDestination(item: $store.selectedEventId.sending(\.dismissEventNavigation)) { eventId in
-                    EventDetailView(eventId: eventId)
-                }
-                .navigationDestination(item: $store.selectedTicketId.sending(\.dismissTicketNavigation)) { ticketId in
-                    TicketDetailView(
-                        store: store.scope(
-                            state: \.ticketDetailFeature,
-                            action: \.ticketDetailFeature
-                        ),
-                        ticketId: ticketId
+        tabView
+            .navigationDestination(item: $store.selectedEventId.sending(\.dismissEventNavigation)) { eventId in
+                EventDetailView(eventId: eventId)
+            }
+            .navigationDestination(item: $store.selectedTicketId.sending(\.dismissTicketNavigation)) { ticketId in
+                TicketDetailView(
+                    store: store.scope(
+                        state: \.ticketDetailFeature,
+                        action: \.ticketDetailFeature
+                    ),
+                    ticketId: ticketId
+                )
+            }
+            .navigationDestination(item: $store.selectedSellerId.sending(\.dismissSellerNavigation)) { sellerId in
+                SellerProfileView(
+                    store: store.scope(
+                        state: \.sellerProfileFeature,
+                        action: \.sellerProfileFeature
                     )
+                )
+                .onAppear {
+                    store.send(.sellerProfileFeature(.loadProfileById(sellerId)))
                 }
-                .navigationDestination(item: $store.selectedSellerId.sending(\.dismissSellerNavigation)) { sellerId in
-                    SellerProfileView(
-                        store: store.scope(
-                            state: \.sellerProfileFeature,
-                            action: \.sellerProfileFeature
-                        )
-                    )
-                    .onAppear {
-                        store.send(.sellerProfileFeature(.loadProfileById(sellerId)))
-                    }
-                }
-        }
-        .ignoresSafeArea(.keyboard, edges: .bottom) // Para melhor comportamento do teclado
+            }
+            .ignoresSafeArea(.keyboard, edges: .bottom)
     }
     
     @ViewBuilder
@@ -50,12 +48,14 @@ public struct SocialAppView: View {
     
     @ViewBuilder
     private var eventsTab: some View {
-        EventsView(
-            store: store.scope(
-                state: \.eventsFeature,
-                action: \.eventsFeature
+        NavigationStack {
+            EventsView(
+                store: store.scope(
+                    state: \.eventsFeature,
+                    action: \.eventsFeature
+                )
             )
-        )
+        }
         .tabItem {
             Image(systemName: AppTab.events.icon)
             Text(AppTab.events.displayName)
@@ -80,12 +80,17 @@ public struct SocialAppView: View {
     
     @ViewBuilder
     private var favoritesTab: some View {
-        FavoritesPlaceholderView()
-            .tabItem {
-                Image(systemName: AppTab.favorites.icon)
-                Text(AppTab.favorites.displayName)
-            }
-            .tag(AppTab.favorites)
+        FavoritesView(
+            store: store.scope(
+                state: \.favoritesFeature,
+                action: \.favoritesFeature
+            )
+        )
+        .tabItem {
+            Image(systemName: AppTab.favorites.icon)
+            Text(AppTab.favorites.displayName)
+        }
+        .tag(AppTab.favorites)
     }
     
     @ViewBuilder

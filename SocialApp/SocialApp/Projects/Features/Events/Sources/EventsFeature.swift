@@ -10,6 +10,8 @@ public struct EventsFeature {
         public var selectedCategory: EventCategory?
         public var isLoading: Bool = false
         public var errorMessage: String?
+        public var searchFeature = SearchFeature.State()
+        public var isSearchPresented: Bool = false
         
         public var todayEvent: Event? {
             return events.first { event in
@@ -45,6 +47,8 @@ public struct EventsFeature {
         case categorySelected(EventCategory?)
         case eventSelected(UUID)
         case refreshRequested
+        case searchFeature(SearchFeature.Action)
+        case setSearchPresented(Bool)
     }
     
     @Dependency(\.eventsClient) var eventsClient
@@ -52,6 +56,10 @@ public struct EventsFeature {
     public init() {}
     
     public var body: some ReducerOf<Self> {
+        Scope(state: \.searchFeature, action: \.searchFeature) {
+            SearchFeature()
+        }
+        
         Reduce { state, action in
             switch action {
             case .onAppear:
@@ -111,6 +119,7 @@ public struct EventsFeature {
                 }
                 
             case .searchTapped:
+                state.isSearchPresented = true
                 return .none
                 
             case .eventSelected:
@@ -118,6 +127,21 @@ public struct EventsFeature {
                 
             case .refreshRequested:
                 return .send(.loadEvents)
+                
+            case .searchFeature(.eventSelected(let eventId)):
+                state.isSearchPresented = false
+                return .send(.eventSelected(eventId))
+                
+            case .searchFeature(.cancelSearch):
+                state.isSearchPresented = false
+                return .none
+                
+            case .searchFeature:
+                return .none
+                
+            case let .setSearchPresented(isPresented):
+                state.isSearchPresented = isPresented
+                return .none
             }
         }
     }

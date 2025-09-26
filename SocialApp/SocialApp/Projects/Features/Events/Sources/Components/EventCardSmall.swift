@@ -1,72 +1,80 @@
+import ComposableArchitecture
 import SwiftUI
 
-struct EventCardSmall: View {
+public struct EventCardSmall: View {
     let event: Event
     let onTap: () -> Void
     
-    var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            ZStack(alignment: .topLeading) {
-                AsyncImage(url: event.imageURL.flatMap { URL(string: $0) }) { image in
-                    image.resizable().scaledToFill()
+    public init(event: Event, onTap: @escaping () -> Void) {
+        self.event = event
+        self.onTap = onTap
+    }
+    
+    public var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            // Image
+            ZStack(alignment: .topTrailing) {
+                AsyncImage(url: URL(string: event.imageURL ?? "")) { image in
+                    image
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
                 } placeholder: {
-                    Rectangle().fill(Color.gray.opacity(0.2))
+                    Rectangle()
+                        .fill(Color.gray.opacity(0.3))
+                        .overlay {
+                            Image(systemName: "photo")
+                                .foregroundColor(.gray)
+                        }
                 }
                 .frame(width: 160, height: 120)
                 .clipped()
-                .cornerRadius(16)
                 
-                Text(event.dateFormatted)
-                    .font(.caption.bold())
-                    .padding(6)
-                    .background(Color.white)
-                    .cornerRadius(8)
-                    .padding(6)
+                // Favorite button
+                EventFavoriteView(
+                    store: Store(initialState: EventFavoriteFeature.State(event: event)) {
+                        EventFavoriteFeature()
+                    }
+                )
+                .padding(.trailing, 8)
+                .padding(.top, 8)
             }
             
-            Text(event.name)
-                .font(.subheadline.bold())
-                .lineLimit(1)
-            
-            Text(event.timeRange)
-                .font(.caption)
-                .foregroundColor(.gray)
-            
-            HStack {
-                VStack(alignment: .leading, spacing: 4) {
-                    HStack(spacing: 4) {
-                        Image(systemName: "mappin.circle.fill")
-                            .foregroundColor(.blue)
-                            .font(.caption)
-                        Text(event.location.name)
-                            .font(.caption)
-                            .foregroundColor(.gray)
-                            .lineLimit(1)
-                    }
-                    
-                    HStack(spacing: 4) {
-                        Image(systemName: "tag.fill")
-                            .foregroundColor(.green)
-                            .font(.caption)
-                        Text("A partir de \(event.startPrice, format: .currency(code: "BRL"))")
-                            .font(.caption)
-                            .foregroundColor(.gray)
-                    }
-                }
-                
-                Spacer()
-                
-                HStack(spacing: 4) {
-                    Image(systemName: "calendar")
+            // Content
+            VStack(alignment: .leading, spacing: 8) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(event.dateFormatted)
+                        .font(.caption)
+                        .fontWeight(.semibold)
                         .foregroundColor(.blue)
+                    
+                    Text(event.name)
+                        .font(.headline)
+                        .lineLimit(2)
+                        .multilineTextAlignment(.leading)
+                    
+                    Text(event.location.city)
                         .font(.caption)
-                    Text(event.createdAt, style: .date)
-                        .font(.caption)
-                        .foregroundColor(.gray)
+                        .foregroundColor(.secondary)
+                }
+                
+                HStack {
+                    Text("R$ \(event.startPrice, specifier: "%.0f")")
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.primary)
+                    
+                    Spacer()
                 }
             }
+            .padding(12)
         }
         .frame(width: 160)
-        .onTapGesture(perform: onTap)
+        .background(Color(.systemBackground))
+        .cornerRadius(12)
+        .shadow(color: .black.opacity(0.1), radius: 4, x: 0, y: 2)
+        .contentShape(Rectangle())
+        .onTapGesture {
+            onTap()
+        }
     }
 }

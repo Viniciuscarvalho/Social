@@ -48,6 +48,14 @@ public struct EventsView: View {
         .refreshable {
             store.send(.refreshRequested)
         }
+        .sheet(isPresented: $store.isSearchPresented.sending(\.setSearchPresented)) {
+            SearchView(
+                store: store.scope(
+                    state: \.searchFeature,
+                    action: \.searchFeature
+                )
+            )
+        }
         .onAppear {
             store.send(.onAppear)
         }
