@@ -1,238 +1,194 @@
 [
   {
-    "id": "123e4567-e89b-12d3-a456-426614174000",
-    "name": "Evento de Hoje",
-    "description": "Um evento que acontece hoje",
-    "startPrice": 50.0,
-    "category": "music",
-    "isRecommended": true,
-    "eventDate": "2024-12-19T14:00:00Z", // Data de hoje no formato ISO8601
-    "createdAt": "2024-12-18T10:00:00Z",
-    "location": {
-      "name": "Local do Evento",
-      "city": "São Paulo",
-      "state": "SP", 
-      "country": "Brasil",
-      "coordinate": {
-        "latitude": -23.5505,
-        "longitude": -46.6333
-      }
-    }
+      "id": "550e8400-e29b-41d4-a716-446655440000",
+      "name": "Workshop de Swift Avançado",
+      "description": "Aprenda conceitos avançados de Swift incluindo Concurrency, Actors e Macros",
+      "imageURL": "https://example.com/swift-workshop.jpg",
+      "startPrice": 120,
+      "category": "technology",
+      "isRecommended": true,
+      "eventDate": "2025-09-26T19:00:00Z",
+      "createdAt": "2025-09-25T10:00:00Z",
+      "location": {
+          "name": "Centro de Tecnologia",
+          "address": "Av. Paulista, 1000",
+          "city": "São Paulo",
+          "state": "SP",
+          "country": "Brasil",
+          "coordinate": {
+              "latitude": -23.5614,
+              "longitude": -46.6562
+          }
+      },
+      "rating": 4.8,
+      "reviewCount": 45
   },
   {
-    "id": "550e8400-e29b-41d4-a716-446655440001",
-    "name": "Festival de Música Eletrônica",
-    "description": "O maior festival de música eletrônica do Brasil com os melhores DJs internacionais",
-    "imageURL": "https://example.com/electronic-festival.jpg",
-    "startPrice": 180.0,
-    "location": {
-      "name": "Allianz Parque",
-      "address": "Av. Francisco Matarazzo, 1705",
-      "city": "São Paulo",
-      "state": "SP",
-      "country": "Brasil",
-      "coordinate": {
-        "latitude": -23.5278,
-        "longitude": -46.6682
-      }
-    },
-    "category": "music",
-    "isRecommended": false,
-    "rating": 4.5,
-    "reviewCount": 320,
-    "createdAt": "2024-01-10T08:15:00Z",
-    "eventDate": "2024-04-15T20:00:00Z"
+      "id": "550e8400-e29b-41d4-a716-446655440001",
+      "name": "Concerto de Jazz no Parque",
+      "description": "Uma noite especial com os melhores músicos de jazz da cidade",
+      "imageURL": "https://example.com/jazz-concert.jpg",
+      "startPrice": 80,
+      "category": "music",
+      "isRecommended": false,
+      "eventDate": "2025-09-27T20:00:00Z",
+      "createdAt": "2025-09-24T09:00:00Z",
+      "location": {
+          "name": "Parque Ibirapuera",
+          "address": "Av. Pedro Álvares Cabral",
+          "city": "São Paulo",
+          "state": "SP",
+          "country": "Brasil",
+          "coordinate": {
+              "latitude": -23.5873,
+              "longitude": -46.6577
+          }
+      },
+      "rating": 4.5,
+      "reviewCount": 32
   },
   {
-    "id": "550e8400-e29b-41d4-a716-446655440002",
-    "name": "Rock in Rio 2024",
-    "description": "O maior festival de rock do mundo retorna ao Brasil com lineup espetacular",
-    "imageURL": "https://example.com/rock-in-rio.jpg",
-    "startPrice": 320.0,
-    "location": {
-      "name": "Cidade do Rock",
-      "address": "Av. Salvador Allende, s/n",
-      "city": "Rio de Janeiro",
-      "state": "RJ",
-      "country": "Brasil",
-      "coordinate": {
-        "latitude": -22.9068,
-        "longitude": -43.1729
-      }
-    },
-    "category": "music",
-    "isRecommended": true,
-    "rating": 4.8,
-    "reviewCount": 1250,
-    "createdAt": "2024-01-20T16:45:00Z",
-    "eventDate": "2024-09-15T18:00:00Z"
+      "id": "550e8400-e29b-41d4-a716-446655440002",
+      "name": "Festival Gastronômico Italiano",
+      "description": "Deguste os melhores pratos da culinária italiana com chefs renomados",
+      "imageURL": "https://example.com/italian-festival.jpg",
+      "startPrice": 150,
+      "category": "food",
+      "isRecommended": true,
+      "eventDate": "2025-09-28T18:00:00Z",
+      "createdAt": "2025-09-25T11:30:00Z",
+      "location": {
+          "name": "Vila Madalena",
+          "address": "Rua Harmonia, 123",
+          "city": "São Paulo",
+          "state": "SP",
+          "country": "Brasil",
+          "coordinate": {
+              "latitude": -23.5368,
+              "longitude": -46.6918
+          }
+      },
+      "rating": 4.9,
+      "reviewCount": 78
   },
   {
-    "id": "550e8400-e29b-41d4-a716-446655440003",
-    "name": "Copa do Mundo FIFA 2026 - Semifinal",
-    "description": "Partida semifinal da Copa do Mundo FIFA 2026 no Maracanã",
-    "imageURL": "https://example.com/fifa-world-cup.jpg",
-    "startPrice": 850.0,
-    "location": {
-      "name": "Estádio do Maracanã",
-      "address": "Av. Pres. Castelo Branco, Portão 2",
-      "city": "Rio de Janeiro",
-      "state": "RJ",
-      "country": "Brasil",
-      "coordinate": {
-        "latitude": -22.9121,
-        "longitude": -43.2302
-      }
-    },
-    "category": "sports",
-    "isRecommended": true,
-    "rating": 5.0,
-    "reviewCount": 2800,
-    "createdAt": "2024-02-01T12:00:00Z",
-    "eventDate": "2026-07-14T16:00:00Z"
+      "id": "550e8400-e29b-41d4-a716-446655440003",
+      "name": "Trilha na Serra da Cantareira",
+      "description": "Uma aventura pela maior floresta urbana do mundo",
+      "imageURL": "https://example.com/cantareira-trail.jpg",
+      "startPrice": 45,
+      "category": "adventure",
+      "isRecommended": false,
+      "eventDate": "2025-09-29T07:00:00Z",
+      "createdAt": "2025-09-26T08:00:00Z",
+      "location": {
+          "name": "Parque Estadual da Cantareira",
+          "address": "Rua do Horto, 1799",
+          "city": "São Paulo",
+          "state": "SP",
+          "country": "Brasil",
+          "coordinate": {
+              "latitude": -23.4394,
+              "longitude": -46.6236
+          }
+      },
+      "rating": 4.7,
+      "reviewCount": 56
   },
   {
-    "id": "550e8400-e29b-41d4-a716-446655440004",
-    "name": "Festival de Gastronomia de São Paulo",
-    "description": "Descubra os sabores únicos da culinária paulistana com os melhores chefs",
-    "imageURL": "https://example.com/gastronomy-festival.jpg",
-    "startPrice": 120.0,
-    "location": {
-      "name": "Ibirapuera Park",
-      "address": "Av. Paulista, 1578",
-      "city": "São Paulo",
-      "state": "SP",
-      "country": "Brasil",
-      "coordinate": {
-        "latitude": -23.5875,
-        "longitude": -46.6575
-      }
-    },
-    "category": "food",
-    "isRecommended": false,
-    "rating": 4.3,
-    "reviewCount": 180,
-    "createdAt": "2024-01-25T09:20:00Z",
-    "eventDate": "2024-05-10T11:00:00Z"
+      "id": "550e8400-e29b-41d4-a716-446655440004",
+      "name": "Exposição de Arte Contemporânea",
+      "description": "Descubra as mais recentes tendências da arte contemporânea brasileira",
+      "imageURL": "https://example.com/art-exhibition.jpg",
+      "startPrice": 25,
+      "category": "culture",
+      "isRecommended": true,
+      "eventDate": "2025-09-30T10:00:00Z",
+      "createdAt": "2025-09-23T16:20:00Z",
+      "location": {
+          "name": "Pinacoteca do Estado",
+          "address": "Praça da Luz, 2",
+          "city": "São Paulo",
+          "state": "SP",
+          "country": "Brasil",
+          "coordinate": {
+              "latitude": -23.5346,
+              "longitude": -46.6335
+          }
+      },
+      "rating": 4.6,
+      "reviewCount": 89
   },
   {
-    "id": "550e8400-e29b-41d4-a716-446655440005",
-    "name": "Tech Summit Brasil 2024",
-    "description": "O maior evento de tecnologia do Brasil reunindo startups, investidores e inovadores",
-    "imageURL": "https://example.com/tech-summit.jpg",
-    "startPrice": 450.0,
-    "location": {
-      "name": "Centro de Convenções Frei Caneca",
-      "address": "Rua Frei Caneca, 569",
-      "city": "São Paulo",
-      "state": "SP",
-      "country": "Brasil",
-      "coordinate": {
-        "latitude": -23.5489,
-        "longitude": -46.6388
-      }
-    },
-    "category": "technology",
-    "isRecommended": true,
-    "rating": 4.7,
-    "reviewCount": 890,
-    "createdAt": "2024-02-05T14:30:00Z",
-    "eventDate": "2024-08-20T09:00:00Z"
+      "id": "550e8400-e29b-41d4-a716-446655440005",
+      "name": "Campeonato de eSports",
+      "description": "Competição nacional dos melhores jogadores de eSports do país",
+      "imageURL": "https://example.com/esports-championship.jpg",
+      "startPrice": 60,
+      "category": "sports",
+      "isRecommended": false,
+      "eventDate": "2025-10-01T15:00:00Z",
+      "createdAt": "2025-09-26T08:45:00Z",
+      "location": {
+          "name": "Arena Corinthians",
+          "address": "Av. Miguel Ignácio Curi, 111",
+          "city": "São Paulo",
+          "state": "SP",
+          "country": "Brasil",
+          "coordinate": {
+              "latitude": -23.5458,
+              "longitude": -46.4732
+          }
+      },
+      "rating": 4.4,
+      "reviewCount": 123
   },
   {
-    "id": "550e8400-e29b-41d4-a716-446655440006",
-    "name": "Bienal de Arte de São Paulo",
-    "description": "Exposição internacional de arte contemporânea com artistas de todo o mundo",
-    "imageURL": "https://example.com/art-biennale.jpg",
-    "startPrice": 60.0,
-    "location": {
-      "name": "Pavilhão da Bienal",
-      "address": "Av. Pedro Álvares Cabral, s/n",
-      "city": "São Paulo",
-      "state": "SP",
-      "country": "Brasil",
-      "coordinate": {
-        "latitude": -23.5873,
-        "longitude": -46.6573
-      }
-    },
-    "category": "culture",
-    "isRecommended": false,
-    "rating": 4.2,
-    "reviewCount": 420,
-    "createdAt": "2024-01-30T11:15:00Z",
-    "eventDate": "2024-10-05T10:00:00Z"
+      "id": "550e8400-e29b-41d4-a716-446655440006",
+      "name": "Conferência de Negócios 2025",
+      "description": "Networking e palestras com os principais líderes empresariais",
+      "imageURL": "https://example.com/business-conference.jpg",
+      "startPrice": 250,
+      "category": "business",
+      "isRecommended": true,
+      "eventDate": "2025-10-02T09:00:00Z",
+      "createdAt": "2025-09-25T13:15:00Z",
+      "location": {
+          "name": "World Trade Center",
+          "address": "Av. das Nações Unidas, 12.551",
+          "city": "São Paulo",
+          "state": "SP",
+          "country": "Brasil",
+          "coordinate": {
+              "latitude": -23.6158,
+              "longitude": -46.7034
+          }
+      },
+      "rating": 4.8,
+      "reviewCount": 67
   },
   {
-    "id": "550e8400-e29b-41d4-a716-446655440007",
-    "name": "Conferência Empreendedorismo Digital",
-    "description": "Aprenda estratégias de negócios digitais com especialistas renomados",
-    "imageURL": "https://example.com/business-conference.jpg",
-    "startPrice": 280.0,
-    "location": {
-      "name": "World Trade Center",
-      "address": "Av. das Nações Unidas, 12551",
-      "city": "São Paulo",
-      "state": "SP",
-      "country": "Brasil",
-      "coordinate": {
-        "latitude": -23.6109,
-        "longitude": -46.6970
-      }
-    },
-    "category": "business",
-    "isRecommended": true,
-    "rating": 4.6,
-    "reviewCount": 340,
-    "createdAt": "2024-02-08T15:45:00Z",
-    "eventDate": "2024-06-25T08:30:00Z"
-  },
-  {
-    "id": "550e8400-e29b-41d4-a716-446655440008",
-    "name": "Aventura na Chapada Diamantina",
-    "description": "Expedição de 3 dias pela Chapada Diamantina com trilhas e cachoeiras",
-    "imageURL": "https://example.com/chapada-adventure.jpg",
-    "startPrice": 680.0,
-    "location": {
-      "name": "Vale do Pati",
-      "address": "Chapada Diamantina",
-      "city": "Lençóis",
-      "state": "BA",
-      "country": "Brasil",
-      "coordinate": {
-        "latitude": -12.4696,
-        "longitude": -41.3893
-      }
-    },
-    "category": "adventure",
-    "isRecommended": true,
-    "rating": 4.9,
-    "reviewCount": 95,
-    "createdAt": "2024-01-28T13:20:00Z",
-    "eventDate": "2024-07-12T06:00:00Z"
-  },
-  {
-    "id": "550e8400-e29b-41d4-a716-446655440009",
-    "name": "Formula 1 GP do Brasil",
-    "description": "Grande Prêmio de Formula 1 no circuito de Interlagos",
-    "imageURL": "https://example.com/f1-brasil.jpg",
-    "startPrice": 750.0,
-    "location": {
-      "name": "Autódromo José Carlos Pace",
-      "address": "Av. Sen. Teotônio Vilela, 261",
-      "city": "São Paulo",
-      "state": "SP",
-      "country": "Brasil",
-      "coordinate": {
-        "latitude": -23.7008,
-        "longitude": -46.6977
-      }
-    },
-    "category": "sports",
-    "isRecommended": true,
-    "rating": 4.8,
-    "reviewCount": 1560,
-    "createdAt": "2024-02-12T10:00:00Z",
-    "eventDate": "2024-11-03T14:00:00Z"
+      "id": "550e8400-e29b-41d4-a716-446655440007",
+      "name": "Observação de Pássaros no Parque",
+      "description": "Atividade educativa para observar e conhecer as aves urbanas",
+      "imageURL": "https://example.com/birdwatching.jpg",
+      "startPrice": 30,
+      "category": "nature",
+      "isRecommended": false,
+      "eventDate": "2025-10-03T06:30:00Z",
+      "createdAt": "2025-09-26T11:00:00Z",
+      "location": {
+          "name": "Parque Villa-Lobos",
+          "address": "Av. Prof. Fonseca Rodrigues, 2001",
+          "city": "São Paulo",
+          "state": "SP",
+          "country": "Brasil",
+          "coordinate": {
+              "latitude": -23.5436,
+              "longitude": -46.7208
+          }
+      },
+      "rating": 4.3,
+      "reviewCount": 24
   }
 ]
