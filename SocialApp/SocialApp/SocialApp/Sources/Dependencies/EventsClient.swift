@@ -12,15 +12,11 @@ public struct EventsClient {
 extension EventsClient: DependencyKey {
     public static let liveValue = EventsClient(
         fetchEvents: {
-            print("🚀 EventsClient.fetchEvents chamado")
             try await Task.sleep(for: .seconds(1))
             do {
                 let events = try await loadEventsFromJSON()
-                print("🎯 EventsClient retornando \(events.count) events do JSON")
                 return events
             } catch {
-                print("⚠️ Erro ao carregar JSON, usando dados mockados: \(error)")
-                print("🎯 EventsClient retornando \(SharedMockData.sampleEvents.count) events mockados")
                 return SharedMockData.sampleEvents
             }
         },

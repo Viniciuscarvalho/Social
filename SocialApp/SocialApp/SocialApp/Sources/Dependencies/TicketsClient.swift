@@ -13,10 +13,8 @@ public struct TicketsClient {
 extension TicketsClient: DependencyKey {
     public static let liveValue = TicketsClient(
         fetchTickets: {
-            print("🚀 TicketsClient.fetchTickets chamado")
             try await Task.sleep(for: .seconds(1))
             let tickets = try await loadTicketsFromJSON()
-            print("🎯 TicketsClient retornando \(tickets.count) tickets")
             return tickets
         },
         fetchTicketsByEvent: { eventId in
