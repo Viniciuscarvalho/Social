@@ -4,10 +4,14 @@ import SwiftUI
 
 @main
 struct SocialApp: App {
+    @State private var themeManager = ThemeManager.shared
+    
     var body: some Scene {
         WindowGroup {
             ContentView()
                 .modelContainer(DataManager.shared.modelContainer)
+                .preferredColorScheme(themeManager.colorScheme)
+                .environment(themeManager)
         }
     }
 }
@@ -30,7 +34,7 @@ extension SocialAppView {
                 SocialAppFeature()
             } withDependencies: {
                 $0.favoritesClient = .liveValue
-                $0.eventsClient = .liveValue // Assumindo que você já tem isso configurado
+                $0.eventsClient = .liveValue
             }
         )
     }

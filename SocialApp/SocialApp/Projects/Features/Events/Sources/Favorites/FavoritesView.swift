@@ -62,33 +62,31 @@ struct FavoriteEventCard: View {
                     .aspectRatio(contentMode: .fill)
             } placeholder: {
                 Rectangle()
-                    .fill(Color.gray.opacity(0.3))
+                    .fill(AppColors.tertiaryBackground)
             }
             .frame(width: 80, height: 80)
             .cornerRadius(12)
             
             VStack(alignment: .leading, spacing: 6) {
                 Text(favorite.eventName)
-                    .font(.headline)
+                    .adaptiveHeadline()
                     .lineLimit(2)
                 
                 Text(favorite.eventLocation)
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
+                    .adaptiveSubheadline()
                 
                 if let eventDate = favorite.eventDate {
                     Text(eventDate, style: .date)
                         .font(.caption)
-                        .foregroundColor(.blue)
+                        .foregroundColor(AppColors.primary)
                 } else {
                     Text("Data a definir")
-                        .font(.caption)
-                        .foregroundColor(.gray)
+                        .adaptiveCaption()
                 }
                 
                 Text("Favoritado em \(favorite.favoriteDate.formatted(date: .abbreviated, time: .omitted))")
                     .font(.caption2)
-                    .foregroundColor(.gray)
+                    .foregroundColor(AppColors.tertiaryText)
             }
             
             Spacer()
@@ -96,21 +94,19 @@ struct FavoriteEventCard: View {
             VStack(alignment: .trailing, spacing: 8) {
                 Text("R$ \(favorite.eventPrice, specifier: "%.2f")")
                     .font(.headline)
-                    .foregroundColor(.primary)
+                    .foregroundColor(AppColors.primary)
                 
                 Button(action: onRemove) {
                     Image(systemName: "heart.fill")
-                        .foregroundColor(.red)
+                        .foregroundColor(AppColors.favoriteRed)
                         .padding(8)
-                        .background(Color.red.opacity(0.1))
+                        .background(AppColors.favoriteRed.opacity(0.1))
                         .clipShape(Circle())
                 }
             }
         }
         .padding()
-        .background(Color(.systemBackground))
-        .cornerRadius(12)
-        .shadow(color: .black.opacity(0.1), radius: 2, x: 0, y: 1)
+        .adaptiveCardStyle()
         .contentShape(Rectangle())
         .onTapGesture {
             action()
