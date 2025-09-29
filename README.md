@@ -1,6 +1,8 @@
-# 🎫 SocialApp
+<img width="120" height="120" alt="app-icon-120x120" src="https://github.com/user-attachments/assets/8c20500f-7986-457f-a543-3a55d4cf47a4" />
 
-Uma aplicação iOS moderna para descoberta e compra de tickets para eventos sociais, construída com SwiftUI e The Composable Architecture.
+# Social App
+
+Uma aplicação iOS moderna para descoberta e compra de tickets para eventos, construída com SwiftUI e The Composable Architecture.
 
 ## 📱 Sobre o App
 
@@ -229,6 +231,7 @@ O projeto não requer variáveis de ambiente especiais. Todos os dados são mock
 - [ ] Sistema de pagamentos
 - [ ] Notificações push
 - [ ] Sistema de avaliações
+- [ ] Adicionar e remover ingressos
 
 ## 🤝 Contribuindo
 
