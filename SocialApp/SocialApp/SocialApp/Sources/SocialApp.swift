@@ -12,6 +12,7 @@ struct SocialApp: App {
                 .modelContainer(DataManager.shared.modelContainer)
                 .preferredColorScheme(themeManager.colorScheme)
                 .environment(themeManager)
+                .ignoresSafeArea(.keyboard)
         }
     }
 }

@@ -46,7 +46,46 @@ public struct SellerProfileFeature {
                 return .run { send in
                     do {
                         try await Task.sleep(for: .seconds(1))
-                        let profile = SellerProfile(name: "Profile \(profileId.uuidString.prefix(8))", title: "Designer")
+                        
+                        // Cria tickets de exemplo para o vendedor
+                        let sampleTickets = [
+                            Ticket(
+                                eventId: UUID(),
+                                sellerId: profileId,
+                                name: "Rock in Rio 2024",
+                                price: 250.0,
+                                ticketType: .vip,
+                                validUntil: Calendar.current.date(byAdding: .month, value: 1, to: Date()) ?? Date()
+                            ),
+                            Ticket(
+                                eventId: UUID(),
+                                sellerId: profileId,
+                                name: "Festival de Verão",
+                                price: 120.0,
+                                ticketType: .general,
+                                validUntil: Calendar.current.date(byAdding: .month, value: 2, to: Date()) ?? Date()
+                            ),
+                            Ticket(
+                                eventId: UUID(),
+                                sellerId: profileId,
+                                name: "Show Acústico",
+                                price: 85.0,
+                                ticketType: .student,
+                                validUntil: Calendar.current.date(byAdding: .day, value: 15, to: Date()) ?? Date()
+                            )
+                        ]
+                        
+                        var profile = SellerProfile(
+                            name: "João Silva",
+                            title: "Vendedor Oficial de Ingressos",
+                            profileImageURL: nil
+                        )
+                        profile.followersCount = 1243
+                        profile.followingCount = 89
+                        profile.ticketsCount = sampleTickets.count
+                        profile.isVerified = true
+                        profile.tickets = sampleTickets
+                        
                         await send(.profileResponse(.success(profile)))
                     } catch {
                         await send(.profileResponse(.failure(APIError(message: error.localizedDescription, code: 500))))

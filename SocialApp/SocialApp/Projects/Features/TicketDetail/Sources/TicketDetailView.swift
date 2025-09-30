@@ -1,4 +1,5 @@
 import ComposableArchitecture
+import ComposableArchitecture
 import SwiftUI
 
 public struct TicketDetailView: View {
@@ -125,33 +126,69 @@ public struct TicketDetailView: View {
                     Text("Vendedor")
                         .font(.headline)
                     
-                    HStack {
-                        Circle()
-                            .fill(Color.blue.opacity(0.3))
-                            .frame(width: 40, height: 40)
-                            .overlay(
-                                Image(systemName: "person.fill")
-                                    .foregroundColor(.blue)
-                            )
-                        
-                        VStack(alignment: .leading) {
-                            Text(ticketDetail.seller.name)
-                                .fontWeight(.semibold)
-                            if let title = ticketDetail.seller.title {
-                                Text(title)
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
+                    NavigationLink {
+                        SellerProfileView(
+                            store: Store(initialState: SellerProfileFeature.State()) {
+                                SellerProfileFeature()
                             }
+                        )
+                        .onAppear {
+                            // Carrega o perfil específico do vendedor
+                            let sellerStore = Store(initialState: SellerProfileFeature.State()) {
+                                SellerProfileFeature()
+                            }
+                            sellerStore.send(.loadProfileById(ticketDetail.seller.id))
                         }
-                        
-                        Spacer()
+                    } label: {
+                        HStack {
+                            AsyncImage(url: URL(string: ticketDetail.seller.profileImageURL ?? "")) { image in
+                                image
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fill)
+                            } placeholder: {
+                                Circle()
+                                    .fill(Color.blue.opacity(0.3))
+                                    .overlay(
+                                        Image(systemName: "person.fill")
+                                            .foregroundColor(.blue)
+                                    )
+                            }
+                            .frame(width: 40, height: 40)
+                            .clipShape(Circle())
+                            
+                            VStack(alignment: .leading) {
+                                HStack {
+                                    Text(ticketDetail.seller.name)
+                                        .fontWeight(.semibold)
+                                        .foregroundColor(.primary)
+                                    
+                                    if ticketDetail.seller.isVerified {
+                                        Image(systemName: "checkmark.seal.fill")
+                                            .foregroundColor(.blue)
+                                            .font(.caption)
+                                    }
+                                }
+                                
+                                if let title = ticketDetail.seller.title {
+                                    Text(title)
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
+                            }
+                            
+                            Spacer()
+                            
+                            Image(systemName: "chevron.right")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
                     }
                 }
                 .padding()
                 .background(Color.gray.opacity(0.05))
                 .cornerRadius(8)
                 
-                // Purchase Button
+                // Trade Button
                 if ticketDetail.status == .available {
                     Button(action: {
                         store.send(.purchaseTicket(ticketDetail.ticketId))
@@ -161,7 +198,7 @@ public struct TicketDetailView: View {
                                 ProgressView()
                                     .scaleEffect(0.8)
                             }
-                            Text(store.isPurchasing ? "Processando..." : "Comprar Ingresso")
+                            Text(store.isPurchasing ? "Processando..." : "Negociar Ingresso")
                         }
                         .frame(maxWidth: .infinity)
                         .padding()

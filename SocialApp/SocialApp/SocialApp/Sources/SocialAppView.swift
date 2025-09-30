@@ -9,37 +9,6 @@ public struct SocialAppView: View {
     }
     
     public var body: some View {
-        NavigationStack {
-            tabView
-                .navigationDestination(item: $store.selectedEventId.sending(\.dismissEventNavigation)) { eventId in
-                    EventDetailView(eventId: eventId)
-                }
-                .navigationDestination(item: $store.selectedTicketId.sending(\.dismissTicketNavigation)) { ticketId in
-                    TicketDetailView(
-                        store: store.scope(
-                            state: \.ticketDetailFeature,
-                            action: \.ticketDetailFeature
-                        ),
-                        ticketId: ticketId
-                    )
-                }
-                .navigationDestination(item: $store.selectedSellerId.sending(\.dismissSellerNavigation)) { sellerId in
-                    SellerProfileView(
-                        store: store.scope(
-                            state: \.sellerProfileFeature,
-                            action: \.sellerProfileFeature
-                        )
-                    )
-                    .onAppear {
-                        store.send(.sellerProfileFeature(.loadProfileById(sellerId)))
-                    }
-                }
-                .ignoresSafeArea(.keyboard, edges: .bottom)
-        }
-    }
-    
-    @ViewBuilder
-    private var tabView: some View {
         TabView(selection: $store.selectedTab.sending(\.tabSelected)) {
             eventsTab
             ticketsTab
@@ -50,12 +19,37 @@ public struct SocialAppView: View {
     
     @ViewBuilder
     private var eventsTab: some View {
-        EventsView(
-            store: store.scope(
-                state: \.eventsFeature,
-                action: \.eventsFeature
+        NavigationStack {
+            EventsView(
+                store: store.scope(
+                    state: \.eventsFeature,
+                    action: \.eventsFeature
+                )
             )
-        )
+            .navigationDestination(item: $store.selectedEventId.sending(\.dismissEventNavigation)) { eventId in
+                EventDetailView(eventId: eventId)
+            }
+            .navigationDestination(item: $store.selectedTicketId.sending(\.dismissTicketNavigation)) { ticketId in
+                TicketDetailView(
+                    store: store.scope(
+                        state: \.ticketDetailFeature,
+                        action: \.ticketDetailFeature
+                    ),
+                    ticketId: ticketId
+                )
+            }
+            .navigationDestination(item: $store.selectedSellerId.sending(\.dismissSellerNavigation)) { sellerId in
+                SellerProfileView(
+                    store: store.scope(
+                        state: \.sellerProfileFeature,
+                        action: \.sellerProfileFeature
+                    )
+                )
+                .onAppear {
+                    store.send(.sellerProfileFeature(.loadProfileById(sellerId)))
+                }
+            }
+        }
         .tabItem {
             Image(systemName: AppTab.events.icon)
             Text(AppTab.events.displayName)
@@ -65,12 +59,23 @@ public struct SocialAppView: View {
     
     @ViewBuilder
     private var ticketsTab: some View {
-        TicketsListView(
-            store: store.scope(
-                state: \.ticketsListFeature,
-                action: \.ticketsListFeature
+        NavigationStack {
+            TicketsListView(
+                store: store.scope(
+                    state: \.ticketsListFeature,
+                    action: \.ticketsListFeature
+                )
             )
-        )
+            .navigationDestination(item: $store.selectedTicketId.sending(\.dismissTicketNavigation)) { ticketId in
+                TicketDetailView(
+                    store: store.scope(
+                        state: \.ticketDetailFeature,
+                        action: \.ticketDetailFeature
+                    ),
+                    ticketId: ticketId
+                )
+            }
+        }
         .tabItem {
             Image(systemName: AppTab.tickets.icon)
             Text(AppTab.tickets.displayName)
@@ -80,12 +85,17 @@ public struct SocialAppView: View {
     
     @ViewBuilder
     private var favoritesTab: some View {
-        FavoritesView(
-            store: store.scope(
-                state: \.favoritesFeature,
-                action: \.favoritesFeature
+        NavigationStack {
+            FavoritesView(
+                store: store.scope(
+                    state: \.favoritesFeature,
+                    action: \.favoritesFeature
+                )
             )
-        )
+            .navigationDestination(item: $store.selectedEventId.sending(\.dismissEventNavigation)) { eventId in
+                EventDetailView(eventId: eventId)
+            }
+        }
         .tabItem {
             Image(systemName: AppTab.favorites.icon)
             Text(AppTab.favorites.displayName)
@@ -95,11 +105,13 @@ public struct SocialAppView: View {
     
     @ViewBuilder
     private var profileTab: some View {
-        ProfilePlaceholderView()
-            .tabItem {
-                Image(systemName: AppTab.profile.icon)
-                Text(AppTab.profile.displayName)
-            }
-            .tag(AppTab.profile)
+        NavigationStack {
+            ProfileView()
+        }
+        .tabItem {
+            Image(systemName: AppTab.profile.icon)
+            Text(AppTab.profile.displayName)
+        }
+        .tag(AppTab.profile)
     }
 }

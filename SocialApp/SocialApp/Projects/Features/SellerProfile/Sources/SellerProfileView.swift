@@ -82,7 +82,7 @@ public struct SellerProfileView: View {
                     Text("\(profile.followersCount)")
                         .font(.title2)
                         .fontWeight(.bold)
-                    Text("Followers")
+                    Text("Seguidores")
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
@@ -91,7 +91,7 @@ public struct SellerProfileView: View {
                     Text("\(profile.followingCount)")
                         .font(.title2)
                         .fontWeight(.bold)
-                    Text("Following")
+                    Text("Seguindo")
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
@@ -100,15 +100,72 @@ public struct SellerProfileView: View {
                     Text("\(profile.ticketsCount)")
                         .font(.title2)
                         .fontWeight(.bold)
-                    Text("Tickets")
+                    Text("Ingressos")
                         .font(.caption)
                         .foregroundColor(.secondary)
+                }
+            }
+            
+            // Tickets do Vendedor
+            if !profile.tickets.isEmpty {
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Ingressos Disponíveis")
+                        .font(.headline)
+                        .padding(.horizontal)
+                    
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 12) {
+                            ForEach(profile.tickets.prefix(5)) { ticket in
+                                ticketCardView(ticket)
+                            }
+                        }
+                        .padding(.horizontal)
+                    }
                 }
             }
             
             Spacer()
         }
         .padding()
+    }
+    
+    private func ticketCardView(_ ticket: Ticket) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Text(ticket.ticketType.displayName)
+                    .font(.caption)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(Color.blue.opacity(0.2))
+                    .foregroundColor(.blue)
+                    .cornerRadius(4)
+                
+                Spacer()
+                
+                Text("$\(Int(ticket.price))")
+                    .font(.headline)
+                    .fontWeight(.bold)
+            }
+            
+            Text(ticket.name)
+                .font(.subheadline)
+                .fontWeight(.semibold)
+                .lineLimit(2)
+            
+            HStack {
+                Image(systemName: "circle.fill")
+                    .font(.caption2)
+                    .foregroundColor(ticket.status == .available ? .green : .orange)
+                
+                Text(ticket.status.displayName)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+        }
+        .padding(12)
+        .frame(width: 160)
+        .background(Color(.systemGray6))
+        .cornerRadius(8)
     }
     
     private var errorView: some View {
