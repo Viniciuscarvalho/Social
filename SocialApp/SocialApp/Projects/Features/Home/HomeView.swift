@@ -114,15 +114,15 @@ public struct HomeView: View {
                         .padding(.vertical, 40)
                 } else {
                     ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 16) {
+                        HStack(spacing: 20) {
                             ForEach(events) { event in
                                 EventCard(event: event) {
                                     store.send(.eventSelected(event.id))
                                 }
-                                .frame(width: 280)
+                                .frame(width: 300)
                             }
                         }
-                        .padding(.horizontal, 16)
+                        .padding(.horizontal, 20)
                     }
                     .padding(.horizontal, -16)
                 }

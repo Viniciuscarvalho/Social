@@ -8,6 +8,7 @@ public struct SocialAppFeature {
         public var selectedTab: AppTab = .home
         public var homeFeature = HomeFeature.State()
         public var ticketsListFeature = TicketsListFeature.State()
+        public var addTicket = AddTicketFeature.State()
         public var favoritesFeature = FavoritesFeature.State()
         public var sellerProfileFeature = SellerProfileFeature.State()
         public var ticketDetailFeature = TicketDetailFeature.State()
@@ -16,6 +17,7 @@ public struct SocialAppFeature {
         public var selectedEventId: UUID?
         public var selectedTicketId: UUID?
         public var selectedSellerId: UUID?
+        public var showingAddTicket = false
         
         public init() {}
     }
@@ -24,6 +26,7 @@ public struct SocialAppFeature {
         case tabSelected(AppTab)
         case homeFeature(HomeFeature.Action)
         case ticketsListFeature(TicketsListFeature.Action)
+        case addTicket(AddTicketFeature.Action)
         case favoritesFeature(FavoritesFeature.Action)
         case sellerProfileFeature(SellerProfileFeature.Action)
         case ticketDetailFeature(TicketDetailFeature.Action)
@@ -36,6 +39,10 @@ public struct SocialAppFeature {
         case dismissEventNavigation(UUID?)
         case dismissTicketNavigation(UUID?)
         case dismissSellerNavigation(UUID?)
+        
+        // Add ticket modal actions
+        case addTicketTapped
+        case setShowingAddTicket(Bool)
     }
     
     public init() {}
@@ -47,6 +54,10 @@ public struct SocialAppFeature {
         
         Scope(state: \.ticketsListFeature, action: \.ticketsListFeature) {
             TicketsListFeature()
+        }
+        
+        Scope(state: \.addTicket, action: \.addTicket) {
+            AddTicketFeature()
         }
         
         Scope(state: \.favoritesFeature, action: \.favoritesFeature) {
@@ -65,6 +76,14 @@ public struct SocialAppFeature {
             switch action {
             case let .tabSelected(tab):
                 state.selectedTab = tab
+                return .none
+                
+            case .addTicketTapped:
+                state.showingAddTicket = true
+                return .none
+                
+            case let .setShowingAddTicket(isShowing):
+                state.showingAddTicket = isShowing
                 return .none
                 
             case let .navigateToEventDetail(eventId):
@@ -104,11 +123,19 @@ public struct SocialAppFeature {
             case let .favoritesFeature(.eventSelected(eventId)):
                 return .send(.navigateToEventDetail(eventId))
                 
+            // Handle add ticket completion
+            case .addTicket(.publishTicket):
+                state.showingAddTicket = false
+                return .none
+                
             // Outras actions das features são tratadas pelos seus próprios reducers
             case .homeFeature:
                 return .none
                 
             case .ticketsListFeature:
+                return .none
+                
+            case .addTicket:
                 return .none
                 
             case .favoritesFeature:

@@ -365,28 +365,35 @@ public struct SellerProfile: Codable, Identifiable, Equatable {
 
 // MARK: - Navigation Models
 
-public enum AppTab: String, CaseIterable, Equatable {
-    case home = "home"
-    case tickets = "tickets"
-    case favorites = "favorites"
-    case profile = "profile"
+public enum AppTab: Hashable, CaseIterable {
+    case home
+    case tickets
+    case addTicket
+    case favorites
+    case profile
     
-    public var displayName: String {
+    var icon: String {
         switch self {
-        case .home: return "Home"
+        case .home: return "house.fill"
+        case .tickets: return "ticket.fill"
+        case .addTicket: return "plus"
+        case .favorites: return "heart.fill"
+        case .profile: return "person.fill"
+        }
+    }
+    
+    var title: String {
+        switch self {
+        case .home: return "Início"
         case .tickets: return "Ingressos"
+        case .addTicket: return ""
         case .favorites: return "Favoritos"
         case .profile: return "Perfil"
         }
     }
     
-    public var icon: String {
-        switch self {
-        case .home: return "house"
-        case .tickets: return "ticket"
-        case .favorites: return "heart"
-        case .profile: return "person"
-        }
+    var displayName: String {
+        title
     }
 }
 
