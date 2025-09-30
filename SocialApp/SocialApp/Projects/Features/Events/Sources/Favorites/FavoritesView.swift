@@ -114,19 +114,6 @@ struct FavoriteEventCard: View {
     }
 }
 
-// Placeholder view para ser removida depois
-public struct FavoritesPlaceholderView: View {
-    public init() {}
-    
-    public var body: some View {
-        FavoritesView(
-            store: Store(initialState: FavoritesFeature.State()) {
-                FavoritesFeature()
-            }
-        )
-    }
-}
-
 #Preview {
     FavoritesView(
         store: Store(initialState: FavoritesFeature.State()) {

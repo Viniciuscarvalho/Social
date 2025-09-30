@@ -24,6 +24,8 @@ let project = Project(
             sources: [
                 "./SocialApp/Sources/**",
                 "./SharedModels/Sources/**",
+                "./Projects/Features/Home/**",
+                "./Projects/Features/Profile/**",
                 "./Projects/Features/Events/Sources/**",
                 "./Projects/Features/TicketsList/Sources/**", 
                 "./Projects/Features/SellerProfile/Sources/**",

@@ -2,61 +2,86 @@ import SwiftUI
 import CoreLocation
 import ComposableArchitecture
 
-struct EventCard: View {
+public struct EventCard: View {
     let event: Event
     let onTap: () -> Void
     
-    var body: some View {
+    public init(event: Event, onTap: @escaping () -> Void) {
+        self.event = event
+        self.onTap = onTap
+    }
+    
+    public var body: some View {
         Button(action: onTap) {
-            HStack(spacing: 12) {
-                AsyncImage(url: URL(string: event.imageURL ?? "")) { image in
+            VStack(alignment: .leading, spacing: 12) {
+                // Event image placeholder
+                AsyncImage(url: event.imageURL.flatMap(URL.init)) { image in
                     image
                         .resizable()
                         .aspectRatio(contentMode: .fill)
                 } placeholder: {
                     Rectangle()
-                        .fill(Color.gray.opacity(0.3))
+                        .fill(Color(.systemGray5))
+                        .overlay(
+                            Image(systemName: "photo")
+                                .foregroundColor(.secondary)
+                        )
                 }
-                .frame(width: 80, height: 80)
-                .cornerRadius(8)
+                .frame(height: 160)
+                .clipped()
+                .cornerRadius(12)
                 
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(event.name)
-                        .font(.headline)
-                        .lineLimit(2)
-                    
-                    Text(event.location.name)
-                        .font(.caption)
-                        .foregroundColor(.gray)
-                    
-                    Text("$\(Int(event.startPrice))")
-                        .font(.subheadline)
-                        .foregroundColor(.green)
-                    
-                    if let rating = event.rating {
-                        HStack(spacing: 2) {
-                            Image(systemName: "star.fill")
-                                .foregroundColor(.yellow)
+                VStack(alignment: .leading, spacing: 6) {
+                    HStack {
+                        Text(event.category.icon)
+                        Text(event.category.displayName)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        Spacer()
+                        if event.isRecommended {
+                            Text("⭐ Recomendado")
                                 .font(.caption)
-                            Text(String(format: "%.1f", rating))
-                                .font(.caption)
+                                .foregroundColor(.orange)
                         }
                     }
-                }
-                
-                Spacer()
-                
-                EventFavoriteView(
-                    store: Store(initialState: EventFavoriteFeature.State(event: event)) {
-                        EventFavoriteFeature()
+                    
+                    Text(event.name)
+                        .font(.headline)
+                        .fontWeight(.semibold)
+                        .lineLimit(2)
+                        .multilineTextAlignment(.leading)
+                    
+                    HStack {
+                        Image(systemName: "location")
+                            .foregroundColor(.secondary)
+                        Text(event.location.city)
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                        Spacer()
+                        Text("A partir de R$ \(event.startPrice, specifier: "%.0f")")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                            .foregroundColor(.primary)
                     }
-                )
+                    
+                    HStack {
+                        Image(systemName: "calendar")
+                            .foregroundColor(.secondary)
+                        Text(event.dateFormatted)
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                        Spacer()
+                        Text(event.timeRange)
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    }
+                }
+                .padding(.horizontal, 4)
             }
-            .padding()
-            .background(Color.white)
-            .cornerRadius(12)
-            .shadow(radius: 2)
         }
         .buttonStyle(PlainButtonStyle())
+        .background(Color(.systemBackground))
+        .cornerRadius(16)
+        .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 4)
     }
 }

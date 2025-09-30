@@ -5,8 +5,8 @@ import SwiftUI
 public struct SocialAppFeature {
     @ObservableState
     public struct State: Equatable {
-        public var selectedTab: AppTab = .events
-        public var eventsFeature = EventsFeature.State()
+        public var selectedTab: AppTab = .home
+        public var homeFeature = HomeFeature.State()
         public var ticketsListFeature = TicketsListFeature.State()
         public var favoritesFeature = FavoritesFeature.State()
         public var sellerProfileFeature = SellerProfileFeature.State()
@@ -22,7 +22,7 @@ public struct SocialAppFeature {
     
     public enum Action: Equatable {
         case tabSelected(AppTab)
-        case eventsFeature(EventsFeature.Action)
+        case homeFeature(HomeFeature.Action)
         case ticketsListFeature(TicketsListFeature.Action)
         case favoritesFeature(FavoritesFeature.Action)
         case sellerProfileFeature(SellerProfileFeature.Action)
@@ -41,8 +41,8 @@ public struct SocialAppFeature {
     public init() {}
     
     public var body: some ReducerOf<Self> {
-        Scope(state: \.eventsFeature, action: \.eventsFeature) {
-            EventsFeature()
+        Scope(state: \.homeFeature, action: \.homeFeature) {
+            HomeFeature()
         }
         
         Scope(state: \.ticketsListFeature, action: \.ticketsListFeature) {
@@ -92,8 +92,11 @@ public struct SocialAppFeature {
                 return .none
                 
             // Handle child feature actions that need navigation
-            case let .eventsFeature(.eventSelected(eventId)):
+            case let .homeFeature(.eventSelected(eventId)):
                 return .send(.navigateToEventDetail(eventId))
+                
+            case let .homeFeature(.ticketSelected(ticketId)):
+                return .send(.navigateToTicketDetail(ticketId))
                 
             case let .ticketsListFeature(.ticketSelected(ticketId)):
                 return .send(.navigateToTicketDetail(ticketId))
@@ -102,7 +105,7 @@ public struct SocialAppFeature {
                 return .send(.navigateToEventDetail(eventId))
                 
             // Outras actions das features são tratadas pelos seus próprios reducers
-            case .eventsFeature:
+            case .homeFeature:
                 return .none
                 
             case .ticketsListFeature:

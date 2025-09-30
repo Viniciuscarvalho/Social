@@ -1,73 +1,75 @@
 import SwiftUI
 
-struct TicketCard: View {
+public struct TicketCard: View {
     let ticket: Ticket
     let onTap: () -> Void
-
-    var body: some View {
+    
+    public init(ticket: Ticket, onTap: @escaping () -> Void) {
+        self.ticket = ticket
+        self.onTap = onTap
+    }
+    
+    public var body: some View {
         Button(action: onTap) {
-            HStack(alignment: .top, spacing: 12) {
-                Image(systemName: "ticket")
-                    .font(.system(size: 24))
-                    .foregroundColor(.green)
-                    .padding(8)
-                    .background(Color.green.opacity(0.1))
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
-
-                VStack(alignment: .leading, spacing: 6) {
-                    HStack(alignment: .center) {
-                        Text(ticket.name)
-                            .font(.headline)
+            HStack(spacing: 16) {
+                // Ticket type icon
+                VStack {
+                    Image(systemName: "ticket")
+                        .font(.title2)
+                        .foregroundColor(.blue)
+                    Text(ticket.ticketType.displayName)
+                        .font(.caption2)
+                        .foregroundColor(.blue)
+                        .multilineTextAlignment(.center)
+                }
+                .frame(width: 60)
+                
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(ticket.name)
+                        .font(.headline)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.primary)
+                    
+                    HStack {
+                        Text("R$ \(ticket.price, specifier: "%.2f")")
+                            .font(.title3)
+                            .fontWeight(.bold)
                             .foregroundColor(.primary)
-                            .lineLimit(1)
-
-                        Spacer()
-                    }
-
-                    HStack(spacing: 8) {
-                        Text(ticket.ticketType.displayName)
-                            .font(.caption)
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 4)
-                            .background(Color.gray.opacity(0.15))
-                            .clipShape(Capsule())
-
-                        Text(ticket.status.displayName)
-                            .font(.caption2)
-                            .foregroundColor(.secondary)
-                    }
-
-                    HStack(alignment: .firstTextBaseline) {
-                        Text(formatPrice(ticket.price))
-                            .font(.subheadline)
-                            .fontWeight(.semibold)
-
-                        if let discount = ticket.discountPercentage {
-                            Text(String(format: "-%.0f%%", discount))
+                        
+                        if let discountPercentage = ticket.discountPercentage {
+                            Text("-\(discountPercentage, specifier: "%.0f")%")
                                 .font(.caption)
-                                .foregroundColor(.green)
+                                .fontWeight(.medium)
                                 .padding(.horizontal, 6)
                                 .padding(.vertical, 2)
-                                .background(Color.green.opacity(0.15))
-                                .clipShape(Capsule())
+                                .background(Color.green)
+                                .foregroundColor(.white)
+                                .cornerRadius(4)
                         }
-
-                        Spacer()
-
-                        Text("Válido até \(formatDate(ticket.validUntil))")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
                     }
+                    
+                    Text("Válido até: \(ticket.validUntil, style: .date)")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                
+                Spacer()
+                
+                VStack {
+                    Circle()
+                        .fill(Color(ticket.status.color))
+                        .frame(width: 12, height: 12)
+                    Text(ticket.status.displayName)
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
                 }
             }
-            .padding(12)
-            .background(
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(Color(.systemBackground))
-                    .shadow(color: Color.black.opacity(0.05), radius: 4, x: 0, y: 2)
-            )
+            .padding(16)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(PlainButtonStyle())
+        .background(Color(.systemBackground))
+        .cornerRadius(12)
+        .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 2)
     }
 
     private func formatPrice(_ value: Double) -> String {

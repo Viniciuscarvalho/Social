@@ -10,7 +10,7 @@ public struct SocialAppView: View {
     
     public var body: some View {
         TabView(selection: $store.selectedTab.sending(\.tabSelected)) {
-            eventsTab
+            homeTab
             ticketsTab
             favoritesTab
             profileTab
@@ -18,12 +18,12 @@ public struct SocialAppView: View {
     }
     
     @ViewBuilder
-    private var eventsTab: some View {
+    private var homeTab: some View {
         NavigationStack {
-            EventsView(
+            HomeView(
                 store: store.scope(
-                    state: \.eventsFeature,
-                    action: \.eventsFeature
+                    state: \.homeFeature,
+                    action: \.homeFeature
                 )
             )
             .navigationDestination(item: $store.selectedEventId.sending(\.dismissEventNavigation)) { eventId in
@@ -51,10 +51,10 @@ public struct SocialAppView: View {
             }
         }
         .tabItem {
-            Image(systemName: AppTab.events.icon)
-            Text(AppTab.events.displayName)
+            Image(systemName: AppTab.home.icon)
+            Text(AppTab.home.displayName)
         }
-        .tag(AppTab.events)
+        .tag(AppTab.home)
     }
     
     @ViewBuilder

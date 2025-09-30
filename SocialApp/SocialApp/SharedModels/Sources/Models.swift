@@ -366,14 +366,14 @@ public struct SellerProfile: Codable, Identifiable, Equatable {
 // MARK: - Navigation Models
 
 public enum AppTab: String, CaseIterable, Equatable {
-    case events = "events"
+    case home = "home"
     case tickets = "tickets"
     case favorites = "favorites"
     case profile = "profile"
     
     public var displayName: String {
         switch self {
-        case .events: return "Eventos"
+        case .home: return "Home"
         case .tickets: return "Ingressos"
         case .favorites: return "Favoritos"
         case .profile: return "Perfil"
@@ -382,10 +382,38 @@ public enum AppTab: String, CaseIterable, Equatable {
     
     public var icon: String {
         switch self {
-        case .events: return "calendar"
+        case .home: return "house"
         case .tickets: return "ticket"
         case .favorites: return "heart"
         case .profile: return "person"
+        }
+    }
+}
+
+// MARK: - Home Models
+
+public struct HomeContent: Codable, Equatable {
+    public var curatedEvents: [Event]
+    public var trendingEvents: [Event]
+    public var availableTickets: [Ticket]
+    public var user: User?
+    
+    public init(curatedEvents: [Event] = [], trendingEvents: [Event] = [], availableTickets: [Ticket] = [], user: User? = nil) {
+        self.curatedEvents = curatedEvents
+        self.trendingEvents = trendingEvents
+        self.availableTickets = availableTickets
+        self.user = user
+    }
+}
+
+public enum EventSection: String, CaseIterable, Equatable {
+    case curated = "curated"
+    case trending = "trending"
+    
+    public var displayName: String {
+        switch self {
+        case .curated: return "Curated"
+        case .trending: return "Trending"
         }
     }
 }
