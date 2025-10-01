@@ -37,8 +37,6 @@ private enum HomeClientKey: DependencyKey {
                     user: currentUser
                 )
             } catch {
-                // Em caso de erro, retorna um HomeContent vazio
-                // Os clients já têm fallbacks para SharedMockData
                 print("❌ Erro ao carregar home content: \(error)")
                 return HomeContent()
             }
