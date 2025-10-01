@@ -381,20 +381,6 @@ public enum AppTab: Hashable, CaseIterable {
         case .profile: return "person.fill"
         }
     }
-    
-    var title: String {
-        switch self {
-        case .home: return "Início"
-        case .tickets: return "Ingressos"
-        case .addTicket: return ""
-        case .favorites: return "Favoritos"
-        case .profile: return "Perfil"
-        }
-    }
-    
-    var displayName: String {
-        title
-    }
 }
 
 // MARK: - Home Models

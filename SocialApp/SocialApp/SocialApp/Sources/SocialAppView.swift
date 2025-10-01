@@ -13,17 +13,22 @@ public struct SocialAppView: View {
             AppColors.backgroundGradient
                 .ignoresSafeArea()
             
-            TabView(selection: $store.selectedTab.sending(\.tabSelected)) {
-                homeTab
-                ticketsTab
-                
-                Color.clear
-                    .tag(AppTab.addTicket)
-                
-                favoritesTab
-                profileTab
+            // Content based on selected tab
+            Group {
+                switch store.selectedTab {
+                case .home:
+                    homeTab
+                case .tickets:
+                    ticketsTab
+                case .addTicket:
+                    Color.clear
+                case .favorites:
+                    favoritesTab
+                case .profile:
+                    profileTab
+                }
             }
-            .preferredColorScheme(.dark)
+            .toolbar(.hidden, for: .tabBar)
             .ignoresSafeArea(.keyboard)
             
             CustomTabBar(
@@ -51,6 +56,7 @@ public struct SocialAppView: View {
                         action: \.homeFeature
                     )
                 )
+                .padding(.bottom, 100)
             }
             .navigationDestination(item: $store.selectedEventId.sending(\.dismissEventNavigation)) { eventId in
                 ZStack {
@@ -58,6 +64,7 @@ public struct SocialAppView: View {
                         .ignoresSafeArea()
                     
                     EventDetailView(eventId: eventId)
+                        .toolbar(.hidden, for: .tabBar)
                 }
             }
             .navigationDestination(item: $store.selectedTicketId.sending(\.dismissTicketNavigation)) { ticketId in
@@ -72,6 +79,7 @@ public struct SocialAppView: View {
                         ),
                         ticketId: ticketId
                     )
+                    .toolbar(.hidden, for: .tabBar)
                 }
             }
             .navigationDestination(item: $store.selectedSellerId.sending(\.dismissSellerNavigation)) { sellerId in
@@ -86,7 +94,6 @@ public struct SocialAppView: View {
                 }
             }
         }
-        .tag(AppTab.home)
     }
     
     @ViewBuilder
@@ -102,6 +109,7 @@ public struct SocialAppView: View {
                         action: \.ticketsListFeature
                     )
                 )
+                .padding(.bottom, 100)
             }
             .navigationDestination(item: $store.selectedTicketId.sending(\.dismissTicketNavigation)) { ticketId in
                 ZStack {
@@ -115,10 +123,10 @@ public struct SocialAppView: View {
                         ),
                         ticketId: ticketId
                     )
+                    .toolbar(.hidden, for: .tabBar)
                 }
             }
         }
-        .tag(AppTab.tickets)
     }
     
     @ViewBuilder
@@ -134,6 +142,7 @@ public struct SocialAppView: View {
                         action: \.favoritesFeature
                     )
                 )
+                .padding(.bottom, 100)
             }
             .navigationDestination(item: $store.selectedEventId.sending(\.dismissEventNavigation)) { eventId in
                 ZStack {
@@ -141,10 +150,10 @@ public struct SocialAppView: View {
                         .ignoresSafeArea()
                     
                     EventDetailView(eventId: eventId)
+                        .toolbar(.hidden, for: .tabBar)
                 }
             }
         }
-        .tag(AppTab.favorites)
     }
     
     @ViewBuilder
@@ -155,9 +164,9 @@ public struct SocialAppView: View {
                     .ignoresSafeArea()
                 
                 ProfileView()
+                    .padding(.bottom, 100)
             }
         }
-        .tag(AppTab.profile)
     }
 }
 
@@ -168,11 +177,11 @@ struct CustomTabBar: View {
     let onAddTicket: () -> Void
     
     var body: some View {
+    
         HStack(spacing: 0) {
             // Home
             TabBarButton(
                 icon: AppTab.home.icon,
-                title: AppTab.home.title,
                 isSelected: selectedTab == .home
             ) {
                 selectedTab = .home
@@ -181,7 +190,6 @@ struct CustomTabBar: View {
             // Tickets
             TabBarButton(
                 icon: AppTab.tickets.icon,
-                title: AppTab.tickets.title,
                 isSelected: selectedTab == .tickets
             ) {
                 selectedTab = .tickets
@@ -194,7 +202,6 @@ struct CustomTabBar: View {
             // Favorites
             TabBarButton(
                 icon: AppTab.favorites.icon,
-                title: AppTab.favorites.title,
                 isSelected: selectedTab == .favorites
             ) {
                 selectedTab = .favorites
@@ -203,29 +210,24 @@ struct CustomTabBar: View {
             // Profile
             TabBarButton(
                 icon: AppTab.profile.icon,
-                title: AppTab.profile.title,
                 isSelected: selectedTab == .profile
             ) {
                 selectedTab = .profile
             }
         }
-        .frame(height: 70)
-        .padding(.horizontal, 20)
-        .padding(.top, 12)
-        .padding(.bottom, 8)
+        .frame(height: 60)
         .background(
             RoundedRectangle(cornerRadius: 25)
                 .fill(AppColors.cardBackground)
                 .shadow(color: AppColors.cardShadow.opacity(0.15), radius: 20, x: 0, y: -8)
         )
-        .padding(.horizontal, 20)
-        .padding(.bottom, 10)
+        .padding(.bottom, 0)
     }
+    
 }
 
 struct TabBarButton: View {
     let icon: String
-    let title: String
     let isSelected: Bool
     let action: () -> Void
     
@@ -234,17 +236,11 @@ struct TabBarButton: View {
             VStack(spacing: 6) {
                 Image(systemName: icon)
                     .font(.system(size: 18, weight: .medium))
-                    .foregroundColor(isSelected ? AppColors.primary : AppColors.tertiaryText)
                     .frame(height: 24)
-                
-                if !title.isEmpty {
-                    Text(title)
-                        .font(.system(size: 11, weight: .medium))
-                        .foregroundColor(isSelected ? AppColors.primary : AppColors.tertiaryText)
-                        .lineLimit(1)
-                }
             }
             .frame(maxWidth: .infinity)
+            .frame(height: 60)
+            .foregroundColor(isSelected ? AppColors.primary : AppColors.tertiaryText)
             .contentShape(Rectangle())
         }
         .buttonStyle(PlainButtonStyle())
@@ -273,7 +269,7 @@ struct AddButton: View {
                     .foregroundColor(.white)
             }
         }
-        .offset(y: -15) // Eleva o botão acima da TabBar
+        .offset(y: -20)
         .buttonStyle(PlainButtonStyle())
     }
 }
