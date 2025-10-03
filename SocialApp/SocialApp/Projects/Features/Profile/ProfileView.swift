@@ -2,7 +2,7 @@ import SwiftUI
 
 public struct ProfileView: View {
     @Environment(ThemeManager.self) private var themeManager
-    @State private var user = User(name: "João Silva", email: "joao.silva@email.com")
+    @State private var user = User(name: "João Silva", title: "Entusiasta de Eventos", email: "joao.silva@email.com")
     @State private var showingImagePicker = false
     @State private var notificationsEnabled = true
     @State private var emailNotifications = true
@@ -16,6 +16,9 @@ public struct ProfileView: View {
             VStack(spacing: 24) {
                 // Header do perfil
                 profileHeaderView
+                
+                // Estatísticas do usuário
+                userStatsSection
                 
                 // Seção de configurações
                 settingsSection
@@ -84,6 +87,16 @@ public struct ProfileView: View {
                         .foregroundColor(.secondary)
                 }
                 
+                if let title = user.title {
+                    Text(title)
+                        .font(.caption)
+                        .foregroundColor(.blue)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(Color.blue.opacity(0.1))
+                        .cornerRadius(8)
+                }
+                
                 Button("Editar Perfil") {
                     showingEditProfile = true
                 }
@@ -92,6 +105,43 @@ public struct ProfileView: View {
             }
         }
         .padding(.vertical)
+    }
+    
+    @ViewBuilder
+    private var userStatsSection: some View {
+        HStack(spacing: 20) {
+            userStatItem(title: "Ingressos", value: "\(user.ticketsCount)", color: .blue)
+            userStatItem(title: "Seguidores", value: "\(user.followersCount)", color: .green)
+            userStatItem(title: "Seguindo", value: "\(user.followingCount)", color: .purple)
+            
+            if user.isVerified {
+                VStack(spacing: 4) {
+                    Image(systemName: "checkmark.seal.fill")
+                        .font(.system(size: 20))
+                        .foregroundColor(.blue)
+                    
+                    Text("Verificado")
+                        .font(.caption)
+                        .foregroundColor(.blue)
+                }
+            }
+        }
+        .padding()
+        .background(Color(.systemGray6))
+        .cornerRadius(12)
+    }
+    
+    private func userStatItem(title: String, value: String, color: Color) -> some View {
+        VStack(spacing: 4) {
+            Text(value)
+                .font(.title2)
+                .fontWeight(.bold)
+                .foregroundColor(color)
+            
+            Text(title)
+                .font(.caption)
+                .foregroundColor(.secondary)
+        }
     }
     
     @ViewBuilder
@@ -272,13 +322,14 @@ public struct ProfileView: View {
                 .font(.caption)
                 .foregroundColor(.gray)
             
-            Text("© 2024 SocialApp")
+            Text("© 2025 SocialApp")
                 .font(.caption)
                 .foregroundColor(.gray)
         }
         .padding(.top, 20)
     }
     
+    @ViewBuilder
     private func sectionHeader(_ title: String) -> some View {
         HStack {
             Text(title)
@@ -290,7 +341,14 @@ public struct ProfileView: View {
         .padding(.bottom, 8)
     }
     
-    private func settingsRow(icon: String, iconColor: Color, title: String, subtitle: String, action: @escaping () -> Void) -> some View {
+    @ViewBuilder
+    private func settingsRow(
+        icon: String,
+        iconColor: Color,
+        title: String,
+        subtitle: String,
+        action: @escaping () -> Void
+    ) -> some View {
         Button(action: action) {
             HStack(spacing: 16) {
                 Image(systemName: icon)
@@ -320,7 +378,14 @@ public struct ProfileView: View {
         .buttonStyle(.plain)
     }
     
-    private func toggleRow(icon: String, iconColor: Color, title: String, subtitle: String, isOn: Binding<Bool>) -> some View {
+    @ViewBuilder
+    private func toggleRow(
+        icon: String,
+        iconColor: Color,
+        title: String,
+        subtitle: String,
+        isOn: Binding<Bool>
+    ) -> some View {
         HStack(spacing: 16) {
             Image(systemName: icon)
                 .font(.system(size: 20))
@@ -346,6 +411,7 @@ public struct ProfileView: View {
         .padding(.vertical, 12)
     }
     
+    @ViewBuilder
     private var editProfileSheet: some View {
         NavigationView {
             EditProfileView(user: $user)
@@ -368,6 +434,7 @@ public struct ProfileView: View {
         }
     }
     
+    @ViewBuilder
     private var imagePickerSheet: some View {
         VStack(spacing: 20) {
             Text("Alterar Foto do Perfil")
@@ -413,11 +480,13 @@ struct EditProfileView: View {
     @Binding var user: User
     @State private var tempName: String
     @State private var tempEmail: String
+    @State private var tempTitle: String
     
     init(user: Binding<User>) {
         self._user = user
         self._tempName = State(initialValue: user.wrappedValue.name)
         self._tempEmail = State(initialValue: user.wrappedValue.email ?? "")
+        self._tempTitle = State(initialValue: user.wrappedValue.title ?? "")
     }
     
     var body: some View {
@@ -427,11 +496,13 @@ struct EditProfileView: View {
                 TextField("Email", text: $tempEmail)
                     .keyboardType(.emailAddress)
                     .autocapitalization(.none)
+                TextField("Título/Profissão", text: $tempTitle)
             }
         }
         .onDisappear {
             user.name = tempName
             user.email = tempEmail.isEmpty ? nil : tempEmail
+            user.title = tempTitle.isEmpty ? nil : tempTitle
         }
     }
 }

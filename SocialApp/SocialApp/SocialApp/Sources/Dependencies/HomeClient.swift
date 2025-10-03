@@ -37,7 +37,6 @@ private enum HomeClientKey: DependencyKey {
                     user: currentUser
                 )
             } catch {
-                print("❌ Erro ao carregar home content: \(error)")
                 return HomeContent()
             }
         }

@@ -60,11 +60,11 @@ public enum SharedMockData {
         )
     ]
     
-    // MARK: - Seller Profiles
-    public static let sampleSellerProfiles: [SellerProfile] = [
-        SellerProfile(name: "João Silva", title: "Event Organizer", profileImageURL: "https://example.com/joao.jpg"),
-        SellerProfile(name: "Maria Santos", title: "Concert Promoter", profileImageURL: "https://example.com/maria.jpg"),
-        SellerProfile(name: "Pedro Costa", title: "UX Designer", profileImageURL: "https://example.com/pedro.jpg")
+    // MARK: - Users (Ex-Seller Profiles)
+    public static let sampleSellerProfiles: [User] = [
+        User(name: "João Silva", title: "Event Organizer", profileImageURL: "https://example.com/joao.jpg"),
+        User(name: "Maria Santos", title: "Concert Promoter", profileImageURL: "https://example.com/maria.jpg"),
+        User(name: "Pedro Costa", title: "UX Designer", profileImageURL: "https://example.com/pedro.jpg")
     ]
     
     // MARK: - Tickets
@@ -105,7 +105,7 @@ public enum SharedMockData {
         sampleEvents.randomElement() ?? sampleEvents[0]
     }
     
-    public static func randomSeller() -> SellerProfile {
+    public static func randomSeller() -> User {
         sampleSellerProfiles.randomElement() ?? sampleSellerProfiles[0]
     }
     

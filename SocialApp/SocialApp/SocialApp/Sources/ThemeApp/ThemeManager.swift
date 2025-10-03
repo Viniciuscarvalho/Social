@@ -12,7 +12,6 @@ public class ThemeManager {
     }
     
     private init() {
-        // Carrega a preferência salva do usuário
         if let savedScheme = UserDefaults.standard.string(forKey: "colorScheme"),
            let scheme = ColorScheme(rawValue: savedScheme) {
             self.colorScheme = scheme
@@ -24,7 +23,7 @@ public class ThemeManager {
         case .light:
             colorScheme = .dark
         case .dark:
-            colorScheme = nil // Sistema
+            colorScheme = nil
         case .none:
             colorScheme = .light
         }

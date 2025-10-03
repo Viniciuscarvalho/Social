@@ -31,6 +31,7 @@ public struct SellerProfileView: View {
                         }
                     }
                     .padding()
+                    .padding(.bottom, 100)
                 }
             } else {
                 errorView
@@ -55,7 +56,7 @@ public struct SellerProfileView: View {
         }
     }
     
-    private func profileHeaderView(_ profile: SellerProfile) -> some View {
+    private func profileHeaderView(_ profile: User) -> some View {
         HStack(spacing: 16) {
             // Profile Image
             AsyncImage(url: URL(string: profile.profileImageURL ?? "")) { image in
@@ -128,9 +129,8 @@ public struct SellerProfileView: View {
         )
     }
     
-    private func statsCardsView(_ profile: SellerProfile) -> some View {
+    private func statsCardsView(_ profile: User) -> some View {
         VStack(spacing: 12) {
-            // Seguidores Card
             statsCard(
                 title: "Seguidores",
                 value: "\(profile.followersCount)",
@@ -140,7 +140,6 @@ public struct SellerProfileView: View {
                 showSeeAll: false
             )
             
-            // Ingressos Vendidos Card
             statsCard(
                 title: "Ingressos",
                 value: "\(profile.ticketsCount)",
@@ -216,7 +215,7 @@ public struct SellerProfileView: View {
         )
     }
     
-    private func ticketsSection(_ profile: SellerProfile) -> some View {
+    private func ticketsSection(_ profile: User) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Text("Ingressos Disponíveis")

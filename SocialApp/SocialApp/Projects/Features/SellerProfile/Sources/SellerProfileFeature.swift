@@ -5,7 +5,7 @@ import Foundation
 public struct SellerProfileFeature {
     @ObservableState
     public struct State: Equatable {
-        public var profile: SellerProfile?
+        public var profile: User?
         public var isLoading: Bool = false
         public var errorMessage: String?
         
@@ -16,7 +16,7 @@ public struct SellerProfileFeature {
         case onAppear
         case loadProfile
         case loadProfileById(UUID)
-        case profileResponse(Result<SellerProfile, APIError>)
+        case profileResponse(Result<User, APIError>)
     }
     
     public init() {}
@@ -33,7 +33,7 @@ public struct SellerProfileFeature {
                 return .run { send in
                     do {
                         try await Task.sleep(for: .seconds(1))
-                        let profile = SellerProfile(name: "Richard A. Bachmann", title: "UX/UX Designer")
+                        let profile = User(name: "Richard A. Bachmann", title: "UX/UX Designer")
                         await send(.profileResponse(.success(profile)))
                     } catch {
                         await send(.profileResponse(.failure(APIError(message: error.localizedDescription, code: 500))))
@@ -75,7 +75,7 @@ public struct SellerProfileFeature {
                             )
                         ]
                         
-                        var profile = SellerProfile(
+                        var profile = User(
                             name: "João Silva",
                             title: "Vendedor Oficial de Ingressos",
                             profileImageURL: nil

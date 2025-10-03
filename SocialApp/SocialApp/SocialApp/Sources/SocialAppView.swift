@@ -13,7 +13,6 @@ public struct SocialAppView: View {
             AppColors.backgroundGradient
                 .ignoresSafeArea()
             
-            // Content based on selected tab
             Group {
                 switch store.selectedTab {
                 case .home:

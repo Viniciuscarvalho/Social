@@ -24,7 +24,6 @@ public struct FavoriteButton: View {
     }
 }
 
-// Store para gerenciar o estado de favorito de um evento específico
 @Reducer
 public struct EventFavoriteFeature {
     @ObservableState
