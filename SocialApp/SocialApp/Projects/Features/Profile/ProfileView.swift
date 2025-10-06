@@ -2,6 +2,7 @@ import SwiftUI
 
 public struct ProfileView: View {
     @Environment(ThemeManager.self) private var themeManager
+    @EnvironmentObject var authManager: AuthManager
     @State private var user = User(name: "João Silva", title: "Entusiasta de Eventos", email: "joao.silva@email.com")
     @State private var showingImagePicker = false
     @State private var notificationsEnabled = true
@@ -290,7 +291,7 @@ public struct ProfileView: View {
                 
                 // Sair
                 Button(action: {
-                    // Implementar logout
+                    authManager.signOut()
                 }) {
                     HStack(spacing: 16) {
                         Image(systemName: "rectangle.portrait.and.arrow.right")

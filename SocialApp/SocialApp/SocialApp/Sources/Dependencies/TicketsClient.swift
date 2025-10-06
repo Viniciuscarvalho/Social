@@ -35,7 +35,7 @@ extension TicketsClient: DependencyKey {
                 throw APIError(message: "Event not found for ticket", code: 404)
             }
             // Create a lightweight seller profile (no sellers JSON available in live)
-            var seller = SellerProfile(name: "Seller \(ticket.sellerId.uuidString.prefix(8))", title: "Vendedor")
+            var seller = User(name: "Seller \(ticket.sellerId.uuidString.prefix(8))", title: "Vendedor")
             seller.tickets = [ticket]
             seller.ticketsCount = 1
             // Build the TicketDetail mirroring the ticket information

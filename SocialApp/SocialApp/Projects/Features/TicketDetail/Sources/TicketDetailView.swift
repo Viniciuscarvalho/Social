@@ -23,7 +23,7 @@ public struct TicketDetailView: View {
                 }
             }
             .padding()
-            .padding(.bottom, 100) // Padding para evitar sobreposição da tabBar
+            .padding(.bottom, 100)
         }
         .navigationTitle("Detalhes do Ingresso")
         .navigationBarTitleDisplayMode(.large)

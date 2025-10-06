@@ -5,15 +5,40 @@ import SwiftUI
 @main
 struct SocialApp: App {
     @State private var themeManager = ThemeManager.shared
+    @StateObject private var authManager = AuthManager()
+    @State private var showSplash = true
     
     var body: some Scene {
         WindowGroup {
-            ContentView()
-                .modelContainer(DataManager.shared.modelContainer)
-                .preferredColorScheme(themeManager.colorScheme)
-                .environment(themeManager)
-                .ignoresSafeArea(.keyboard)
+            ZStack {
+                if showSplash {
+                    SplashView()
+                        .transition(.opacity)
+                } else {
+                    if authManager.isAuthenticated {
+                        ContentView()
+                            .environmentObject(authManager)
+                            .preferredColorScheme(themeManager.colorScheme)
+                            .ignoresSafeArea(.keyboard)
+                    } else if authManager.isFirstLaunch {
+                        OnboardingView()
+                            .environmentObject(authManager)
+                    } else {
+                        SignInView()
+                            .environmentObject(authManager)
+                    }
+                }
+            }
+            .onAppear {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                    withAnimation(.easeInOut(duration: 0.5)) {
+                        showSplash = false
+                    }
+                }
+            }
         }
+        .modelContainer(DataManager.shared.modelContainer)
+        .environment(themeManager)
     }
 }
 
