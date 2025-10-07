@@ -1,17 +1,12 @@
 import SwiftUI
+import ComposableArchitecture
 
 struct SignInView: View {
-    @EnvironmentObject var authManager: AuthManager
-    @State private var email = ""
-    @State private var password = ""
-    @State private var rememberMe = false
-    @State private var showAlert = false
-    @State private var alertMessage = ""
+    @Bindable var store: StoreOf<SignInForm>
     @State private var showSignUp = false
     
     var body: some View {
         ZStack {
-            // Gradiente de fundo mais visível
             LinearGradient(
                 colors: [
                     Color(red: 0.1, green: 0.1, blue: 0.2),
@@ -44,16 +39,29 @@ struct SignInView: View {
                         .foregroundColor(.black)
                     
                     VStack(spacing: 16) {
-                        CustomTextField(placeholder: "Email", text: $email)
-                        CustomTextField(placeholder: "Senha", text: $password, isSecure: true)
+                        CustomTextField(
+                            placeholder: "Email", 
+                            text: .init(
+                                get: { store.email },
+                                set: { store.send(.emailChanged($0)) }
+                            )
+                        )
+                        CustomTextField(
+                            placeholder: "Senha", 
+                            text: .init(
+                                get: { store.password },
+                                set: { store.send(.passwordChanged($0)) }
+                            ),
+                            isSecure: true
+                        )
                     }
                     
                     HStack(spacing: 8) {
                         Button(action: {
-                            rememberMe.toggle()
+                            store.send(.rememberMeToggled)
                         }) {
-                            Image(systemName: rememberMe ? "checkmark.square.fill" : "square")
-                                .foregroundColor(rememberMe ? .black : .gray)
+                            Image(systemName: store.rememberMe ? "checkmark.square.fill" : "square")
+                                .foregroundColor(store.rememberMe ? .black : .gray)
                                 .font(.system(size: 20))
                         }
                         
@@ -62,7 +70,9 @@ struct SignInView: View {
                             .foregroundColor(.gray)
                     }
                     
-                    Button(action: handleSignIn) {
+                    Button(action: {
+                        store.send(.signInTapped(email: store.email, password: store.password))
+                    }) {
                         Text("Entrar")
                             .font(.system(size: 16, weight: .semibold))
                             .foregroundColor(.white)
@@ -90,31 +100,19 @@ struct SignInView: View {
                 .cornerRadius(30, corners: [.topLeft, .topRight])
             }
         }
-        .alert("Atenção", isPresented: $showAlert) {
+        .alert("Atenção", isPresented: .init(
+            get: { store.showAlert },
+            set: { _ in store.send(.alertDismissed) }
+        )) {
             Button("OK", role: .cancel) { }
         } message: {
-            Text(alertMessage)
+            Text(store.alertMessage)
         }
         .fullScreenCover(isPresented: $showSignUp) {
-            SignUpView()
-                .environmentObject(authManager)
+            SignUpView(store: Store(initialState: SignUpForm.State()) {
+                SignUpForm()
+            })
         }
-    }
-    
-    func handleSignIn() {
-        guard !email.isEmpty else {
-            alertMessage = "Por favor, insira seu email"
-            showAlert = true
-            return
-        }
-        
-        guard !password.isEmpty else {
-            alertMessage = "Por favor, insira sua senha"
-            showAlert = true
-            return
-        }
-        
-        authManager.signIn(email: email, password: password)
     }
 }
 

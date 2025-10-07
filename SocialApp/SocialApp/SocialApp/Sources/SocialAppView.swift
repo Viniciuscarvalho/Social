@@ -1,4 +1,5 @@
 import ComposableArchitecture
+import ComposableArchitecture
 import SwiftUI
 
 public struct SocialAppView: View {
@@ -9,6 +10,25 @@ public struct SocialAppView: View {
     }
     
     public var body: some View {
+        Group {
+            if store.isAuthenticated && store.currentUser != nil {
+                MainTabView(store: store)
+            } else {
+                AuthenticationView(store: store)
+            }
+        }
+        .onAppear {
+            store.send(.onAppear)
+        }
+    }
+}
+
+// MARK: - Main Tab View
+
+struct MainTabView: View {
+    @Bindable var store: StoreOf<SocialAppFeature>
+    
+    var body: some View {
         ZStack(alignment: .bottom) {
             AppColors.backgroundGradient
                 .ignoresSafeArea()
@@ -162,8 +182,13 @@ public struct SocialAppView: View {
                 AppColors.backgroundGradient
                     .ignoresSafeArea()
                 
-                ProfileView()
-                    .padding(.bottom, 100)
+                ProfileView(
+                    store: store.scope(
+                        state: \.profileFeature,
+                        action: \.profileFeature
+                    )
+                )
+                .padding(.bottom, 100)
             }
         }
     }
@@ -176,7 +201,6 @@ struct CustomTabBar: View {
     let onAddTicket: () -> Void
     
     var body: some View {
-    
         HStack(spacing: 0) {
             // Home
             TabBarButton(
@@ -222,7 +246,6 @@ struct CustomTabBar: View {
         )
         .padding(.bottom, 0)
     }
-    
 }
 
 struct TabBarButton: View {

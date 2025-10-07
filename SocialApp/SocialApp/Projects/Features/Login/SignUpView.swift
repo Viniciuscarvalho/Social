@@ -1,16 +1,11 @@
+import ComposableArchitecture
 import SwiftUI
 
 struct SignUpView: View {
-    @EnvironmentObject var authManager: AuthManager
+    @Bindable var store: StoreOf<SignUpForm>
     @Environment(\.dismiss) var dismiss
     
-    @State private var name = ""
-    @State private var email = ""
-    @State private var password = ""
-    @State private var confirmPassword = ""
     @State private var agreeToTerms = false
-    @State private var showAlert = false
-    @State private var alertMessage = ""
     
     var body: some View {
         ZStack {
@@ -61,10 +56,36 @@ struct SignUpView: View {
                         .foregroundColor(.black)
                     
                     VStack(spacing: 16) {
-                        CustomTextField(placeholder: "Nome", text: $name)
-                        CustomTextField(placeholder: "Email", text: $email)
-                        CustomTextField(placeholder: "Senha", text: $password, isSecure: true)
-                        CustomTextField(placeholder: "Confirme a Senha", text: $confirmPassword, isSecure: true)
+                        CustomTextField(
+                            placeholder: "Nome", 
+                            text: .init(
+                                get: { store.name },
+                                set: { store.send(.nameChanged($0)) }
+                            )
+                        )
+                        CustomTextField(
+                            placeholder: "Email", 
+                            text: .init(
+                                get: { store.email },
+                                set: { store.send(.emailChanged($0)) }
+                            )
+                        )
+                        CustomTextField(
+                            placeholder: "Senha", 
+                            text: .init(
+                                get: { store.password },
+                                set: { store.send(.passwordChanged($0)) }
+                            ),
+                            isSecure: true
+                        )
+                        CustomTextField(
+                            placeholder: "Confirme a Senha", 
+                            text: .init(
+                                get: { store.confirmPassword },
+                                set: { store.send(.confirmPasswordChanged($0)) }
+                            ),
+                            isSecure: true
+                        )
                     }
                     
                     HStack(spacing: 8) {
@@ -85,7 +106,14 @@ struct SignUpView: View {
                             .foregroundColor(.black)
                     }
                     
-                    Button(action: handleSignUp) {
+                    Button(action: {
+                        guard agreeToTerms else {
+                            store.send(.showAlert("Você precisa concordar com os Termos e Condições"))
+                            return
+                        }
+                        store.send(.signUpTapped(name: store.name, email: store.email, password: store.password))
+                        dismiss()
+                    }) {
                         Text("Cadastrar")
                             .font(.system(size: 16, weight: .semibold))
                             .foregroundColor(.white)
@@ -101,45 +129,13 @@ struct SignUpView: View {
                 .cornerRadius(30, corners: [.topLeft, .topRight])
             }
         }
-        .alert("Atenção", isPresented: $showAlert) {
+        .alert("Atenção", isPresented: .init(
+            get: { store.showAlert },
+            set: { _ in store.send(.alertDismissed) }
+        )) {
             Button("OK", role: .cancel) { }
         } message: {
-            Text(alertMessage)
+            Text(store.alertMessage)
         }
-    }
-    
-    func handleSignUp() {
-        guard !name.isEmpty else {
-            alertMessage = "Por favor, insira seu nome"
-            showAlert = true
-            return
-        }
-        
-        guard !email.isEmpty else {
-            alertMessage = "Por favor, insira seu email"
-            showAlert = true
-            return
-        }
-        
-        guard !password.isEmpty else {
-            alertMessage = "Por favor, insira sua senha"
-            showAlert = true
-            return
-        }
-        
-        guard password == confirmPassword else {
-            alertMessage = "As senhas não coincidem"
-            showAlert = true
-            return
-        }
-        
-        guard agreeToTerms else {
-            alertMessage = "Você precisa concordar com os Termos e Condições"
-            showAlert = true
-            return
-        }
-        
-        authManager.signUp(name: name, email: email, password: password)
-        dismiss()
     }
 }

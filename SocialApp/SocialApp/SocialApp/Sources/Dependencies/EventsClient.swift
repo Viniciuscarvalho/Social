@@ -2,70 +2,93 @@ import ComposableArchitecture
 import Foundation
 
 @DependencyClient
-public struct EventsClient {
-    public var fetchEvents: () async throws -> [Event]
-    public var searchEvents: (String) async throws -> [Event]
-    public var fetchEventsByCategory: (EventCategory) async throws -> [Event]
-    public var fetchEventDetail: (UUID) async throws -> Event
+struct EventsClient {
+    var fetchEvents: @Sendable () async throws -> [Event]
+    var fetchEvent: @Sendable (_ id: String) async throws -> Event
+    var searchEvents: @Sendable (_ query: String) async throws -> [Event]
+    var fetchEventsByCategory: @Sendable (_ category: EventCategory) async throws -> [Event]
 }
 
 extension EventsClient: DependencyKey {
-    public static let liveValue = EventsClient(
+    static let liveValue = Self(
         fetchEvents: {
-            try await Task.sleep(for: .seconds(1))
             do {
-                let events = try await loadEventsFromJSON()
-                return events
+                let apiEvents: [Event] = try await NetworkService.shared.request(
+                    endpoint: "/events",
+                    method: .GET
+                )
+                return apiEvents
             } catch {
-                return SharedMockData.sampleEvents
+                // Fallback para JSON local
+                print("API call failed, falling back to local JSON: \(error)")
+                return try await loadEventsFromJSON()
+            }
+        },
+        fetchEvent: { id in
+            do {
+                let apiEvent: Event = try await NetworkService.shared.request(
+                    endpoint: "/events/\(id)",
+                    method: .GET
+                )
+                return apiEvent
+            } catch {
+                // Fallback para JSON local
+                print("API call failed, falling back to local JSON: \(error)")
+                let events = try await loadEventsFromJSON()
+                guard let event = events.first(where: { $0.id.uuidString == id }) else {
+                    throw NetworkError.notFound
+                }
+                return event
             }
         },
         searchEvents: { query in
             do {
-                let allEvents = try await loadEventsFromJSON()
-                return allEvents.filter { event in
-                    event.name.localizedCaseInsensitiveContains(query)
-                }
+                let queryItems = [URLQueryItem(name: "q", value: query)]
+                let apiEvents: [Event] = try await NetworkService.shared.request(
+                    endpoint: "/events",
+                    method: .GET,
+                    queryItems: queryItems
+                )
+                return apiEvents
             } catch {
-                return SharedMockData.sampleEvents.filter { event in
-                    event.name.localizedCaseInsensitiveContains(query)
+                // Fallback para busca local
+                print("API call failed, falling back to local search: \(error)")
+                let events = try await loadEventsFromJSON()
+                return events.filter { event in
+                    event.name.localizedCaseInsensitiveContains(query) ||
+                    event.description?.localizedCaseInsensitiveContains(query) == true ||
+                    event.location.name.localizedCaseInsensitiveContains(query)
                 }
             }
         },
         fetchEventsByCategory: { category in
             do {
-                let allEvents = try await loadEventsFromJSON()
-                return allEvents.filter { $0.category == category }
+                let queryItems = [URLQueryItem(name: "category", value: category.rawValue)]
+                let apiEvents: [Event] = try await NetworkService.shared.request(
+                    endpoint: "/events",
+                    method: .GET,
+                    queryItems: queryItems
+                )
+                return apiEvents
             } catch {
-                return SharedMockData.sampleEvents.filter { $0.category == category }
-            }
-        },
-        fetchEventDetail: { eventId in
-            do {
-                let allEvents = try await loadEventsFromJSON()
-                guard let event = allEvents.first(where: { $0.id == eventId }) else {
-                    throw APIError(message: "Event not found", code: 404)
-                }
-                return event
-            } catch {
-                guard let event = SharedMockData.sampleEvents.first(where: { $0.id == eventId }) else {
-                    throw APIError(message: "Event not found", code: 404)
-                }
-                return event
+                // Fallback para filtro local
+                print("API call failed, falling back to local filtering: \(error)")
+                let events = try await loadEventsFromJSON()
+                return events.filter { $0.category == category }
             }
         }
     )
     
-    public static let testValue = EventsClient(
-        fetchEvents: { SharedMockData.sampleEvents },
-        searchEvents: { _ in SharedMockData.sampleEvents },
-        fetchEventsByCategory: { _ in SharedMockData.sampleEvents },
-        fetchEventDetail: { _ in SharedMockData.sampleEvents[0] }
+    static let testValue = Self(
+        fetchEvents: unimplemented("EventsClient.fetchEvents"),
+        fetchEvent: unimplemented("EventsClient.fetchEvent"),
+        searchEvents: unimplemented("EventsClient.searchEvents"),
+        fetchEventsByCategory: unimplemented("EventsClient.fetchEventsByCategory")
     )
 }
 
 extension DependencyValues {
-    public var eventsClient: EventsClient {
+    var eventsClient: EventsClient {
         get { self[EventsClient.self] }
         set { self[EventsClient.self] = newValue }
     }

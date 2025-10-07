@@ -1,9 +1,16 @@
 import Foundation
 
+@MainActor
 final class AuthManager: ObservableObject {
     @Published var isAuthenticated = false
     @Published var currentUser: User?
     @Published var isFirstLaunch = true
+    @Published var isLoading = false
+    @Published var errorMessage: String?
+    
+    private let userService = UserService.shared
+    private var authToken: String?
+    private var currentUserId: String?
     
     init() {
         checkAuthStatus()
@@ -14,34 +21,114 @@ final class AuthManager: ObservableObject {
            let user = try? JSONDecoder().decode(User.self, from: userData) {
             currentUser = user
             isAuthenticated = true
+            authToken = UserDefaults.standard.string(forKey: "authToken")
+            currentUserId = UserDefaults.standard.string(forKey: "currentUserId")
         }
         
         isFirstLaunch = UserDefaults.standard.bool(forKey: "hasLaunchedBefore") == false
     }
     
     func signUp(name: String, email: String, password: String) {
-        let user = User(name: name, email: email)
-        if let encoded = try? JSONEncoder().encode(user) {
-            UserDefaults.standard.set(encoded, forKey: "currentUser")
-            UserDefaults.standard.set(true, forKey: "hasLaunchedBefore")
-            currentUser = user
-            isAuthenticated = true
-            isFirstLaunch = false
+        Task {
+            isLoading = true
+            errorMessage = nil
+            
+            do {
+                let response = try await userService.createUser(name: name, email: email, password: password)
+                
+                // Salva os dados localmente
+                await saveUserData(user: response.user, token: response.token, userId: response.user.id.uuidString)
+                
+                // Atualiza o estado
+                currentUser = response.user
+                isAuthenticated = true
+                isFirstLaunch = false
+                
+            } catch let error as NetworkError {
+                errorMessage = error.errorDescription
+            } catch {
+                errorMessage = "Erro inesperado ao criar conta"
+            }
+            
+            isLoading = false
         }
     }
     
     func signIn(email: String, password: String) {
-        let user = User( name: "User", email: email)
-        if let encoded = try? JSONEncoder().encode(user) {
-            UserDefaults.standard.set(encoded, forKey: "currentUser")
-            currentUser = user
-            isAuthenticated = true
+        Task {
+            isLoading = true
+            errorMessage = nil
+            
+            do {
+                let response = try await userService.signIn(email: email, password: password)
+                
+                // Salva os dados localmente
+                await saveUserData(user: response.user, token: response.token, userId: response.user.id.uuidString)
+                
+                // Atualiza o estado
+                currentUser = response.user
+                isAuthenticated = true
+                
+            } catch let error as NetworkError {
+                errorMessage = error.errorDescription
+            } catch {
+                errorMessage = "Erro inesperado ao fazer login"
+            }
+            
+            isLoading = false
         }
     }
     
     func signOut() {
+        // Remove dados locais
         UserDefaults.standard.removeObject(forKey: "currentUser")
+        UserDefaults.standard.removeObject(forKey: "authToken")
+        UserDefaults.standard.removeObject(forKey: "currentUserId")
+        
+        // Limpa estado
         currentUser = nil
         isAuthenticated = false
+        authToken = nil
+        currentUserId = nil
+        errorMessage = nil
+    }
+    
+    func refreshUserProfile() {
+        guard let userId = currentUserId else { return }
+        
+        Task {
+            do {
+                let userResponse = try await userService.getUserById(userId)
+                
+                // Atualiza o usuário local
+                if let encoded = try? JSONEncoder().encode(userResponse.user) {
+                    UserDefaults.standard.set(encoded, forKey: "currentUser")
+                    currentUser = userResponse.user
+                }
+            } catch {
+                print("Erro ao atualizar perfil do usuário: \(error)")
+            }
+        }
+    }
+    
+    // MARK: - Private Methods
+    private func saveUserData(user: User, token: String?, userId: String) async {
+        // Salva o usuário
+        if let encoded = try? JSONEncoder().encode(user) {
+            UserDefaults.standard.set(encoded, forKey: "currentUser")
+        }
+        
+        // Salva o token de autenticação
+        if let token = token {
+            UserDefaults.standard.set(token, forKey: "authToken")
+            authToken = token
+        }
+        
+        // Salva o ID do usuário
+        UserDefaults.standard.set(userId, forKey: "currentUserId")
+        currentUserId = userId
+        
+        // Marca que o app já foi aberto
+        UserDefaults.standard.set(true, forKey: "hasLaunchedBefore")
     }
 }

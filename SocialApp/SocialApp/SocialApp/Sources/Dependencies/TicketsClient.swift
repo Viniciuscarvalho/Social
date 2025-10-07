@@ -2,79 +2,85 @@ import ComposableArchitecture
 import Foundation
 
 @DependencyClient
-public struct TicketsClient {
-    public var fetchTickets: () async throws -> [Ticket]
-    public var fetchTicketsByEvent: (UUID) async throws -> [Ticket]
-    public var fetchTicketDetail: (UUID) async throws -> TicketDetail
-    public var purchaseTicket: (UUID) async throws -> Ticket
-    public var toggleFavorite: (UUID) async throws -> Void
+struct TicketsClient {
+    var fetchTickets: @Sendable (_ eventId: String?) async throws -> [Ticket]
+    var fetchAvailableTickets: @Sendable () async throws -> [Ticket]
+    var createTicket: @Sendable (_ request: CreateTicketRequest) async throws -> Ticket
+    var favoriteTicket: @Sendable (_ ticketId: String) async throws -> Void
+    var unfavoriteTicket: @Sendable (_ ticketId: String) async throws -> Void
 }
 
 extension TicketsClient: DependencyKey {
-    public static let liveValue = TicketsClient(
-        fetchTickets: {
-            try await Task.sleep(for: .seconds(1))
-            let tickets = try await loadTicketsFromJSON()
-            return tickets
-        },
-        fetchTicketsByEvent: { eventId in
-            let allTickets = try await loadTicketsFromJSON()
-            return allTickets.filter { $0.eventId == eventId }
-        },
-        fetchTicketDetail: { ticketId in
-            // Simulate network delay
-            try await Task.sleep(for: .milliseconds(600))
-            
-            let tickets = try await loadTicketsFromJSON()
-            guard let ticket = tickets.first(where: { $0.id == ticketId }) else {
-                throw APIError(message: "Ticket not found", code: 404)
+    static let liveValue = Self(
+        fetchTickets: { eventId in
+            do {
+                var queryItems: [URLQueryItem] = []
+                if let eventId = eventId {
+                    queryItems.append(URLQueryItem(name: "eventId", value: eventId))
+                }
+                
+                let apiTickets: [Ticket] = try await NetworkService.shared.request(
+                    endpoint: "/tickets",
+                    method: .GET,
+                    queryItems: queryItems.isEmpty ? nil : queryItems
+                )
+                return apiTickets
+            } catch {
+                // Fallback para JSON local
+                print("API call failed, falling back to local JSON: \(error)")
+                return try await loadTicketsFromJSON()
             }
-            
-            let events = try await loadEventsFromJSON()
-            guard let event = events.first(where: { $0.id == ticket.eventId }) else {
-                throw APIError(message: "Event not found for ticket", code: 404)
+        },
+        fetchAvailableTickets: {
+            do {
+                let queryItems = [URLQueryItem(name: "status", value: "available")]
+                let apiTickets: [Ticket] = try await NetworkService.shared.request(
+                    endpoint: "/tickets",
+                    method: .GET,
+                    queryItems: queryItems
+                )
+                return apiTickets
+            } catch {
+                // Fallback para JSON local
+                print("API call failed, falling back to local JSON: \(error)")
+                let tickets = try await loadTicketsFromJSON()
+                return tickets.filter { $0.status == .available }
             }
-            // Create a lightweight seller profile (no sellers JSON available in live)
-            var seller = User(name: "Seller \(ticket.sellerId.uuidString.prefix(8))", title: "Vendedor")
-            seller.tickets = [ticket]
-            seller.ticketsCount = 1
-            // Build the TicketDetail mirroring the ticket information
-            var detail = TicketDetail(
-                ticketId: ticket.id,
-                event: event,
-                seller: seller,
-                price: ticket.price,
-                quantity: 1,
-                ticketType: ticket.ticketType,
-                validUntil: ticket.validUntil
+        },
+        createTicket: { request in
+            return try await NetworkService.shared.request(
+                endpoint: "/tickets",
+                method: .POST,
+                body: request
             )
-            detail.status = ticket.status
-            return detail
         },
-        purchaseTicket: { ticketId in
-            var tickets = try await loadTicketsFromJSON()
-            guard let index = tickets.firstIndex(where: { $0.id == ticketId }) else {
-                throw APIError(message: "Ticket not found", code: 404)
-            }
-            tickets[index].status = .sold
-            return tickets[index]
+        favoriteTicket: { ticketId in
+            let request = FavoriteTicketRequest(ticketId: ticketId)
+            let _: APIResponse<String> = try await NetworkService.shared.request(
+                endpoint: "/tickets/\(ticketId)/favorite",
+                method: .POST,
+                body: request
+            )
         },
-        toggleFavorite: { ticketId in
-            // Logic to toggle favorite
+        unfavoriteTicket: { ticketId in
+            let _: APIResponse<String> = try await NetworkService.shared.request(
+                endpoint: "/tickets/\(ticketId)/favorite",
+                method: .DELETE
+            )
         }
     )
     
-    public static let testValue = TicketsClient(
-        fetchTickets: { SharedMockData.sampleTickets },
-        fetchTicketsByEvent: { _ in SharedMockData.sampleTickets },
-        fetchTicketDetail: { ticketId in SharedMockData.sampleTicketDetail(for: ticketId) },
-        purchaseTicket: { _ in SharedMockData.sampleTickets[0] },
-        toggleFavorite: { _ in }
+    static let testValue = Self(
+        fetchTickets: unimplemented("TicketsClient.fetchTickets"),
+        fetchAvailableTickets: unimplemented("TicketsClient.fetchAvailableTickets"),
+        createTicket: unimplemented("TicketsClient.createTicket"),
+        favoriteTicket: unimplemented("TicketsClient.favoriteTicket"),
+        unfavoriteTicket: unimplemented("TicketsClient.unfavoriteTicket")
     )
 }
 
 extension DependencyValues {
-    public var ticketsClient: TicketsClient {
+    var ticketsClient: TicketsClient {
         get { self[TicketsClient.self] }
         set { self[TicketsClient.self] = newValue }
     }
