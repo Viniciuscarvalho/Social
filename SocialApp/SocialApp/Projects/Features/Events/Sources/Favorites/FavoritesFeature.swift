@@ -58,7 +58,7 @@ public struct FavoritesFeature {
                 }
                 
             case let .favoriteToggled(event):
-                let eventIdString = event.id.uuidString
+                let eventIdString = event.id
                 let isFavorited = state.favoriteEvents.contains { $0.eventId == eventIdString }
                 
                 if isFavorited {

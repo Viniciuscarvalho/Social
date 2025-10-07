@@ -88,7 +88,7 @@ public enum SharedMockData {
     ]
     
     // MARK: - Ticket Details
-    public static func sampleTicketDetail(for ticketId: UUID) -> TicketDetail {
+    public static func sampleTicketDetail(for ticketId: String) -> TicketDetail {
         TicketDetail(
             ticketId: ticketId,
             event: sampleEvents[0],

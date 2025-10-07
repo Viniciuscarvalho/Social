@@ -23,7 +23,7 @@ public class FavoriteEvent {
     }
     
     public init(from event: Event) {
-        self.eventId = event.id.uuidString
+        self.eventId = event.id
         self.eventName = event.name
         self.eventImageURL = event.imageURL
         self.eventPrice = event.startPrice

@@ -1,18 +1,20 @@
 import SwiftUI
 import ComposableArchitecture
 
-struct EventDetailView: View {
-    @Dependency(\.eventsClient) private var eventsClient
-    let eventId: String
-    @State private var event: Event?
-    @State private var isLoading: Bool = true
-    @State private var errorMessage: String?
+public struct EventDetailView: View {
+    @Bindable var store: StoreOf<EventDetailFeature>
+    let eventId: UUID
     
-    var body: some View {
+    public init(store: StoreOf<EventDetailFeature>, eventId: UUID) {
+        self.store = store
+        self.eventId = eventId
+    }
+    
+    public var body: some View {
         Group {
-            if isLoading {
-                ProgressView("Carregando evento...")
-            } else if let event = event {
+            if store.isLoading {
+                loadingView
+            } else if let event = store.event {
                 eventContentView(event)
             } else {
                 errorView
@@ -20,20 +22,21 @@ struct EventDetailView: View {
         }
         .navigationTitle("Detalhes do Evento")
         .navigationBarTitleDisplayMode(.large)
-        .task {
-            await loadEvent()
+        .onAppear {
+            print("🎪 EventDetailView apareceu para evento: \(eventId)")
+            store.send(.onAppear(eventId))
         }
     }
     
-    private func loadEvent() async {
-        do {
-            let loadedEvent = try await eventsClient.fetchEvent(eventId)
-            self.event = loadedEvent
-            self.isLoading = false
-        } catch {
-            self.errorMessage = (error as? APIError)?.message ?? error.localizedDescription
-            self.isLoading = false
+    private var loadingView: some View {
+        VStack(spacing: 20) {
+            ProgressView()
+                .scaleEffect(1.5)
+            Text("Carregando evento...")
+                .font(.headline)
+                .foregroundColor(.secondary)
         }
+        .frame(maxWidth: .infinity, minHeight: 200)
     }
     
     @ViewBuilder
@@ -133,10 +136,17 @@ struct EventDetailView: View {
                 .font(.title2)
                 .fontWeight(.semibold)
             
-            if let errorMessage = errorMessage {
+            if let errorMessage = store.errorMessage {
                 Text(errorMessage)
+                    .font(.body)
                     .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
             }
+            
+            Button("Tentar Novamente") {
+                store.send(.onAppear(eventId))
+            }
+            .buttonStyle(.borderedProminent)
         }
         .padding()
     }

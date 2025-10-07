@@ -4,178 +4,120 @@ import Foundation
 @Reducer
 public struct TicketsListFeature {
     @ObservableState
-    struct State: Equatable {
-        var tickets: [Ticket] = []
-        var favoriteTickets: [Ticket] = []
-        var isLoading = false
-        var errorMessage: String?
-        var filter = TicketsListFilter()
+    public struct State: Equatable {
+        public var tickets: [Ticket] = []
+        public var filteredTickets: [Ticket] = []
+        public var selectedFilter = TicketsListFilter()
+        public var isLoading: Bool = false
+        public var errorMessage: String?
         
-        @Presents var destination: Destination.State?
+        public init() {}
+        
+        public var displayTickets: [Ticket] {
+            filteredTickets.isEmpty ? tickets : filteredTickets
+        }
     }
     
-    enum Action: Equatable {
+    public enum Action: Equatable {
         case onAppear
-        case loadAvailableTickets
-        case loadFavoriteTickets
-        case loadTicketsForEvent(String)
-        case ticketSelected(String)
-        case ticketsResponse(Result<[Ticket], NetworkError>)
-        case favoriteTicket(String)
-        case unfavoriteTicket(String)
-        case favoriteResponse(Result<Void, NetworkError>)
-        case createTicket(CreateTicketRequest)
-        case createTicketResponse(Result<Ticket, NetworkError>)
+        case loadTickets
+        case ticketsResponse(Result<[Ticket], APIError>)
+        case ticketSelected(UUID)
+        case favoriteToggled(UUID)
         case filterChanged(TicketsListFilter)
-        case setTicketTypeFilter(TicketType?)
-        case setStatusFilter(TicketStatus?)
-        case setSortOption(TicketSortOption)
-        
-        case destination(PresentationAction<Destination.Action>)
-    }
-    
-    @Reducer
-    enum Destination {
-        case ticketDetail(TicketDetailFeature)
+        case refreshRequested
     }
     
     @Dependency(\.ticketsClient) var ticketsClient
     
-    var body: some ReducerOf<Self> {
+    public init() {}
+    
+    public var body: some ReducerOf<Self> {
         Reduce { state, action in
             switch action {
             case .onAppear:
-                return .send(.loadAvailableTickets)
+                return .send(.loadTickets)
                 
-            case .loadAvailableTickets:
+            case .loadTickets:
                 state.isLoading = true
                 state.errorMessage = nil
                 return .run { send in
                     do {
-                        let tickets = try await ticketsClient.fetchAvailableTickets()
+                        let tickets = try await ticketsClient.fetchTickets()
                         await send(.ticketsResponse(.success(tickets)))
-                    } catch let error as NetworkError {
-                        await send(.ticketsResponse(.failure(error)))
                     } catch {
-                        await send(.ticketsResponse(.failure(.unknown(error))))
+                        print("❌ Erro ao carregar tickets: \(error.localizedDescription)")
+                        await send(.ticketsResponse(.failure(APIError(message: error.localizedDescription, code: 500))))
                     }
                 }
-                
-            case .loadFavoriteTickets:
-                state.isLoading = true
-                state.errorMessage = nil
-                return .run { [tickets = state.tickets] send in
-                    let favoriteTickets = tickets.filter { $0.isFavorited }
-                    await send(.ticketsResponse(.success(favoriteTickets)))
-                }
-                
-            case let .loadTicketsForEvent(eventId):
-                state.isLoading = true
-                state.errorMessage = nil
-                return .run { send in
-                    do {
-                        let tickets = try await ticketsClient.fetchTickets(eventId)
-                        await send(.ticketsResponse(.success(tickets)))
-                    } catch let error as NetworkError {
-                        await send(.ticketsResponse(.failure(error)))
-                    } catch {
-                        await send(.ticketsResponse(.failure(.unknown(error))))
-                    }
-                }
-                
-            case let .ticketSelected(tickedId):
-                guard let ticket = state.tickets.first(where: { $0.id == ticketId }) else {
-                    return .none
-                }
-                
-                state.destination = .ticketDetail(
-                    TicketDetailFeature.State(ticket: ticket)
-                )
-                return .none
                 
             case let .ticketsResponse(.success(tickets)):
-                state.tickets = tickets
                 state.isLoading = false
-                state.errorMessage = nil
+                state.tickets = tickets
+                state.filteredTickets = filterTickets(tickets, with: state.selectedFilter)
                 return .none
                 
             case let .ticketsResponse(.failure(error)):
                 state.isLoading = false
-                state.errorMessage = error.errorDescription
+                state.errorMessage = error.message
                 return .none
                 
-            case let .favoriteTicket(ticketId):
+            case .ticketSelected:
+                return .none
+                
+            case let .favoriteToggled(ticketId):
                 return .run { send in
                     do {
-                        try await ticketsClient.favoriteTicket(ticketId)
-                        await send(.favoriteResponse(.success(())))
-                    } catch let error as NetworkError {
-                        await send(.favoriteResponse(.failure(error)))
+                        try await ticketsClient.toggleFavorite(ticketId)
+                        await send(.loadTickets)
                     } catch {
-                        await send(.favoriteResponse(.failure(.unknown(error))))
+                        await send(.ticketsResponse(.failure(APIError(message: error.localizedDescription, code: 500))))
                     }
                 }
-                
-            case let .unfavoriteTicket(ticketId):
-                return .run { send in
-                    do {
-                        try await ticketsClient.unfavoriteTicket(ticketId)
-                        await send(.favoriteResponse(.success(())))
-                    } catch let error as NetworkError {
-                        await send(.favoriteResponse(.failure(error)))
-                    } catch {
-                        await send(.favoriteResponse(.failure(.unknown(error))))
-                    }
-                }
-                
-            case .favoriteResponse(.success):
-                // Recarrega os tickets para refletir mudanças
-                return .send(.loadAvailableTickets)
-                
-            case let .favoriteResponse(.failure(error)):
-                state.errorMessage = error.errorDescription
-                return .none
-                
-            case let .createTicket(request):
-                state.isLoading = true
-                return .run { send in
-                    do {
-                        let ticket = try await ticketsClient.createTicket(request)
-                        await send(.createTicketResponse(.success(ticket)))
-                    } catch let error as NetworkError {
-                        await send(.createTicketResponse(.failure(error)))
-                    } catch {
-                        await send(.createTicketResponse(.failure(.unknown(error))))
-                    }
-                }
-                
-            case let .createTicketResponse(.success(apiTicket)):
-                state.isLoading = false
-                let newTicket = apiTicket.toDomainModel()
-                state.tickets.append(newTicket)
-                return .none
-                
-            case let .createTicketResponse(.failure(error)):
-                state.isLoading = false
-                state.errorMessage = error.errorDescription
-                return .none
                 
             case let .filterChanged(filter):
-                state.filter = filter
-                return .send(.loadAvailableTickets)
-                
-            case let .setTicketTypeFilter(type):
-                state.filter.ticketType = type
+                state.selectedFilter = filter
+                state.filteredTickets = filterTickets(state.tickets, with: filter)
                 return .none
                 
-            case let .setStatusFilter(status):
-                state.filter.status = status
-                return .none
-                
-            case let .setSortOption(sortOption):
-                state.filter.sortBy = sortOption
-                return .none
+            case .refreshRequested:
+                return .send(.loadTickets)
             }
         }
+    }
+    
+    private func filterTickets(_ tickets: [Ticket], with filter: TicketsListFilter) -> [Ticket] {
+        var filtered = tickets
+        
+        if let priceRange = filter.priceRange {
+            filtered = filtered.filter { ticket in
+                ticket.price >= priceRange.min && ticket.price <= priceRange.max
+            }
+        }
+        
+        if let ticketType = filter.ticketType {
+            filtered = filtered.filter { $0.ticketType == ticketType }
+        }
+        
+        if let status = filter.status {
+            filtered = filtered.filter { $0.status == status }
+        }
+        
+        if filter.showFavoritesOnly {
+            filtered = filtered.filter(\.isFavorited)
+        }
+        
+        switch filter.sortBy {
+        case .dateCreated:
+            filtered = filtered.sorted { $0.createdAt > $1.createdAt }
+        case .priceAsc:
+            filtered = filtered.sorted { $0.price < $1.price }
+        case .priceDesc:
+            filtered = filtered.sorted { $0.price > $1.price }
+        case .eventDate, .popularity:
+            break
+        }
+        
+        return filtered
     }
 }

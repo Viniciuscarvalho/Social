@@ -5,19 +5,19 @@ import Foundation
 public struct EventDetailFeature {
     @ObservableState
     public struct State: Equatable {
-        public var eventId: String
+        public var eventId: UUID
         public var event: Event?
         public var isLoading: Bool = false
         public var errorMessage: String?
         
-        public init(eventId: String) {
+        public init(eventId: UUID) {
             self.eventId = eventId
         }
     }
     
     public enum Action: Equatable {
-        case onAppear
-        case loadEvent
+        case onAppear(UUID)
+        case loadEvent(UUID)
         case eventResponse(Result<Event, APIError>)
     }
     
@@ -28,18 +28,21 @@ public struct EventDetailFeature {
     public var body: some ReducerOf<Self> {
         Reduce { state, action in
             switch action {
-            case .onAppear:
-                return .send(.loadEvent)
+            case let .onAppear(eventId):
+                state.eventId = eventId
+                return .send(.loadEvent(eventId))
                 
-            case .loadEvent:
+            case let .loadEvent(eventId):
                 state.isLoading = true
                 state.errorMessage = nil
-                let id = state.eventId
                 return .run { send in
                     do {
-                        let event = try await eventsClient.fetchEvent(id)
+                        print("🎪 Carregando detalhes do evento: \(eventId)")
+                        let event = try await eventsClient.fetchEventDetail(eventId)
+                        print("✅ Detalhes do evento carregados: \(event.name)")
                         await send(.eventResponse(.success(event)))
                     } catch {
+                        print("❌ Erro ao carregar detalhes do evento: \(error.localizedDescription)")
                         let apiError = error as? APIError ?? APIError(message: error.localizedDescription, code: 500)
                         await send(.eventResponse(.failure(apiError)))
                     }

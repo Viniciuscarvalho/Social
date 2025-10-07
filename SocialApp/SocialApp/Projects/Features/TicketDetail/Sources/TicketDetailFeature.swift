@@ -6,9 +6,11 @@ public struct TicketDetailFeature {
     @ObservableState
     public struct State: Equatable {
         public var ticketDetail: TicketDetail?
+        public var sellerProfile: SellerProfileFeature.State?
         public var isLoading: Bool = false
         public var errorMessage: String?
         public var isPurchasing: Bool = false
+        public var currentTicketId: UUID?
         
         public init() {}
     }
@@ -19,6 +21,8 @@ public struct TicketDetailFeature {
         case ticketDetailResponse(Result<TicketDetail, APIError>)
         case purchaseTicket(UUID)
         case purchaseResponse(Result<TicketDetail, APIError>)
+        case loadSellerProfile(UUID)
+        case sellerProfile(SellerProfileFeature.Action)
     }
     
     @Dependency(\.ticketsClient) var ticketsClient
@@ -29,6 +33,7 @@ public struct TicketDetailFeature {
         Reduce { state, action in
             switch action {
             case let .onAppear(ticketId):
+                state.currentTicketId = ticketId
                 return .send(.loadTicketDetail(ticketId))
                 
             case let .loadTicketDetail(ticketId):
@@ -36,9 +41,12 @@ public struct TicketDetailFeature {
                 state.errorMessage = nil
                 return .run { send in
                     do {
+                        print("🎫 Carregando detalhes do ticket: \(ticketId)")
                         let ticketDetail = try await ticketsClient.fetchTicketDetail(ticketId)
+                        print("✅ Detalhes do ticket carregados: \(ticketDetail.event.name)")
                         await send(.ticketDetailResponse(.success(ticketDetail)))
                     } catch {
+                        print("❌ Erro ao carregar detalhes do ticket: \(error.localizedDescription)")
                         let apiError = error as? APIError ?? APIError(message: error.localizedDescription, code: 500)
                         await send(.ticketDetailResponse(.failure(apiError)))
                     }
@@ -58,11 +66,14 @@ public struct TicketDetailFeature {
                 state.isPurchasing = true
                 return .run { send in
                     do {
+                        print("💰 Iniciando compra do ticket: \(ticketId)")
                         try await Task.sleep(for: .seconds(2))
                         var ticketDetail = try await ticketsClient.fetchTicketDetail(ticketId)
                         ticketDetail.status = .sold
+                        print("✅ Ticket comprado com sucesso")
                         await send(.purchaseResponse(.success(ticketDetail)))
                     } catch {
+                        print("❌ Erro ao comprar ticket: \(error.localizedDescription)")
                         await send(.purchaseResponse(.failure(APIError(message: error.localizedDescription, code: 500))))
                     }
                 }
@@ -75,6 +86,13 @@ public struct TicketDetailFeature {
             case let .purchaseResponse(.failure(error)):
                 state.isPurchasing = false
                 state.errorMessage = error.message
+                return .none
+                
+            case let .loadSellerProfile(sellerId):
+                state.sellerProfile = SellerProfileFeature.State()
+                return .send(.sellerProfile(.loadProfileById(sellerId.uuidString)))
+                
+            case .sellerProfile:
                 return .none
             }
         }

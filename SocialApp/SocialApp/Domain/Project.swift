@@ -1,13 +1,13 @@
 import ProjectDescription
 
 let project = Project(
-    name: "SharedModels",
+    name: "Domain",
     targets: [
         .target(
-            name: "SharedModels",
+            name: "Domain",
             destinations: .iOS,
             product: .framework,
-            bundleId: "dev.tuist.SharedModels",
+            bundleId: "dev.tuist.Domain",
             infoPlist: .default,
             sources: ["Sources/**"]
         )

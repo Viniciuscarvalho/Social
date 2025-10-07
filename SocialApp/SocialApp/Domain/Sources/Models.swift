@@ -526,7 +526,7 @@ public struct UserUpdateRequest: Codable {
 // MARK: - Ticket API Models
 
 public struct CreateTicketRequest: Codable {
-    public let eventId: UUID
+    public let eventId: String
     public let name: String
     public let price: Double
     public let originalPrice: Double?
@@ -534,7 +534,7 @@ public struct CreateTicketRequest: Codable {
     public let validUntil: Date
     
     public init(
-        eventId: UUID,
+        eventId: String,
         name: String,
         price: Double,
         originalPrice: Double? = nil,
@@ -551,225 +551,19 @@ public struct CreateTicketRequest: Codable {
 }
 
 public struct FavoriteTicketRequest: Codable {
-    public let ticketId: UUID
+    public let ticketId: String
     
-    public init(ticketId: UUID) {
+    public init(ticketId: String) {
         self.ticketId = ticketId
     }
 }
 
-// MARK: - Custom Coding Strategies for API Compatibility
-
-extension User {
-    private enum CodingKeys: String, CodingKey {
-        case id, name, title, profileImageURL, email
-        case followersCount, followingCount, ticketsCount
-        case isVerified, tickets, createdAt
-    }
+public struct PurchaseTicketRequest: Codable {
+    public let ticketId: String
+    public let quantity: Int?
     
-    public init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        
-        // Handle UUID from string
-        let idString = try container.decode(String.self, forKey: .id)
-        self.id = UUID(uuidString: idString) ?? String
-        
-        self.name = try container.decode(String.self, forKey: .name)
-        self.title = try container.decodeIfPresent(String.self, forKey: .title)
-        self.profileImageURL = try container.decodeIfPresent(String.self, forKey: .profileImageURL)
-        self.email = try container.decodeIfPresent(String.self, forKey: .email)
-        self.followersCount = try container.decodeIfPresent(Int.self, forKey: .followersCount) ?? 0
-        self.followingCount = try container.decodeIfPresent(Int.self, forKey: .followingCount) ?? 0
-        self.ticketsCount = try container.decodeIfPresent(Int.self, forKey: .ticketsCount) ?? 0
-        self.isVerified = try container.decodeIfPresent(Bool.self, forKey: .isVerified) ?? false
-        self.tickets = try container.decodeIfPresent([Ticket].self, forKey: .tickets) ?? []
-        
-        // Handle Date from ISO8601 string
-        if let dateString = try container.decodeIfPresent(String.self, forKey: .createdAt) {
-            let formatter = ISO8601DateFormatter()
-            self.createdAt = formatter.date(from: dateString) ?? Date()
-        } else {
-            self.createdAt = Date()
-        }
-    }
-    
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        
-        try container.encode(id, forKey: .id)
-        try container.encode(name, forKey: .name)
-        try container.encodeIfPresent(title, forKey: .title)
-        try container.encodeIfPresent(profileImageURL, forKey: .profileImageURL)
-        try container.encodeIfPresent(email, forKey: .email)
-        try container.encode(followersCount, forKey: .followersCount)
-        try container.encode(followingCount, forKey: .followingCount)
-        try container.encode(ticketsCount, forKey: .ticketsCount)
-        try container.encode(isVerified, forKey: .isVerified)
-        try container.encode(tickets, forKey: .tickets)
-        
-        let formatter = ISO8601DateFormatter()
-        try container.encode(formatter.string(from: createdAt), forKey: .createdAt)
-    }
-}
-
-extension Event {
-    private enum CodingKeys: String, CodingKey {
-        case id, name, description, imageURL, startPrice
-        case location, category, isRecommended, rating
-        case reviewCount, createdAt, eventDate
-    }
-    
-    public init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        
-        let idString = try container.decode(String.self, forKey: .id)
-        self.id = UUID(uuidString: idString) ?? String
-        
-        self.name = try container.decode(String.self, forKey: .name)
-        self.description = try container.decodeIfPresent(String.self, forKey: .description)
-        self.imageURL = try container.decodeIfPresent(String.self, forKey: .imageURL)
-        self.startPrice = try container.decode(Double.self, forKey: .startPrice)
-        self.location = try container.decode(Location.self, forKey: .location)
-        
-        let categoryString = try container.decode(String.self, forKey: .category)
-        self.category = EventCategory(rawValue: categoryString) ?? .culture
-        
-        self.isRecommended = try container.decodeIfPresent(Bool.self, forKey: .isRecommended) ?? false
-        self.rating = try container.decodeIfPresent(Double.self, forKey: .rating)
-        self.reviewCount = try container.decodeIfPresent(Int.self, forKey: .reviewCount)
-        
-        let formatter = ISO8601DateFormatter()
-        if let dateString = try container.decodeIfPresent(String.self, forKey: .createdAt) {
-            self.createdAt = formatter.date(from: dateString) ?? Date()
-        } else {
-            self.createdAt = Date()
-        }
-        
-        if let eventDateString = try container.decodeIfPresent(String.self, forKey: .eventDate) {
-            self.eventDate = formatter.date(from: eventDateString)
-        } else {
-            self.eventDate = nil
-        }
-    }
-    
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        
-        try container.encode(id, forKey: .id)
-        try container.encode(name, forKey: .name)
-        try container.encodeIfPresent(description, forKey: .description)
-        try container.encodeIfPresent(imageURL, forKey: .imageURL)
-        try container.encode(startPrice, forKey: .startPrice)
-        try container.encode(location, forKey: .location)
-        try container.encode(category.rawValue, forKey: .category)
-        try container.encode(isRecommended, forKey: .isRecommended)
-        try container.encodeIfPresent(rating, forKey: .rating)
-        try container.encodeIfPresent(reviewCount, forKey: .reviewCount)
-        
-        let formatter = ISO8601DateFormatter()
-        try container.encode(formatter.string(from: createdAt), forKey: .createdAt)
-        
-        if let eventDate = eventDate {
-            try container.encode(formatter.string(from: eventDate), forKey: .eventDate)
-        }
-    }
-}
-
-extension Ticket {
-    private enum CodingKeys: String, CodingKey {
-        case id, eventId, sellerId, name, price, originalPrice
-        case ticketType, status, validUntil, createdAt, isFavorited
-    }
-    
-    public init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        
-        let idString = try container.decode(String.self, forKey: .id)
-        self.id = UUID(uuidString: idString) ?? String
-        
-        let eventIdString = try container.decode(String.self, forKey: .eventId)
-        self.eventId = UUID(uuidString: eventIdString) ?? String
-        
-        let sellerIdString = try container.decode(String.self, forKey: .sellerId)
-        self.sellerId = UUID(uuidString: sellerIdString) ?? String
-        
-        self.name = try container.decode(String.self, forKey: .name)
-        self.price = try container.decode(Double.self, forKey: .price)
-        self.originalPrice = try container.decodeIfPresent(Double.self, forKey: .originalPrice)
-        
-        let ticketTypeString = try container.decode(String.self, forKey: .ticketType)
-        self.ticketType = TicketType(rawValue: ticketTypeString) ?? .general
-        
-        let statusString = try container.decode(String.self, forKey: .status)
-        self.status = TicketStatus(rawValue: statusString) ?? .available
-        
-        self.isFavorited = try container.decodeIfPresent(Bool.self, forKey: .isFavorited) ?? false
-        
-        let formatter = ISO8601DateFormatter()
-        
-        let validUntilString = try container.decode(String.self, forKey: .validUntil)
-        self.validUntil = formatter.date(from: validUntilString) ?? Date()
-        
-        if let createdAtString = try container.decodeIfPresent(String.self, forKey: .createdAt) {
-            self.createdAt = formatter.date(from: createdAtString) ?? Date()
-        } else {
-            self.createdAt = Date()
-        }
-    }
-    
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        
-        try container.encode(id, forKey: .id)
-        try container.encode(eventId, forKey: .eventId)
-        try container.encode(sellerId, forKey: .sellerId)
-        try container.encode(name, forKey: .name)
-        try container.encode(price, forKey: .price)
-        try container.encodeIfPresent(originalPrice, forKey: .originalPrice)
-        try container.encode(ticketType.rawValue, forKey: .ticketType)
-        try container.encode(status.rawValue, forKey: .status)
-        try container.encode(isFavorited, forKey: .isFavorited)
-        
-        let formatter = ISO8601DateFormatter()
-        try container.encode(formatter.string(from: validUntil), forKey: .validUntil)
-        try container.encode(formatter.string(from: createdAt), forKey: .createdAt)
-    }
-}
-
-extension Location {
-    private enum CodingKeys: String, CodingKey {
-        case name, address, city, state, country, coordinate
-        case latitude, longitude  // For flat structure from API
-    }
-    
-    public init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        
-        self.name = try container.decode(String.self, forKey: .name)
-        self.address = try container.decodeIfPresent(String.self, forKey: .address)
-        self.city = try container.decode(String.self, forKey: .city)
-        self.state = try container.decode(String.self, forKey: .state)
-        self.country = try container.decode(String.self, forKey: .country)
-        
-        // Try to decode coordinate as nested object first, then as flat structure
-        if let coordinate = try? container.decodeIfPresent(Coordinate.self, forKey: .coordinate) {
-            self.coordinate = coordinate
-        } else {
-            // Handle flat structure from API
-            let lat = try container.decodeIfPresent(Double.self, forKey: .latitude) ?? 0.0
-            let lon = try container.decodeIfPresent(Double.self, forKey: .longitude) ?? 0.0
-            self.coordinate = Coordinate(latitude: lat, longitude: lon)
-        }
-    }
-    
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        
-        try container.encode(name, forKey: .name)
-        try container.encodeIfPresent(address, forKey: .address)
-        try container.encode(city, forKey: .city)
-        try container.encode(state, forKey: .state)
-        try container.encode(country, forKey: .country)
-        try container.encode(coordinate, forKey: .coordinate)
+    public init(ticketId: String, quantity: Int? = 1) {
+        self.ticketId = ticketId
+        self.quantity = quantity
     }
 }

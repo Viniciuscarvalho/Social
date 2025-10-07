@@ -33,7 +33,7 @@ public struct TicketsListView: View {
             store.send(.onAppear)
         }
         .refreshable {
-            store.send(.loadAvailableTickets)
+            store.send(.refreshRequested)
         }
     }
     
@@ -72,10 +72,19 @@ public struct TicketsListView: View {
     private var ticketsContentView: some View {
         ScrollView {
             LazyVStack(spacing: 12) {
-                ForEach(store.tickets) { ticket in
+                ForEach(store.displayTickets) { ticket in
                     TicketCard(
                         ticket: ticket,
-                        onTap: { store.send(.ticketSelected(ticket.id)) }
+                        onTap: { 
+                            if let ticketId = UUID(uuidString: ticket.id) {
+                                store.send(.ticketSelected(ticketId))
+                            }
+                        },
+                        onFavorite: { 
+                            if let ticketId = UUID(uuidString: ticket.id) {
+                                store.send(.favoriteToggled(ticketId))
+                            }
+                        }
                     )
                 }
             }
@@ -87,24 +96,32 @@ public struct TicketsListView: View {
         VStack {
             Menu("Tipo de Ingresso") {
                 Button("Todos") {
-                    store.send(.setTicketTypeFilter(nil))
+                    var filter = store.selectedFilter
+                    filter.ticketType = nil
+                    store.send(.filterChanged(filter))
                 }
                 
                 ForEach(TicketType.allCases, id: \.self) { type in
                     Button(type.displayName) {
-                        store.send(.setTicketTypeFilter(type))
+                        var filter = store.selectedFilter
+                        filter.ticketType = type
+                        store.send(.filterChanged(filter))
                     }
                 }
             }
             
             Menu("Status") {
                 Button("Todos") {
-                    store.send(.setStatusFilter(nil))
+                    var filter = store.selectedFilter
+                    filter.status = nil
+                    store.send(.filterChanged(filter))
                 }
                 
                 ForEach(TicketStatus.allCases, id: \.self) { status in
                     Button(status.displayName) {
-                        store.send(.setStatusFilter(status))
+                        var filter = store.selectedFilter
+                        filter.status = status
+                        store.send(.filterChanged(filter))
                     }
                 }
             }
@@ -112,10 +129,21 @@ public struct TicketsListView: View {
             Menu("Ordenar Por") {
                 ForEach(TicketSortOption.allCases, id: \.self) { sortOption in
                     Button(sortOption.displayName) {
-                        store.send(.setSortOption(sortOption))
+                        var filter = store.selectedFilter
+                        filter.sortBy = sortOption
+                        store.send(.filterChanged(filter))
                     }
                 }
             }
+            
+            Toggle("Apenas Favoritos", isOn: Binding(
+                get: { store.selectedFilter.showFavoritesOnly },
+                set: { newValue in
+                    var filter = store.selectedFilter
+                    filter.showFavoritesOnly = newValue
+                    store.send(.filterChanged(filter))
+                }
+            ))
         }
     }
 }

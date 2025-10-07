@@ -19,9 +19,13 @@ public struct EventsView: View {
                 if let todayEvent = store.todayEvent {
                     SectionHeader(title: "Today")
                     EventCardLarge(event: todayEvent) {
-                        store.send(.eventSelected(todayEvent.id))
+                        if let eventId = UUID(uuidString: todayEvent.id) {
+                            store.send(.eventSelected(eventId))
+                        }
                     } onJoin: {
-                        store.send(.eventSelected(todayEvent.id))
+                        if let eventId = UUID(uuidString: todayEvent.id) {
+                            store.send(.eventSelected(eventId))
+                        }
                     }
                 }
                 
@@ -33,7 +37,9 @@ public struct EventsView: View {
                         HStack(spacing: 16) {
                             ForEach(store.upcomingEvents) { event in
                                 EventCardSmall(event: event) {
-                                    store.send(.eventSelected(event.id))
+                                    if let eventId = UUID(uuidString: event.id) {
+                                        store.send(.eventSelected(eventId))
+                                    }
                                 }
                             }
                         }
@@ -47,21 +53,6 @@ public struct EventsView: View {
         .navigationBarTitleDisplayMode(.large)
         .refreshable {
             store.send(.refreshRequested)
-        }
-        .sheet(isPresented: $store.isSearchPresented.sending(\.setSearchPresented)) {
-            SearchView(
-                store: store.scope(
-                    state: \.searchFeature,
-                    action: \.searchFeature
-                )
-            )
-        }
-        .sheet(
-            store: $store.scope(state: \.$destination, action: \.destination),
-            state: /EventsFeature.Destination.State.eventDetail,
-            action: EventsFeature.Destination.Action.eventDetail
-        ) { store in
-            EventDetailFeatureView(store: store)
         }
         .onAppear {
             store.send(.onAppear)

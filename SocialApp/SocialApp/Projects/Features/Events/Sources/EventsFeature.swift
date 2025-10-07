@@ -10,25 +10,45 @@ public struct EventsFeature {
         public var selectedCategory: EventCategory?
         public var isLoading: Bool = false
         public var errorMessage: String?
-        public var searchFeature = SearchFeature.State()
-        public var isSearchPresented: Bool = false
-        @Presents public var destination: Destination.State?
         
         public var todayEvent: Event? {
+            let today = Calendar.current.startOfDay(for: Date())
+            let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: today)!
+            
             return events.first { event in
-                guard let eventDate = event.eventDate else { return false }
-                return Calendar.current.isDate(eventDate, inSameDayAs: Date())
+                let dateToCheck = event.eventDate ?? event.createdAt
+                return dateToCheck >= today && dateToCheck < tomorrow
             }
         }
-
+        
         public var upcomingEvents: [Event] {
-            let today = Date()
+            let today = Calendar.current.startOfDay(for: Date())
+            let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: today)!
+            
             return events.filter { event in
-                guard let eventDate = event.eventDate else { return false }
-                return eventDate > Calendar.current.startOfDay(for: today.addingTimeInterval(24*60*60))
+                let dateToCheck = event.eventDate ?? event.createdAt
+                return dateToCheck >= tomorrow
             }.sorted {
-                ($0.eventDate ?? Date.distantFuture) < ($1.eventDate ?? Date.distantFuture)
+                let date1 = $0.eventDate ?? $0.createdAt
+                let date2 = $1.eventDate ?? $1.createdAt
+                return date1 < date2
             }
+        }
+        
+        // Computed property para debugging - mostra todos os eventos de hoje
+        public var allTodayEvents: [Event] {
+            let today = Calendar.current.startOfDay(for: Date())
+            let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: today)!
+            
+            return events.filter { event in
+                let dateToCheck = event.eventDate ?? event.createdAt
+                return dateToCheck >= today && dateToCheck < tomorrow
+            }
+        }
+        
+        public var user: User? {
+            // This would be loaded from UserClient in a real implementation
+            return nil
         }
         
         public init() {}
@@ -43,13 +63,6 @@ public struct EventsFeature {
         case categorySelected(EventCategory?)
         case eventSelected(UUID)
         case refreshRequested
-        case searchFeature(SearchFeature.Action)
-        case setSearchPresented(Bool)
-        case destination(PresentationAction<Destination.Action>)
-    }
-    
-    @Reducer enum Destination {
-        case eventDetail(EventDetailFeature)
     }
     
     @Dependency(\.eventsClient) var eventsClient
@@ -57,15 +70,6 @@ public struct EventsFeature {
     public init() {}
     
     public var body: some ReducerOf<Self> {
-        Reduce { state, action in .none }
-        .ifLet(\.$destination, action: /Action.destination) {
-            Destination()
-        }
-        
-        Scope(state: \.searchFeature, action: \.searchFeature) {
-            SearchFeature()
-        }
-        
         Reduce { state, action in
             switch action {
             case .onAppear:
@@ -76,17 +80,38 @@ public struct EventsFeature {
                 state.errorMessage = nil
                 return .run { send in
                     do {
+                        print("🔄 Carregando events...")
                         let events = try await eventsClient.fetchEvents()
+                        print("✅ Events carregados: \(events.count) events")
                         await send(.eventsResponse(.success(events)))
                     } catch {
+                        print("❌ Erro ao carregar events: \(error.localizedDescription)")
                         await send(.eventsResponse(.failure(APIError(message: error.localizedDescription, code: 500))))
                     }
                 }
                 
             case let .eventsResponse(.success(events)):
-                state.events = events
+                print("📊 Processando resposta: \(events.count) events recebidos")
                 state.isLoading = false
-                state.errorMessage = nil
+                state.events = events
+                
+                // Logs detalhados para debugging
+                let today = Calendar.current.startOfDay(for: Date())
+                let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: today)!
+                let formatter = DateFormatter()
+                formatter.dateFormat = "dd/MM/yyyy HH:mm"
+                
+                print("🗓️ Data atual: \(formatter.string(from: Date()))")
+                print("🌅 Início do dia: \(formatter.string(from: today))")
+                print("🌅 Início do próximo dia: \(formatter.string(from: tomorrow))")
+                
+                for event in events {
+                    let dateToCheck = event.eventDate ?? event.createdAt
+                    let isToday = dateToCheck >= today && dateToCheck < tomorrow
+                    print("📅 Event '\(event.name)' - Data: \(formatter.string(from: dateToCheck)), É hoje? \(isToday)")
+                }
+                
+                print("🎯 Events finais: \(state.events.count), todayEvent: \(state.todayEvent?.name ?? "nil"), upcomingEvents: \(state.upcomingEvents.count), allTodayEvents: \(state.allTodayEvents.count)")
                 return .none
                 
             case let .eventsResponse(.failure(error)):
@@ -125,33 +150,13 @@ public struct EventsFeature {
                 }
                 
             case .searchTapped:
-                state.isSearchPresented = true
                 return .none
                 
-            case let .eventSelected(eventId):
-                state.destination = .eventDetail(EventDetailFeature.State(eventId: eventId.uuidString))
+            case .eventSelected:
                 return .none
                 
             case .refreshRequested:
                 return .send(.loadEvents)
-                
-            case .searchFeature(.eventSelected(let eventId)):
-                state.isSearchPresented = false
-                return .send(.eventSelected(eventId))
-                
-            case .searchFeature(.cancelSearch):
-                state.isSearchPresented = false
-                return .none
-                
-            case .searchFeature:
-                return .none
-                
-            case let .setSearchPresented(isPresented):
-                state.isSearchPresented = isPresented
-                return .none
-                
-            case .destination:
-                return .none
             }
         }
     }

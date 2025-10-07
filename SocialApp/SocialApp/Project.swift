@@ -23,9 +23,8 @@ let project = Project(
             infoPlist: .default,
             sources: [
                 "./SocialApp/Sources/**",
-                "./SharedModels/Sources/**",
+                "./Domain/Sources/**",
                 "./Projects/Features/Login/**",
-                "./Projects/Features/Home/**",
                 "./Projects/Features/Profile/**",
                 "./Projects/Features/Events/Sources/**",
                 "./Projects/Features/TicketsList/Sources/**", 

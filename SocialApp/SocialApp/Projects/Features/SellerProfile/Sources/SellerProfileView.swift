@@ -41,7 +41,7 @@ public struct SellerProfileView: View {
         .navigationBarTitleDisplayMode(.inline)
         .preferredColorScheme(.dark)
         .onAppear {
-            store.send(.onAppear)
+            store.send(.loadProfileById(ticketDetail.seller.id))
         }
     }
     

@@ -39,7 +39,7 @@ struct AuthFeature {
         case signUp(name: String, email: String, password: String)
         case signOut
         case refreshUserProfile
-        case authResponse(Result<APIAuthResponse, NetworkError>)
+        case authResponse(Result<AuthResponse, NetworkError>)
         case userProfileResponse(Result<User, NetworkError>)
         case clearError
         case signInForm(SignInForm.Action)

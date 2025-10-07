@@ -50,7 +50,7 @@ public struct EventFavoriteFeature {
         Reduce { state, action in
             switch action {
             case .onAppear:
-                let eventId = state.event.id.uuidString
+                let eventId = state.event.id
                 return .run { send in
                     let isFavorite = await favoritesClient.isFavorite(eventId)
                     await send(.favoriteStatusLoaded(isFavorite))
@@ -69,12 +69,12 @@ public struct EventFavoriteFeature {
                 
                 return .run { send in
                     if currentStatus {
-                        await favoritesClient.removeFromFavorites(event.id.uuidString)
+                        await favoritesClient.removeFromFavorites(event.id)
                     } else {
                         await favoritesClient.addToFavorites(event)
                     }
                     // Reload the status to ensure consistency
-                    let newStatus = await favoritesClient.isFavorite(event.id.uuidString)
+                    let newStatus = await favoritesClient.isFavorite(event.id)
                     await send(.favoriteStatusLoaded(newStatus))
                 }
             }

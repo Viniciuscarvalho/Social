@@ -15,9 +15,11 @@ public struct SellerProfileFeature {
     public enum Action: Equatable {
         case onAppear
         case loadProfile
-        case loadProfileById(UUID)
+        case loadProfileById(String)
         case profileResponse(Result<User, APIError>)
     }
+    
+    @Dependency(\.usersClient) var usersClient
     
     public init() {}
     
@@ -31,70 +33,21 @@ public struct SellerProfileFeature {
                 state.isLoading = true
                 state.errorMessage = nil
                 return .run { send in
-                    do {
-                        try await Task.sleep(for: .seconds(1))
-                        let profile = User(name: "Richard A. Bachmann", title: "UX/UX Designer")
-                        await send(.profileResponse(.success(profile)))
-                    } catch {
-                        await send(.profileResponse(.failure(APIError(message: error.localizedDescription, code: 500))))
-                    }
+                    let result = await usersClient.fetchCurrentUser()
+                    await send(.profileResponse(result))
                 }
                 
-            case let .loadProfileById(profileId):
+            case let .loadProfileById(userId):
                 state.isLoading = true
                 state.errorMessage = nil
                 return .run { send in
-                    do {
-                        try await Task.sleep(for: .seconds(1))
-                        
-                        // Cria tickets de exemplo para o vendedor
-                        let sampleTickets = [
-                            Ticket(
-                                eventId: UUID(),
-                                sellerId: profileId,
-                                name: "Rock in Rio 2024",
-                                price: 250.0,
-                                ticketType: .vip,
-                                validUntil: Calendar.current.date(byAdding: .month, value: 1, to: Date()) ?? Date()
-                            ),
-                            Ticket(
-                                eventId: UUID(),
-                                sellerId: profileId,
-                                name: "Festival de Verão",
-                                price: 120.0,
-                                ticketType: .general,
-                                validUntil: Calendar.current.date(byAdding: .month, value: 2, to: Date()) ?? Date()
-                            ),
-                            Ticket(
-                                eventId: UUID(),
-                                sellerId: profileId,
-                                name: "Show Acústico",
-                                price: 85.0,
-                                ticketType: .student,
-                                validUntil: Calendar.current.date(byAdding: .day, value: 15, to: Date()) ?? Date()
-                            )
-                        ]
-                        
-                        var profile = User(
-                            name: "João Silva",
-                            title: "Vendedor Oficial de Ingressos",
-                            profileImageURL: nil
-                        )
-                        profile.followersCount = 1243
-                        profile.followingCount = 89
-                        profile.ticketsCount = sampleTickets.count
-                        profile.isVerified = true
-                        profile.tickets = sampleTickets
-                        
-                        await send(.profileResponse(.success(profile)))
-                    } catch {
-                        await send(.profileResponse(.failure(APIError(message: error.localizedDescription, code: 500))))
-                    }
+                    let result = await usersClient.getUserTickets(userId)
+                    await send(.profileResponse(result))
                 }
                 
-            case let .profileResponse(.success(profile)):
+            case let .profileResponse(.success(user)):
                 state.isLoading = false
-                state.profile = profile
+                state.profile = user
                 return .none
                 
             case let .profileResponse(.failure(error)):

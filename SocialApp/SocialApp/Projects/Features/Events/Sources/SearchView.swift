@@ -61,7 +61,9 @@ public struct SearchView: View {
                         LazyVStack(spacing: 16) {
                             ForEach(store.searchResults) { event in
                                 EventSearchResultCard(event: event) {
-                                    store.send(.eventSelected(event.id))
+                                    if let eventId = UUID(uuidString: event.id) {
+                                        store.send(.eventSelected(eventId))
+                                    }
                                 }
                             }
                         }

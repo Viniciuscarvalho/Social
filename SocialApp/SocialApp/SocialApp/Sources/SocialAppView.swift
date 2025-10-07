@@ -82,8 +82,15 @@ struct MainTabView: View {
                     AppColors.backgroundGradient
                         .ignoresSafeArea()
                     
-                    EventDetailView(eventId: eventId)
+                    if let eventDetailFeature = store.eventDetailFeature {
+                        EventDetailView(
+                            store: Store(initialState: eventDetailFeature) {
+                                EventDetailFeature()
+                            },
+                            eventId: eventId
+                        )
                         .toolbar(.hidden, for: .tabBar)
+                    }
                 }
             }
             .navigationDestination(item: $store.selectedTicketId.sending(\.dismissTicketNavigation)) { ticketId in
@@ -168,8 +175,15 @@ struct MainTabView: View {
                     AppColors.backgroundGradient
                         .ignoresSafeArea()
                     
-                    EventDetailView(eventId: eventId)
+                    if let eventDetailFeature = store.eventDetailFeature {
+                        EventDetailView(
+                            store: Store(initialState: eventDetailFeature) {
+                                EventDetailFeature()
+                            },
+                            eventId: eventId
+                        )
                         .toolbar(.hidden, for: .tabBar)
+                    }
                 }
             }
         }

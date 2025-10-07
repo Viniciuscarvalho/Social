@@ -39,7 +39,7 @@ extension FavoritesClient: DependencyKey {
                     let context = ModelContext(modelContainer)
                     
                     // Verificar se já existe
-                    let eventIdString = event.id.uuidString
+                    let eventIdString = event.id
                     let descriptor = FetchDescriptor<FavoriteEvent>(
                         predicate: #Predicate { $0.eventId == eventIdString }
                     )

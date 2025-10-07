@@ -17,6 +17,7 @@ public struct SocialAppFeature {
         public var profileFeature = ProfileFeature.State()
         public var sellerProfileFeature = SellerProfileFeature.State()
         public var ticketDetailFeature = TicketDetailFeature.State()
+        public var eventDetailFeature: EventDetailFeature.State?
         public var navigationPath = NavigationPath()
 
         public var selectedEventId: UUID?
@@ -59,6 +60,7 @@ public struct SocialAppFeature {
         case profileFeature(ProfileFeature.Action)
         case sellerProfileFeature(SellerProfileFeature.Action)
         case ticketDetailFeature(TicketDetailFeature.Action)
+        case eventDetailFeature(EventDetailFeature.Action)
 
         // Navigation actions
         case navigateToEventDetail(UUID)
@@ -186,6 +188,7 @@ public struct SocialAppFeature {
             // MARK: - Navigation Actions
             case let .navigateToEventDetail(eventId):
                 state.selectedEventId = eventId
+                state.eventDetailFeature = EventDetailFeature.State(eventId: eventId)
                 return .none
                 
             case let .navigateToTicketDetail(ticketId):
@@ -198,6 +201,7 @@ public struct SocialAppFeature {
                 
             case .dismissEventNavigation:
                 state.selectedEventId = nil
+                state.eventDetailFeature = nil
                 return .none
                 
             case .dismissTicketNavigation:
@@ -222,9 +226,11 @@ public struct SocialAppFeature {
                 return .send(.navigateToEventDetail(eventId))
                 
             // MARK: - Add Ticket Completion
-            case .addTicket(.publishTicket):
+            case .addTicket(.publishTicketResponse(.success)):
+                // Fecha o modal após sucesso
                 state.showingAddTicket = false
-                return .none
+                // Recarrega a lista de tickets
+                return .send(.ticketsListFeature(.loadAvailableTickets))
                 
             // MARK: - Other Feature Actions
             // Outras actions das features são tratadas pelos seus próprios reducers
@@ -254,6 +260,10 @@ public struct SocialAppFeature {
                 return .none
                 
             case .ticketDetailFeature:
+                return .none
+                
+            case .eventDetailFeature:
+                // Event detail actions são tratadas internamente
                 return .none
             }
         }
