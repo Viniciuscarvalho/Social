@@ -4,7 +4,7 @@ import Foundation
 @DependencyClient
 struct EventsClient {
     var fetchEvents: @Sendable () async throws -> [Event]
-    var fetchEvent: @Sendable (_ id: String) async throws -> Event
+    var fetchEvent: @Sendable (_ id: UUID) async throws -> Event
     var searchEvents: @Sendable (_ query: String) async throws -> [Event]
     var fetchEventsByCategory: @Sendable (_ category: EventCategory) async throws -> [Event]
 }
@@ -27,7 +27,7 @@ extension EventsClient: DependencyKey {
         fetchEvent: { id in
             do {
                 let apiEvent: Event = try await NetworkService.shared.request(
-                    endpoint: "/events/\(id)",
+                    endpoint: "/events/\(id.uuidString)",
                     method: .GET
                 )
                 return apiEvent
@@ -35,7 +35,7 @@ extension EventsClient: DependencyKey {
                 // Fallback para JSON local
                 print("API call failed, falling back to local JSON: \(error)")
                 let events = try await loadEventsFromJSON()
-                guard let event = events.first(where: { $0.id.uuidString == id }) else {
+                guard let event = events.first(where: { $0.id == id }) else {
                     throw NetworkError.notFound
                 }
                 return event

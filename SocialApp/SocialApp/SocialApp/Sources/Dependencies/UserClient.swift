@@ -4,6 +4,7 @@ import Foundation
 @DependencyClient
 public struct UserClient {
     var getCurrentUser: @Sendable () async throws -> User
+    var fetchCurrentUser: @Sendable () async throws -> User
     var updateUserProfile: @Sendable (User) async throws -> User
     var uploadProfileImage: @Sendable (Data) async throws -> String
     var signOut: @Sendable () async throws -> Void
@@ -12,12 +13,10 @@ public struct UserClient {
 extension UserClient: DependencyKey {
     static let liveValue = Self(
         getCurrentUser: {
-            // Opção 1: Usar chamada direta à API
             guard let userId = UserDefaults.standard.string(forKey: "currentUserId") else {
                 throw NetworkError.unauthorized
             }
             
-            // Faz a chamada real para a API
             let apiResponse: UserResponse = try await NetworkService.shared.request(
                 endpoint: "/users/\(userId)",
                 method: .GET,
@@ -25,10 +24,20 @@ extension UserClient: DependencyKey {
             )
             
             return apiResponse.toUser()
+        },
+        fetchCurrentUser: {
+            // Alias para getCurrentUser para compatibilidade
+            guard let userId = UserDefaults.standard.string(forKey: "currentUserId") else {
+                throw NetworkError.unauthorized
+            }
             
-            // Opção 2: Usar o UserClient existente (comentado por enquanto)
-            // @Dependency(\.userClient) var userClient
-            // return try await userClient.fetchCurrentUser()
+            let apiResponse: UserResponse = try await NetworkService.shared.request(
+                endpoint: "/users/\(userId)",
+                method: .GET,
+                requiresAuth: true
+            )
+            
+            return apiResponse.toUser()
         },
         updateUserProfile: { user in
             guard let userId = UserDefaults.standard.string(forKey: "currentUserId") else {
@@ -113,9 +122,15 @@ extension UserClient: DependencyKey {
     
     static let testValue = Self(
         getCurrentUser: {
-            // Retorna um usuário de teste
             return User(
-                id: UUID(uuidString: "12345678-1234-1234-1234-123456789012") ?? UUID(),
+                name: "Usuário Teste",
+                title: "Desenvolvedor",
+                profileImageURL: nil,
+                email: "teste@example.com"
+            )
+        },
+        fetchCurrentUser: {
+            return User(
                 name: "Usuário Teste",
                 title: "Desenvolvedor",
                 profileImageURL: nil,

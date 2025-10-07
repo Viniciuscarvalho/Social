@@ -15,29 +15,51 @@ extension DependencyValues {
 private enum HomeClientKey: DependencyKey {
     static let liveValue = HomeClient(
         loadHomeContent: {
-            @Dependency(\.eventsClient) var eventsClient
-            @Dependency(\.ticketsClient) var ticketsClient
-            @Dependency(\.userClient) var userClient
-            
-            async let events = eventsClient.fetchEvents()
-            async let tickets = ticketsClient.fetchTickets()
-            async let user = userClient.fetchCurrentUser()
-            
-            do {
-                let (allEvents, allTickets, currentUser) = try await (events, tickets, user)
+            // Usar Task para evitar vazamentos de memória
+            return try await withThrowingTaskGroup(of: Void.self) { group in
+                var events: [Event] = []
+                var tickets: [Ticket] = []
+                var user: User? = nil
+                
+                // Criar dependências localmente para evitar capture cycles
+                let eventsClient = DependencyValues._current.eventsClient
+                let ticketsClient = DependencyValues._current.ticketsClient
+                let userClient = DependencyValues._current.userClient
+                
+                // Buscar eventos
+                group.addTask {
+                    events = try await eventsClient.fetchEvents()
+                }
+                
+                // Buscar tickets disponíveis
+                group.addTask {
+                    tickets = try await ticketsClient.fetchAvailableTickets()
+                }
+                
+                // Buscar usuário atual (opcional)
+                group.addTask {
+                    do {
+                        user = try await userClient.fetchCurrentUser()
+                    } catch {
+                        // Log do erro mas não falha a operação toda
+                        print("Warning: Não foi possível carregar usuário atual: \(error)")
+                        user = nil
+                    }
+                }
+                
+                // Aguardar todas as tasks completarem
+                try await group.waitForAll()
                 
                 // Separar eventos curados dos trending
-                let curatedEvents = allEvents.filter { $0.isRecommended }
-                let trendingEvents = allEvents.filter { !$0.isRecommended }
+                let curatedEvents = events.filter { $0.isRecommended }
+                let trendingEvents = events.filter { !$0.isRecommended }
                 
                 return HomeContent(
                     curatedEvents: curatedEvents,
                     trendingEvents: trendingEvents,
-                    availableTickets: allTickets.filter { $0.status == .available },
-                    user: currentUser
+                    availableTickets: tickets,
+                    user: user
                 )
-            } catch {
-                return HomeContent()
             }
         }
     )

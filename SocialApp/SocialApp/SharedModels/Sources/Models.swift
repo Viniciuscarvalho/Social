@@ -477,6 +477,10 @@ public struct UserResponse: Codable, Equatable {
         self.user = user
         self.tickets = tickets
     }
+    
+    public func toUser() -> User {
+        return user
+    }
 }
 
 public struct UsersListResponse: Codable, Equatable {
