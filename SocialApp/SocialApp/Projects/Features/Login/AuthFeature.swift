@@ -2,9 +2,9 @@ import ComposableArchitecture
 import Foundation
 
 @Reducer
-struct AuthFeature {
+public struct AuthFeature {
     @ObservableState
-    struct State: Equatable {
+    public struct State: Equatable {
         var isAuthenticated = false
         var currentUser: User?
         var isFirstLaunch = true
@@ -33,7 +33,7 @@ struct AuthFeature {
         }
     }
     
-    enum Action: Equatable {
+    public enum Action: Equatable {
         case onAppear
         case signIn(email: String, password: String)
         case signUp(name: String, email: String, password: String)
@@ -44,12 +44,44 @@ struct AuthFeature {
         case clearError
         case signInForm(SignInForm.Action)
         case signUpForm(SignUpForm.Action)
+        
+        // Implementação manual de Equatable para cases com múltiplos parâmetros
+        static func == (lhs: Action, rhs: Action) -> Bool {
+            switch (lhs, rhs) {
+            case (.onAppear, .onAppear),
+                 (.signOut, .signOut),
+                 (.refreshUserProfile, .refreshUserProfile),
+                 (.clearError, .clearError):
+                return true
+                
+            case let (.signIn(email1, password1), .signIn(email2, password2)):
+                return email1 == email2 && password1 == password2
+                
+            case let (.signUp(name1, email1, password1), .signUp(name2, email2, password2)):
+                return name1 == name2 && email1 == email2 && password1 == password2
+                
+            case let (.authResponse(result1), .authResponse(result2)):
+                return result1 == result2
+                
+            case let (.userProfileResponse(result1), .userProfileResponse(result2)):
+                return result1 == result2
+                
+            case let (.signInForm(action1), .signInForm(action2)):
+                return action1 == action2
+                
+            case let (.signUpForm(action1), .signUpForm(action2)):
+                return action1 == action2
+                
+            default:
+                return false
+            }
+        }
     }
     
     @Dependency(\.authClient) var authClient
     @Dependency(\.userClient) var userClient
     
-    var body: some ReducerOf<Self> {
+    public var body: some ReducerOf<Self> {
         Scope(state: \.signInForm, action: \.signInForm) {
             SignInForm()
         }
@@ -121,18 +153,17 @@ struct AuthFeature {
                 state.isLoading = false
                 state.errorMessage = nil
                 
-                // Converte o modelo da API para o modelo de domínio
-                let user = response.user.toDomainModel()
+                let user = response.user
                 
                 // Salva os dados localmente
-                saveUserData(user: user, token: response.token, userId: response.user.id)
+                saveUserData(user: user, token: response.token, userId: user.id)
                 
                 // Atualiza o estado
                 state.currentUser = user
                 state.isAuthenticated = true
                 state.isFirstLaunch = false
                 state.authToken = response.token
-                state.currentUserId = response.user.id
+                state.currentUserId = user.id
                 return .none
                 
             case let .authResponse(.failure(error)):
@@ -172,7 +203,7 @@ struct AuthFeature {
 // MARK: - SignIn Form Feature
 
 @Reducer
-struct SignInForm {
+public struct SignInForm {
     @ObservableState
     struct State: Equatable {
         var email = ""
@@ -182,16 +213,40 @@ struct SignInForm {
         var alertMessage = ""
     }
     
-    enum Action: Equatable {
+    public enum Action: Equatable {
         case emailChanged(String)
         case passwordChanged(String)
         case rememberMeToggled
         case signInTapped(email: String, password: String)
         case alertDismissed
         case showAlert(String)
+        
+        // Implementação manual de Equatable
+        static func == (lhs: Action, rhs: Action) -> Bool {
+            switch (lhs, rhs) {
+            case let (.emailChanged(email1), .emailChanged(email2)):
+                return email1 == email2
+                
+            case let (.passwordChanged(password1), .passwordChanged(password2)):
+                return password1 == password2
+                
+            case (.rememberMeToggled, .rememberMeToggled),
+                 (.alertDismissed, .alertDismissed):
+                return true
+                
+            case let (.signInTapped(email1, password1), .signInTapped(email2, password2)):
+                return email1 == email2 && password1 == password2
+                
+            case let (.showAlert(message1), .showAlert(message2)):
+                return message1 == message2
+                
+            default:
+                return false
+            }
+        }
     }
     
-    var body: some ReducerOf<Self> {
+    public var body: some ReducerOf<Self> {
         Reduce { state, action in
             switch action {
             case let .emailChanged(email):
@@ -234,7 +289,7 @@ struct SignInForm {
 // MARK: - SignUp Form Feature
 
 @Reducer
-struct SignUpForm {
+public struct SignUpForm {
     @ObservableState
     struct State: Equatable {
         var name = ""
@@ -245,7 +300,7 @@ struct SignUpForm {
         var alertMessage = ""
     }
     
-    enum Action: Equatable {
+    public enum Action: Equatable {
         case nameChanged(String)
         case emailChanged(String)
         case passwordChanged(String)
@@ -253,6 +308,35 @@ struct SignUpForm {
         case signUpTapped(name: String, email: String, password: String)
         case alertDismissed
         case showAlert(String)
+        
+        // Implementação manual de Equatable
+        static func == (lhs: Action, rhs: Action) -> Bool {
+            switch (lhs, rhs) {
+            case let (.nameChanged(name1), .nameChanged(name2)):
+                return name1 == name2
+                
+            case let (.emailChanged(email1), .emailChanged(email2)):
+                return email1 == email2
+                
+            case let (.passwordChanged(password1), .passwordChanged(password2)):
+                return password1 == password2
+                
+            case let (.confirmPasswordChanged(password1), .confirmPasswordChanged(password2)):
+                return password1 == password2
+                
+            case (.alertDismissed, .alertDismissed):
+                return true
+                
+            case let (.signUpTapped(name1, email1, password1), .signUpTapped(name2, email2, password2)):
+                return name1 == name2 && email1 == email2 && password1 == password2
+                
+            case let (.showAlert(message1), .showAlert(message2)):
+                return message1 == message2
+                
+            default:
+                return false
+            }
+        }
     }
     
     var body: some ReducerOf<Self> {

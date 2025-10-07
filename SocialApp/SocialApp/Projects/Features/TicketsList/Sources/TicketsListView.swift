@@ -79,11 +79,6 @@ public struct TicketsListView: View {
                             if let ticketId = UUID(uuidString: ticket.id) {
                                 store.send(.ticketSelected(ticketId))
                             }
-                        },
-                        onFavorite: { 
-                            if let ticketId = UUID(uuidString: ticket.id) {
-                                store.send(.favoriteToggled(ticketId))
-                            }
                         }
                     )
                 }

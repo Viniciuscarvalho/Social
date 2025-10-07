@@ -116,7 +116,7 @@ extension UserClient: DependencyKey {
         }
     )
     
-    static let testValue = Self(
+    public static let testValue = Self(
         getCurrentUser: {
             return User(
                 name: "Usuário Teste",

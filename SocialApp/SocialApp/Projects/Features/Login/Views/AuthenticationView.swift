@@ -11,9 +11,26 @@ struct AuthenticationView: View {
                 .ignoresSafeArea()
             
             Group {
-                if store.isFirstLaunch {
-                    OnboardingView {
-                        showSignUp = false
+                if store.auth.isFirstLaunch {
+                    OnboardingView(
+                        onSignUpTapped: {
+                            showSignUp = true
+                        },
+                        onSignInTapped: {
+                            // Marca que não é mais primeiro lançamento
+                            UserDefaults.standard.set(true, forKey: "hasLaunchedBefore")
+                            store.send(.auth(.onAppear))
+                        }
+                    )
+                    .fullScreenCover(isPresented: $showSignUp) {
+                        ZStack {
+                            AppColors.backgroundGradient
+                                .ignoresSafeArea()
+                            
+                            SignUpView(
+                                store: store.scope(state: \.auth.signUpForm, action: \.auth.signUpForm)
+                            )
+                        }
                     }
                 } else {
                     SignInView(

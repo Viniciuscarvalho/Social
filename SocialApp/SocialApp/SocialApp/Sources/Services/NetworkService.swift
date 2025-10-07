@@ -7,7 +7,7 @@ struct NetworkConfig {
 
 // MARK: - Network Error Types
 
-enum NetworkError: Error, LocalizedError {
+public enum NetworkError: Error, LocalizedError {
     case invalidURL
     case noData
     case decodingError
@@ -18,7 +18,7 @@ enum NetworkError: Error, LocalizedError {
     case notFound
     case unknown(Error)
     
-    var errorDescription: String? {
+    public var errorDescription: String? {
         switch self {
         case .invalidURL:
             return "URL inválida"

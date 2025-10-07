@@ -192,7 +192,10 @@ public struct TicketDetailView: View {
                 // Trade Button
                 if ticketDetail.status == .available {
                     Button(action: {
-                        store.send(.purchaseTicket(ticketDetail.ticketId))
+                        // Converter ticketId de String para UUID
+                        if let uuid = UUID(uuidString: ticketDetail.ticketId) {
+                            store.send(.purchaseTicket(uuid))
+                        }
                     }) {
                         HStack {
                             if store.isPurchasing {

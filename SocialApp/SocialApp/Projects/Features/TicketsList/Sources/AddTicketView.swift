@@ -35,11 +35,27 @@ struct AddTicketView: View {
                             text: $store.ticketName
                         )
                         
-                        FormField(
-                            title: "Tipo de Ingresso",
-                            placeholder: "Ex: Pista, VIP, Camarote",
-                            text: $store.ticketType
-                        )
+                        // Picker para tipo de ingresso
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Tipo de Ingresso")
+                                .font(.subheadline)
+                                .fontWeight(.semibold)
+                                .foregroundColor(AppColors.primaryText)
+                            
+                            Picker("Tipo", selection: $store.ticketType) {
+                                ForEach(TicketType.allCases, id: \.self) { type in
+                                    Text(type.displayName).tag(type)
+                                }
+                            }
+                            .pickerStyle(.menu)
+                            .padding(12)
+                            .background(AppColors.secondaryBackground)
+                            .cornerRadius(12)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .stroke(AppColors.separator.opacity(0.5), lineWidth: 1)
+                            )
+                        }
                         
                         FormField(
                             title: "Preço",

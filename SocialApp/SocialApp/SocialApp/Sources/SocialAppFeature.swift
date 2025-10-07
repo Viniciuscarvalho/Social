@@ -213,11 +213,23 @@ public struct SocialAppFeature {
                 return .none
                 
             // MARK: - Child Feature Navigation
-            case let .homeFeature(.eventSelected(eventId)):
-                return .send(.navigateToEventDetail(eventId))
+            case let .homeFeature(.eventSelected(eventIdString)):
+                // Converte String para UUID para EventDetailFeature
+                if let eventId = UUID(uuidString: eventIdString) {
+                    return .send(.navigateToEventDetail(eventId))
+                } else {
+                    print("❌ Erro: Não foi possível converter eventId String para UUID: \(eventIdString)")
+                    return .none
+                }
                 
-            case let .homeFeature(.ticketSelected(ticketId)):
-                return .send(.navigateToTicketDetail(ticketId))
+            case let .homeFeature(.ticketSelected(ticketIdString)):
+                // Converte String para UUID para TicketDetailFeature
+                if let ticketId = UUID(uuidString: ticketIdString) {
+                    return .send(.navigateToTicketDetail(ticketId))
+                } else {
+                    print("❌ Erro: Não foi possível converter ticketId String para UUID: \(ticketIdString)")
+                    return .none
+                }
                 
             case let .ticketsListFeature(.ticketSelected(ticketId)):
                 return .send(.navigateToTicketDetail(ticketId))

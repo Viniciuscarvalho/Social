@@ -42,7 +42,7 @@ final class AuthManager: ObservableObject {
                 await saveUserData(
                     user: response.user,
                     token: response.token,
-                    userId: response.user.id.uuidString
+                    userId: response.user.id
                 )
                 
                 // Atualiza o estado
@@ -72,7 +72,7 @@ final class AuthManager: ObservableObject {
                 await saveUserData(
                     user: response.user,
                     token: response.token,
-                    userId: response.user.id.uuidString
+                    userId: response.user.id
                 )
                 
                 // Atualiza o estado

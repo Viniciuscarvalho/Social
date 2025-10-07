@@ -71,7 +71,7 @@ extension EventsClient: DependencyKey {
                 // Fallback para JSON local
                 print("API call failed, falling back to local JSON: \(error)")
                 let events = try await loadEventsFromJSON()
-                guard let event = events.first(where: { $0.id == id }) else {
+                guard let event = events.first(where: { $0.id == id.uuidString }) else {
                     throw NetworkError.notFound
                 }
                 return event

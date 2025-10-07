@@ -1,12 +1,15 @@
-import ComposableArchitecture
 import SwiftUI
 
 struct OnboardingView: View {
-    @Bindable var store: StoreOf<SignUpForm>
-    @Environment(\.dismiss) var dismiss
-    @EnvironmentObject var authManager: AuthManager
+    let onSignUpTapped: () -> Void
+    let onSignInTapped: () -> Void
+    
     @State private var currentPage = 0
-    @State private var showSignUp = false
+    
+    init(onSignUpTapped: @escaping () -> Void = {}, onSignInTapped: @escaping () -> Void = {}) {
+        self.onSignUpTapped = onSignUpTapped
+        self.onSignInTapped = onSignInTapped
+    }
     
     var body: some View {
         ZStack {
@@ -66,9 +69,7 @@ struct OnboardingView: View {
                             .foregroundColor(.gray)
                             .fixedSize(horizontal: false, vertical: true)
                         
-                        Button(action: {
-                            showSignUp = true
-                        }) {
+                        Button(action: onSignUpTapped) {
                             Text("Cadastre-se")
                                 .font(.system(size: 16, weight: .semibold))
                                 .foregroundColor(.white)
@@ -79,9 +80,7 @@ struct OnboardingView: View {
                         }
                         .padding(.top, 8)
                         
-                        Button(action: {
-                            authManager.isFirstLaunch = false
-                        }) {
+                        Button(action: onSignInTapped) {
                             Text("Já possui conta?")
                                 .font(.system(size: 14))
                                 .foregroundColor(.gray)
@@ -97,10 +96,12 @@ struct OnboardingView: View {
                 .cornerRadius(30, corners: [.topLeft, .topRight])
             }
         }
-        .fullScreenCover(isPresented: $showSignUp) {
-            store.send(.signUpTapped(name: store.name, email: store.email, password: store.password))
-            dismiss()
-                .environmentObject(authManager)
-        }
     }
+}
+
+#Preview {
+    OnboardingView(
+        onSignUpTapped: { print("Sign up tapped") },
+        onSignInTapped: { print("Sign in tapped") }
+    )
 }

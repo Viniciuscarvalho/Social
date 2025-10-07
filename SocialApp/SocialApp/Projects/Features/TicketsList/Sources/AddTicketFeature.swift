@@ -29,19 +29,13 @@ public struct AddTicketFeature {
     
     public enum Action: BindableAction, Equatable {
         case binding(BindingAction<State>)
-        case setTicketName(String)
-        case setTicketType(TicketType)
-        case setPrice(String)
-        case setDescription(String)
-        case setSelectedEvent(UUID?)
-        case setQuantity(Int)
-        case setValidUntil(Date)
         case publishTicket
         case publishTicketResponse(Result<Ticket, APIError>)
         case dismissSuccess
     }
     
     @Dependency(\.ticketsClient) var ticketsClient
+    @Dependency(\.userClient) var userClient
     
     public init() {}
     
@@ -53,39 +47,19 @@ public struct AddTicketFeature {
             case .binding:
                 return .none
                 
-            case let .setTicketName(name):
-                state.ticketName = name
-                return .none
-                
-            case let .setTicketType(type):
-                state.ticketType = type
-                return .none
-                
-            case let .setPrice(price):
-                state.price = price
-                return .none
-                
-            case let .setDescription(description):
-                state.description = description
-                return .none
-                
-            case let .setSelectedEvent(eventId):
-                state.selectedEventId = eventId
-                return .none
-                
-            case let .setQuantity(quantity):
-                state.quantity = max(1, quantity)
-                return .none
-                
-            case let .setValidUntil(date):
-                state.validUntil = date
-                return .none
-                
             case .publishTicket:
+                print("📋 Dados do formulário:")
+                print("   Nome: \(state.ticketName)")
+                print("   Tipo: \(state.ticketType.displayName)")
+                print("   Preço: \(state.price)")
+                print("   Descrição: \(state.description)")
+                print("   Event ID: \(state.selectedEventId?.uuidString ?? "nil")")
+                
                 guard state.isFormValid,
                       let eventId = state.selectedEventId,
                       let priceValue = Double(state.price) else {
                     state.errorMessage = "Por favor, preencha todos os campos obrigatórios"
+                    print("❌ Validação falhou!")
                     return .none
                 }
                 
@@ -96,15 +70,21 @@ public struct AddTicketFeature {
                     do {
                         print("📝 Publicando novo ticket...")
                         
+                        // Buscar usuário atual para pegar o sellerId
+                        let currentUser = try await userClient.fetchCurrentUser()
+                        
                         // Criar novo ticket
                         let newTicket = Ticket(
-                            eventId: eventId,
-                            sellerId: UUID(), // TODO: Usar ID do usuário atual
+                            eventId: eventId.uuidString,  // Converter UUID para String
+                            sellerId: currentUser.id,      // Usar ID do usuário atual
                             name: state.ticketName,
                             price: priceValue,
                             ticketType: state.ticketType,
                             validUntil: state.validUntil
                         )
+                        
+                        print("🎫 Criando ticket para evento: \(eventId.uuidString)")
+                        print("👤 Vendedor: \(currentUser.name) (ID: \(currentUser.id))")
                         
                         // Chamar API para criar ticket
                         let createdTicket = try await ticketsClient.createTicket(newTicket)

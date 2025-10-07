@@ -1,6 +1,20 @@
 import ComposableArchitecture
 import Foundation
 
+/// Feature para o perfil do USUÁRIO LOGADO
+/// 
+/// **Diferença de SellerProfileFeature:**
+/// - ProfileFeature: Perfil do usuário LOGADO (pode editar, configurações)
+/// - SellerProfileFeature: Perfil de OUTRO usuário (apenas visualização)
+///
+/// **Uso:**
+/// Aba "Perfil" do app onde o usuário pode:
+/// - Editar suas informações
+/// - Trocar foto de perfil
+/// - Gerenciar configurações (notificações, privacidade)
+/// - Ver seus próprios tickets
+///
+/// **Editável**: Permite modificar dados pessoais
 @Reducer
 public struct ProfileFeature {
     @ObservableState
