@@ -40,13 +40,14 @@ struct AuthFeature {
         case signOut
         case refreshUserProfile
         case authResponse(Result<APIAuthResponse, NetworkError>)
-        case userProfileResponse(Result<APIUser, NetworkError>)
+        case userProfileResponse(Result<User, NetworkError>)
         case clearError
         case signInForm(SignInForm.Action)
         case signUpForm(SignUpForm.Action)
     }
     
     @Dependency(\.authClient) var authClient
+    @Dependency(\.userClient) var userClient
     
     var body: some ReducerOf<Self> {
         Scope(state: \.signInForm, action: \.signInForm) {
@@ -92,25 +93,23 @@ struct AuthFeature {
                 }
                 
             case .signOut:
-                // Remove dados locais
-                UserDefaults.standard.removeObject(forKey: "currentUser")
-                UserDefaults.standard.removeObject(forKey: "authToken")
-                UserDefaults.standard.removeObject(forKey: "currentUserId")
-                
-                // Limpa estado
+                // Limpa estado local e chama o logout do cliente de auth
                 state.currentUser = nil
                 state.isAuthenticated = false
                 state.authToken = nil
                 state.currentUserId = nil
                 state.errorMessage = nil
-                return .none
+                
+                return .run { _ in
+                    try? await authClient.signOut()
+                }
                 
             case .refreshUserProfile:
                 guard let userId = state.currentUserId else { return .none }
                 return .run { send in
                     do {
-                        let apiUser = try await authClient.getUserProfile(userId)
-                        await send(.userProfileResponse(.success(apiUser)))
+                        let user = try await userClient.getUserProfile(userId)
+                        await send(.userProfileResponse(.success(user)))
                     } catch let error as NetworkError {
                         await send(.userProfileResponse(.failure(error)))
                     } catch {
@@ -141,14 +140,12 @@ struct AuthFeature {
                 state.errorMessage = error.errorDescription
                 return .none
                 
-            case let .userProfileResponse(.success(apiUser)):
-                let user = apiUser.toDomainModel()
-                
+            case let .userProfileResponse(.success(user)):
                 // Atualiza o usuário local
                 if let encoded = try? JSONEncoder().encode(user) {
                     UserDefaults.standard.set(encoded, forKey: "currentUser")
-                    state.currentUser = user
                 }
+                state.currentUser = user
                 return .none
                 
             case let .userProfileResponse(.failure(error)):

@@ -1,5 +1,6 @@
 import Foundation
 
+// DEPRECATED: Prefer using TCA clients (AuthClient, UserClient) instead of UserService.
 @MainActor
 final class AuthManager: ObservableObject {
     @Published var isAuthenticated = false
@@ -8,7 +9,8 @@ final class AuthManager: ObservableObject {
     @Published var isLoading = false
     @Published var errorMessage: String?
     
-    private let userService = UserService.shared
+    private let authClient = AuthClient.liveValue
+    private let userClient = UserClient.liveValue
     private var authToken: String?
     private var currentUserId: String?
     
@@ -34,10 +36,14 @@ final class AuthManager: ObservableObject {
             errorMessage = nil
             
             do {
-                let response = try await userService.createUser(name: name, email: email, password: password)
+                let response = try await authClient.signUp(name, email, password)
                 
                 // Salva os dados localmente
-                await saveUserData(user: response.user, token: response.token, userId: response.user.id.uuidString)
+                await saveUserData(
+                    user: response.user,
+                    token: response.token,
+                    userId: response.user.id.uuidString
+                )
                 
                 // Atualiza o estado
                 currentUser = response.user
@@ -60,10 +66,14 @@ final class AuthManager: ObservableObject {
             errorMessage = nil
             
             do {
-                let response = try await userService.signIn(email: email, password: password)
+                let response = try await authClient.signIn(email, password)
                 
                 // Salva os dados localmente
-                await saveUserData(user: response.user, token: response.token, userId: response.user.id.uuidString)
+                await saveUserData(
+                    user: response.user,
+                    token: response.token,
+                    userId: response.user.id.uuidString
+                )
                 
                 // Atualiza o estado
                 currentUser = response.user
@@ -80,17 +90,14 @@ final class AuthManager: ObservableObject {
     }
     
     func signOut() {
-        // Remove dados locais
-        UserDefaults.standard.removeObject(forKey: "currentUser")
-        UserDefaults.standard.removeObject(forKey: "authToken")
-        UserDefaults.standard.removeObject(forKey: "currentUserId")
-        
-        // Limpa estado
-        currentUser = nil
-        isAuthenticated = false
-        authToken = nil
-        currentUserId = nil
-        errorMessage = nil
+        Task { @MainActor in
+            try? await authClient.signOut()
+            currentUser = nil
+            isAuthenticated = false
+            authToken = nil
+            currentUserId = nil
+            errorMessage = nil
+        }
     }
     
     func refreshUserProfile() {
@@ -98,12 +105,10 @@ final class AuthManager: ObservableObject {
         
         Task {
             do {
-                let userResponse = try await userService.getUserById(userId)
-                
-                // Atualiza o usuário local
-                if let encoded = try? JSONEncoder().encode(userResponse.user) {
+                let user = try await userClient.getUserProfile(userId)
+                if let encoded = try? JSONEncoder().encode(user) {
                     UserDefaults.standard.set(encoded, forKey: "currentUser")
-                    currentUser = userResponse.user
+                    currentUser = user
                 }
             } catch {
                 print("Erro ao atualizar perfil do usuário: \(error)")
@@ -112,6 +117,7 @@ final class AuthManager: ObservableObject {
     }
     
     // MARK: - Private Methods
+    
     private func saveUserData(user: User, token: String?, userId: String) async {
         // Salva o usuário
         if let encoded = try? JSONEncoder().encode(user) {

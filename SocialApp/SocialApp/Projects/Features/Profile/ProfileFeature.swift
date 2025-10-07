@@ -56,12 +56,14 @@ public struct ProfileFeature {
     
     public init() {}
     
-    @Dependency(\.apiClient) var apiClient
+    @Dependency(\.userClient) var userClient
     
     public var body: some ReducerOf<Self> {
         Reduce { state, action in
             switch action {
+                
             // MARK: - Lifecycle
+                
             case .onAppear:
                 return .send(.loadUserProfile)
                 
@@ -74,7 +76,7 @@ public struct ProfileFeature {
                 
                 return .run { send in
                     do {
-                        let user = try await apiClient.getCurrentUser()
+                        let user = try await userClient.getCurrentUser()
                         await send(.userProfileResponse(.success(user)))
                     } catch {
                         await send(.userProfileResponse(.failure(error)))
@@ -107,7 +109,7 @@ public struct ProfileFeature {
                 
                 return .run { send in
                     do {
-                        let user = try await apiClient.updateUserProfile(updatedUser)
+                        let user = try await userClient.updateUserProfile(updatedUser)
                         await send(.updateProfileResponse(.success(user)))
                     } catch {
                         await send(.updateProfileResponse(.failure(error)))
@@ -142,7 +144,7 @@ public struct ProfileFeature {
                 
                 return .run { send in
                     do {
-                        let imageURL = try await apiClient.uploadProfileImage(imageData)
+                        let imageURL = try await userClient.uploadProfileImage(imageData)
                         await send(.uploadProfileImageResponse(.success(imageURL)))
                     } catch {
                         await send(.uploadProfileImageResponse(.failure(error)))
@@ -261,3 +263,4 @@ extension ProfileFeature.Action {
         }
     }
 }
+

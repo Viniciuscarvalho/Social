@@ -10,6 +10,8 @@ public struct TicketsListFeature {
         var isLoading = false
         var errorMessage: String?
         var filter = TicketsListFilter()
+        
+        @Presents var destination: Destination.State?
     }
     
     enum Action: Equatable {
@@ -17,6 +19,7 @@ public struct TicketsListFeature {
         case loadAvailableTickets
         case loadFavoriteTickets
         case loadTicketsForEvent(String)
+        case ticketSelected(String)
         case ticketsResponse(Result<[Ticket], NetworkError>)
         case favoriteTicket(String)
         case unfavoriteTicket(String)
@@ -24,6 +27,16 @@ public struct TicketsListFeature {
         case createTicket(CreateTicketRequest)
         case createTicketResponse(Result<Ticket, NetworkError>)
         case filterChanged(TicketsListFilter)
+        case setTicketTypeFilter(TicketType?)
+        case setStatusFilter(TicketStatus?)
+        case setSortOption(TicketSortOption)
+        
+        case destination(PresentationAction<Destination.Action>)
+    }
+    
+    @Reducer
+    enum Destination {
+        case ticketDetail(TicketDetailFeature)
     }
     
     @Dependency(\.ticketsClient) var ticketsClient
@@ -69,6 +82,16 @@ public struct TicketsListFeature {
                         await send(.ticketsResponse(.failure(.unknown(error))))
                     }
                 }
+                
+            case let .ticketSelected(tickedId):
+                guard let ticket = state.tickets.first(where: { $0.id == ticketId }) else {
+                    return .none
+                }
+                
+                state.destination = .ticketDetail(
+                    TicketDetailFeature.State(ticket: ticket)
+                )
+                return .none
                 
             case let .ticketsResponse(.success(tickets)):
                 state.tickets = tickets
@@ -140,6 +163,18 @@ public struct TicketsListFeature {
             case let .filterChanged(filter):
                 state.filter = filter
                 return .send(.loadAvailableTickets)
+                
+            case let .setTicketTypeFilter(type):
+                state.filter.ticketType = type
+                return .none
+                
+            case let .setStatusFilter(status):
+                state.filter.status = status
+                return .none
+                
+            case let .setSortOption(sortOption):
+                state.filter.sortBy = sortOption
+                return .none
             }
         }
     }

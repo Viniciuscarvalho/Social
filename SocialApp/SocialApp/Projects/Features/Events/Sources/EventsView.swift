@@ -56,6 +56,13 @@ public struct EventsView: View {
                 )
             )
         }
+        .sheet(
+            store: $store.scope(state: \.$destination, action: \.destination),
+            state: /EventsFeature.Destination.State.eventDetail,
+            action: EventsFeature.Destination.Action.eventDetail
+        ) { store in
+            EventDetailFeatureView(store: store)
+        }
         .onAppear {
             store.send(.onAppear)
         }

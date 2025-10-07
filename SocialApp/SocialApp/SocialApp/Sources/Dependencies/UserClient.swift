@@ -5,13 +5,14 @@ import Foundation
 public struct UserClient {
     var getCurrentUser: @Sendable () async throws -> User
     var fetchCurrentUser: @Sendable () async throws -> User
+    var getUserProfile: @Sendable (_ userId: String) async throws -> User
+    var getUserTickets: @Sendable (_ userId: String) async throws -> [Ticket]
     var updateUserProfile: @Sendable (User) async throws -> User
     var uploadProfileImage: @Sendable (Data) async throws -> String
-    var signOut: @Sendable () async throws -> Void
 }
 
 extension UserClient: DependencyKey {
-    static let liveValue = Self(
+    public static let liveValue = Self(
         getCurrentUser: {
             guard let userId = UserDefaults.standard.string(forKey: "currentUserId") else {
                 throw NetworkError.unauthorized
@@ -38,6 +39,22 @@ extension UserClient: DependencyKey {
             )
             
             return apiResponse.toUser()
+        },
+        getUserProfile: { userId in
+            let apiResponse: UserResponse = try await NetworkService.shared.request(
+                endpoint: "/users/\(userId)",
+                method: .GET,
+                requiresAuth: true
+            )
+            return apiResponse.toUser()
+        },
+        getUserTickets: { userId in
+            let apiResponse: [Ticket] = try await NetworkService.shared.request(
+                endpoint: "/users/\(userId)/tickets",
+                method: .GET,
+                requiresAuth: true
+            )
+            return apiResponse
         },
         updateUserProfile: { user in
             guard let userId = UserDefaults.standard.string(forKey: "currentUserId") else {
@@ -96,27 +113,6 @@ extension UserClient: DependencyKey {
             try await Task.sleep(nanoseconds: 1_500_000_000)
             
             return "https://ticketplace-api.onrender.com/uploads/profile/\(userId)/\(UUID().uuidString).jpg"
-        },
-        signOut: {
-            // Remove dados de autenticação locais
-            UserDefaults.standard.removeObject(forKey: "authToken")
-            UserDefaults.standard.removeObject(forKey: "currentUser")
-            UserDefaults.standard.removeObject(forKey: "currentUserId")
-            
-            // Opcional: Fazer chamada para logout no servidor para invalidar tokens
-            // Comentado por enquanto, mas pode ser adicionado se necessário
-            /*
-            do {
-                let _: EmptyResponse = try await NetworkService.shared.request(
-                    endpoint: "/auth/logout",
-                    method: .POST,
-                    requiresAuth: true
-                )
-            } catch {
-                // Ignora erro de logout no servidor se houver
-                print("Erro ao fazer logout no servidor: \(error)")
-            }
-            */
         }
     )
     
@@ -137,15 +133,23 @@ extension UserClient: DependencyKey {
                 email: "teste@example.com"
             )
         },
+        getUserProfile: { _ in
+            return User(
+                name: "Usuário Teste",
+                title: "Desenvolvedor",
+                profileImageURL: nil,
+                email: "teste@example.com"
+            )
+        },
+        getUserTickets: { _ in
+            return []
+        },
         updateUserProfile: { user in
             // Retorna o usuário sem modificações
             return user
         },
         uploadProfileImage: { _ in
             return "https://example.com/test-profile.jpg"
-        },
-        signOut: {
-            // Não faz nada em testes
         }
     )
 }

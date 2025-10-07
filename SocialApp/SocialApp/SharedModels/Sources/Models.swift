@@ -1,7 +1,7 @@
 import Foundation
 
 public struct User: Codable, Identifiable, Equatable {
-    public var id: UUID
+    public var id: String
     public var name: String
     public var title: String?
     public var profileImageURL: String?
@@ -19,7 +19,7 @@ public struct User: Codable, Identifiable, Equatable {
         profileImageURL: String? = nil,
         email: String? = nil
     ) {
-        self.id = UUID()
+        self.id = UUID().uuidString
         self.name = name
         self.title = title
         self.profileImageURL = profileImageURL
@@ -65,7 +65,7 @@ public struct Coordinate: Codable, Equatable {
 // MARK: - Event Domain Models
 
 public struct Event: Codable, Identifiable, Equatable {
-    public var id: UUID
+    public var id: String
     public var name: String
     public var description: String?
     public var imageURL: String?
@@ -81,7 +81,7 @@ public struct Event: Codable, Identifiable, Equatable {
     public init(name: String, description: String? = nil, imageURL: String? = nil,
          startPrice: Double, location: Location, category: EventCategory,
          isRecommended: Bool = false, eventDate: Date? = nil) {
-        self.id = UUID()
+        self.id = UUID().uuidString
         self.name = name
         self.description = description
         self.imageURL = imageURL
@@ -202,9 +202,9 @@ public struct DateRange: Codable, Equatable {
 // MARK: - Ticket Domain Models
 
 public struct Ticket: Codable, Identifiable, Equatable {
-    public var id: UUID
-    public var eventId: UUID
-    public var sellerId: UUID
+    public var id: String
+    public var eventId: String
+    public var sellerId: String
     public var name: String
     public var price: Double
     public var originalPrice: Double?
@@ -214,9 +214,9 @@ public struct Ticket: Codable, Identifiable, Equatable {
     public var createdAt: Date
     public var isFavorited: Bool
     
-    public init(eventId: UUID, sellerId: UUID, name: String, price: Double,
+    public init(eventId: String, sellerId: String, name: String, price: Double,
          ticketType: TicketType, validUntil: Date) {
-        self.id = UUID()
+        self.id = UUID().uuidString
         self.eventId = eventId
         self.sellerId = sellerId
         self.name = name
@@ -286,8 +286,8 @@ public enum TicketStatus: String, CaseIterable, Codable, Equatable {
 // MARK: - TicketDetail Domain Models
 
 public struct TicketDetail: Codable, Identifiable, Equatable {
-    public var id: UUID
-    public var ticketId: UUID
+    public var id: String
+    public var ticketId: String
     public var event: Event
     public var seller: User
     public var price: Double
@@ -299,9 +299,9 @@ public struct TicketDetail: Codable, Identifiable, Equatable {
     public var purchaseDate: Date?
     public var status: TicketStatus
     
-    public init(ticketId: UUID, event: Event, seller: User, price: Double,
+    public init(ticketId: String, event: Event, seller: User, price: Double,
          quantity: Int, ticketType: TicketType, validUntil: Date) {
-        self.id = UUID()
+        self.id = UUID().uuidString
         self.ticketId = ticketId
         self.event = event
         self.seller = seller
@@ -533,8 +533,14 @@ public struct CreateTicketRequest: Codable {
     public let ticketType: TicketType
     public let validUntil: Date
     
-    public init(eventId: UUID, name: String, price: Double, originalPrice: Double? = nil,
-                ticketType: TicketType, validUntil: Date) {
+    public init(
+        eventId: UUID,
+        name: String,
+        price: Double,
+        originalPrice: Double? = nil,
+        ticketType: TicketType,
+        validUntil: Date
+    ) {
         self.eventId = eventId
         self.name = name
         self.price = price
@@ -566,7 +572,7 @@ extension User {
         
         // Handle UUID from string
         let idString = try container.decode(String.self, forKey: .id)
-        self.id = UUID(uuidString: idString) ?? UUID()
+        self.id = UUID(uuidString: idString) ?? String
         
         self.name = try container.decode(String.self, forKey: .name)
         self.title = try container.decodeIfPresent(String.self, forKey: .title)
@@ -590,7 +596,7 @@ extension User {
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         
-        try container.encode(id.uuidString, forKey: .id)
+        try container.encode(id, forKey: .id)
         try container.encode(name, forKey: .name)
         try container.encodeIfPresent(title, forKey: .title)
         try container.encodeIfPresent(profileImageURL, forKey: .profileImageURL)
@@ -617,7 +623,7 @@ extension Event {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         
         let idString = try container.decode(String.self, forKey: .id)
-        self.id = UUID(uuidString: idString) ?? UUID()
+        self.id = UUID(uuidString: idString) ?? String
         
         self.name = try container.decode(String.self, forKey: .name)
         self.description = try container.decodeIfPresent(String.self, forKey: .description)
@@ -649,7 +655,7 @@ extension Event {
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         
-        try container.encode(id.uuidString, forKey: .id)
+        try container.encode(id, forKey: .id)
         try container.encode(name, forKey: .name)
         try container.encodeIfPresent(description, forKey: .description)
         try container.encodeIfPresent(imageURL, forKey: .imageURL)
@@ -679,13 +685,13 @@ extension Ticket {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         
         let idString = try container.decode(String.self, forKey: .id)
-        self.id = UUID(uuidString: idString) ?? UUID()
+        self.id = UUID(uuidString: idString) ?? String
         
         let eventIdString = try container.decode(String.self, forKey: .eventId)
-        self.eventId = UUID(uuidString: eventIdString) ?? UUID()
+        self.eventId = UUID(uuidString: eventIdString) ?? String
         
         let sellerIdString = try container.decode(String.self, forKey: .sellerId)
-        self.sellerId = UUID(uuidString: sellerIdString) ?? UUID()
+        self.sellerId = UUID(uuidString: sellerIdString) ?? String
         
         self.name = try container.decode(String.self, forKey: .name)
         self.price = try container.decode(Double.self, forKey: .price)
@@ -714,9 +720,9 @@ extension Ticket {
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         
-        try container.encode(id.uuidString, forKey: .id)
-        try container.encode(eventId.uuidString, forKey: .eventId)
-        try container.encode(sellerId.uuidString, forKey: .sellerId)
+        try container.encode(id, forKey: .id)
+        try container.encode(eventId, forKey: .eventId)
+        try container.encode(sellerId, forKey: .sellerId)
         try container.encode(name, forKey: .name)
         try container.encode(price, forKey: .price)
         try container.encodeIfPresent(originalPrice, forKey: .originalPrice)

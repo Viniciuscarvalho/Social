@@ -3,11 +3,11 @@ import Foundation
 
 @DependencyClient
 struct TicketsClient {
-    var fetchTickets: @Sendable (_ eventId: UUID?) async throws -> [Ticket]
+    var fetchTickets: @Sendable (_ eventId: String?) async throws -> [Ticket]
     var fetchAvailableTickets: @Sendable () async throws -> [Ticket]
     var createTicket: @Sendable (_ request: CreateTicketRequest) async throws -> Ticket
-    var favoriteTicket: @Sendable (_ ticketId: UUID) async throws -> Void
-    var unfavoriteTicket: @Sendable (_ ticketId: UUID) async throws -> Void
+    var favoriteTicket: @Sendable (_ ticketId: String) async throws -> Void
+    var unfavoriteTicket: @Sendable (_ ticketId: String) async throws -> Void
 }
 
 extension TicketsClient: DependencyKey {
@@ -57,14 +57,14 @@ extension TicketsClient: DependencyKey {
         favoriteTicket: { ticketId in
             let request = FavoriteTicketRequest(ticketId: ticketId)
             let _: APIResponse<String> = try await NetworkService.shared.request(
-                endpoint: "/tickets/\(ticketId.uuidString)/favorite",
+                endpoint: "/tickets/\(ticketId)/favorite",
                 method: .POST,
                 body: request
             )
         },
         unfavoriteTicket: { ticketId in
             let _: APIResponse<String> = try await NetworkService.shared.request(
-                endpoint: "/tickets/\(ticketId.uuidString)/favorite",
+                endpoint: "/tickets/\(ticketId)/favorite",
                 method: .DELETE
             )
         }

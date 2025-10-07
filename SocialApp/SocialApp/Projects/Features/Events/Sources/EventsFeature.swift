@@ -12,6 +12,7 @@ public struct EventsFeature {
         public var errorMessage: String?
         public var searchFeature = SearchFeature.State()
         public var isSearchPresented: Bool = false
+        @Presents public var destination: Destination.State?
         
         public var todayEvent: Event? {
             return events.first { event in
@@ -30,11 +31,6 @@ public struct EventsFeature {
             }
         }
         
-        public var user: User? {
-            // This would be loaded from UserClient in a real implementation
-            return nil
-        }
-        
         public init() {}
     }
     
@@ -49,6 +45,11 @@ public struct EventsFeature {
         case refreshRequested
         case searchFeature(SearchFeature.Action)
         case setSearchPresented(Bool)
+        case destination(PresentationAction<Destination.Action>)
+    }
+    
+    @Reducer enum Destination {
+        case eventDetail(EventDetailFeature)
     }
     
     @Dependency(\.eventsClient) var eventsClient
@@ -56,6 +57,11 @@ public struct EventsFeature {
     public init() {}
     
     public var body: some ReducerOf<Self> {
+        Reduce { state, action in .none }
+        .ifLet(\.$destination, action: /Action.destination) {
+            Destination()
+        }
+        
         Scope(state: \.searchFeature, action: \.searchFeature) {
             SearchFeature()
         }
@@ -122,7 +128,8 @@ public struct EventsFeature {
                 state.isSearchPresented = true
                 return .none
                 
-            case .eventSelected:
+            case let .eventSelected(eventId):
+                state.destination = .eventDetail(EventDetailFeature.State(eventId: eventId.uuidString))
                 return .none
                 
             case .refreshRequested:
@@ -141,6 +148,9 @@ public struct EventsFeature {
                 
             case let .setSearchPresented(isPresented):
                 state.isSearchPresented = isPresented
+                return .none
+                
+            case .destination:
                 return .none
             }
         }

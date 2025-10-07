@@ -33,7 +33,7 @@ public struct TicketsListView: View {
             store.send(.onAppear)
         }
         .refreshable {
-            store.send(.refreshRequested)
+            store.send(.loadAvailableTickets)
         }
     }
     
@@ -72,7 +72,7 @@ public struct TicketsListView: View {
     private var ticketsContentView: some View {
         ScrollView {
             LazyVStack(spacing: 12) {
-                ForEach(store.displayTickets) { ticket in
+                ForEach(store.tickets) { ticket in
                     TicketCard(
                         ticket: ticket,
                         onTap: { store.send(.ticketSelected(ticket.id)) }
@@ -87,32 +87,24 @@ public struct TicketsListView: View {
         VStack {
             Menu("Tipo de Ingresso") {
                 Button("Todos") {
-                    var filter = store.selectedFilter
-                    filter.ticketType = nil
-                    store.send(.filterChanged(filter))
+                    store.send(.setTicketTypeFilter(nil))
                 }
                 
                 ForEach(TicketType.allCases, id: \.self) { type in
                     Button(type.displayName) {
-                        var filter = store.selectedFilter
-                        filter.ticketType = type
-                        store.send(.filterChanged(filter))
+                        store.send(.setTicketTypeFilter(type))
                     }
                 }
             }
             
             Menu("Status") {
                 Button("Todos") {
-                    var filter = store.selectedFilter
-                    filter.status = nil
-                    store.send(.filterChanged(filter))
+                    store.send(.setStatusFilter(nil))
                 }
                 
                 ForEach(TicketStatus.allCases, id: \.self) { status in
                     Button(status.displayName) {
-                        var filter = store.selectedFilter
-                        filter.status = status
-                        store.send(.filterChanged(filter))
+                        store.send(.setStatusFilter(status))
                     }
                 }
             }
@@ -120,9 +112,7 @@ public struct TicketsListView: View {
             Menu("Ordenar Por") {
                 ForEach(TicketSortOption.allCases, id: \.self) { sortOption in
                     Button(sortOption.displayName) {
-                        var filter = store.selectedFilter
-                        filter.sortBy = sortOption
-                        store.send(.filterChanged(filter))
+                        store.send(.setSortOption(sortOption))
                     }
                 }
             }

@@ -4,7 +4,7 @@ import Foundation
 @DependencyClient
 struct EventsClient {
     var fetchEvents: @Sendable () async throws -> [Event]
-    var fetchEvent: @Sendable (_ id: UUID) async throws -> Event
+    var fetchEvent: @Sendable (_ id: String) async throws -> Event
     var searchEvents: @Sendable (_ query: String) async throws -> [Event]
     var fetchEventsByCategory: @Sendable (_ category: EventCategory) async throws -> [Event]
 }

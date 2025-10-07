@@ -1,7 +1,9 @@
 import SwiftUI
+import ComposableArchitecture
 
 struct EventDetailView: View {
-    let eventId: UUID
+    @Dependency(\.eventsClient) private var eventsClient
+    let eventId: String
     @State private var event: Event?
     @State private var isLoading: Bool = true
     @State private var errorMessage: String?
@@ -25,11 +27,11 @@ struct EventDetailView: View {
     
     private func loadEvent() async {
         do {
-            let allEvents = try await loadEventsFromJSON()
-            self.event = allEvents.first(where: { $0.id == eventId })
+            let loadedEvent = try await eventsClient.fetchEvent(eventId)
+            self.event = loadedEvent
             self.isLoading = false
         } catch {
-            self.errorMessage = error.localizedDescription
+            self.errorMessage = (error as? APIError)?.message ?? error.localizedDescription
             self.isLoading = false
         }
     }
