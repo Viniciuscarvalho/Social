@@ -116,7 +116,7 @@ struct MainTabView: View {
                     )
                 )
                 .onAppear {
-                    store.send(.sellerProfileFeature(.loadProfileById(sellerId)))
+                    store.send(.sellerProfileFeature(.loadProfileById(sellerId.uuidString)))
                 }
             }
         }

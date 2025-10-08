@@ -7,7 +7,7 @@ struct NetworkConfig {
 
 // MARK: - Network Error Types
 
-public enum NetworkError: Error, LocalizedError {
+public enum NetworkError: Error, LocalizedError, Equatable {
     case invalidURL
     case noData
     case decodingError
@@ -17,6 +17,29 @@ public enum NetworkError: Error, LocalizedError {
     case forbidden
     case notFound
     case unknown(Error)
+    
+    // Implementação manual de Equatable para case com Error
+    public static func == (lhs: NetworkError, rhs: NetworkError) -> Bool {
+        switch (lhs, rhs) {
+        case (.invalidURL, .invalidURL),
+             (.noData, .noData),
+             (.decodingError, .decodingError),
+             (.networkUnavailable, .networkUnavailable),
+             (.unauthorized, .unauthorized),
+             (.forbidden, .forbidden),
+             (.notFound, .notFound):
+            return true
+            
+        case let (.serverError(code1), .serverError(code2)):
+            return code1 == code2
+            
+        case let (.unknown(error1), .unknown(error2)):
+            return error1.localizedDescription == error2.localizedDescription
+            
+        default:
+            return false
+        }
+    }
     
     public var errorDescription: String? {
         switch self {

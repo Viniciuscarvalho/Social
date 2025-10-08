@@ -41,7 +41,7 @@ public struct SellerProfileView: View {
         .navigationBarTitleDisplayMode(.inline)
         .preferredColorScheme(.dark)
         .onAppear {
-            store.send(.loadProfileById(ticketDetail.seller.id))
+            store.send(.onAppear)
         }
     }
     
@@ -322,7 +322,7 @@ public struct SellerProfileView: View {
             }
             
             Button("Tentar Novamente") {
-                store.send(.loadProfile)
+                store.send(.onAppear)
             }
             .buttonStyle(.borderedProminent)
             .tint(Color(hex: "4a90e2"))

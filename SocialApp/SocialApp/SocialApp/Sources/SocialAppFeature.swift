@@ -74,45 +74,75 @@ public struct SocialAppFeature {
         // Add ticket modal actions
         case addTicketTapped
         case setShowingAddTicket(Bool)
+        
+        // Implementação manual de Equatable para cases com parâmetros
+        public static func == (lhs: Action, rhs: Action) -> Bool {
+            switch (lhs, rhs) {
+            case (.onAppear, .onAppear),
+                 (.signOut, .signOut),
+                 (.addTicketTapped, .addTicketTapped):
+                return true
+                
+            case let (.auth(action1), .auth(action2)):
+                return action1 == action2
+                
+            case let (.tabSelected(tab1), .tabSelected(tab2)):
+                return tab1 == tab2
+                
+            case let (.homeFeature(action1), .homeFeature(action2)):
+                return action1 == action2
+                
+            case let (.ticketsListFeature(action1), .ticketsListFeature(action2)):
+                return action1 == action2
+                
+            case let (.addTicket(action1), .addTicket(action2)):
+                return action1 == action2
+                
+            case let (.favoritesFeature(action1), .favoritesFeature(action2)):
+                return action1 == action2
+                
+            case let (.profileFeature(action1), .profileFeature(action2)):
+                return action1 == action2
+                
+            case let (.sellerProfileFeature(action1), .sellerProfileFeature(action2)):
+                return action1 == action2
+                
+            case let (.ticketDetailFeature(action1), .ticketDetailFeature(action2)):
+                return action1 == action2
+                
+            case let (.eventDetailFeature(action1), .eventDetailFeature(action2)):
+                return action1 == action2
+                
+            case let (.navigateToEventDetail(uuid1), .navigateToEventDetail(uuid2)):
+                return uuid1 == uuid2
+                
+            case let (.navigateToTicketDetail(uuid1), .navigateToTicketDetail(uuid2)):
+                return uuid1 == uuid2
+                
+            case let (.navigateToSellerProfile(uuid1), .navigateToSellerProfile(uuid2)):
+                return uuid1 == uuid2
+                
+            case let (.dismissEventNavigation(uuid1), .dismissEventNavigation(uuid2)):
+                return uuid1 == uuid2
+                
+            case let (.dismissTicketNavigation(uuid1), .dismissTicketNavigation(uuid2)):
+                return uuid1 == uuid2
+                
+            case let (.dismissSellerNavigation(uuid1), .dismissSellerNavigation(uuid2)):
+                return uuid1 == uuid2
+                
+            case let (.setShowingAddTicket(bool1), .setShowingAddTicket(bool2)):
+                return bool1 == bool2
+                
+            default:
+                return false
+            }
+        }
     }
     
     public init() {}
     
     public var body: some ReducerOf<Self> {
-        // Auth reducer
-        Scope(state: \.auth, action: \.auth) {
-            AuthFeature()
-        }
-        
-        // Feature reducers
-        Scope(state: \.homeFeature, action: \.homeFeature) {
-            HomeFeature()
-        }
-        
-        Scope(state: \.ticketsListFeature, action: \.ticketsListFeature) {
-            TicketsListFeature()
-        }
-        
-        Scope(state: \.addTicket, action: \.addTicket) {
-            AddTicketFeature()
-        }
-        
-        Scope(state: \.favoritesFeature, action: \.favoritesFeature) {
-            FavoritesFeature()
-        }
-        
-        Scope(state: \.profileFeature, action: \.profileFeature) {
-            ProfileFeature()
-        }
-        
-        Scope(state: \.sellerProfileFeature, action: \.sellerProfileFeature) {
-            SellerProfileFeature()
-        }
-        
-        Scope(state: \.ticketDetailFeature, action: \.ticketDetailFeature) {
-            TicketDetailFeature()
-        }
-        
         Reduce { state, action in
             switch action {
                 
@@ -130,8 +160,8 @@ public struct SocialAppFeature {
                     state.profileFeature.user = currentUser
                 }
                 return .merge(
-                    .send(.homeFeature(.loadContent)),
-                    .send(.ticketsListFeature(.loadAvailableTickets))
+                    .send(.homeFeature(.loadHomeContent)),
+                    .send(.ticketsListFeature(.loadTickets))
                 )
                 
             case .auth(.signOut):
@@ -161,11 +191,11 @@ public struct SocialAppFeature {
                 // Carrega dados específicos para cada aba quando selecionada
                 switch tab {
                 case .home:
-                    return .send(.homeFeature(.refreshRequested))
+                    return .send(.homeFeature(.refreshHome))
                 case .tickets:
-                    return .send(.ticketsListFeature(.loadAvailableTickets))
+                    return .send(.ticketsListFeature(.loadTickets))
                 case .favorites:
-                    return .send(.favoritesFeature(.loadFavoriteTickets))
+                    return .send(.favoritesFeature(.loadFavorites))
                 case .addTicket:
                     return .none
                 case .profile:
@@ -242,7 +272,7 @@ public struct SocialAppFeature {
                 // Fecha o modal após sucesso
                 state.showingAddTicket = false
                 // Recarrega a lista de tickets
-                return .send(.ticketsListFeature(.loadAvailableTickets))
+                return .send(.ticketsListFeature(.loadTickets))
                 
             // MARK: - Other Feature Actions
             // Outras actions das features são tratadas pelos seus próprios reducers
@@ -278,6 +308,41 @@ public struct SocialAppFeature {
                 // Event detail actions são tratadas internamente
                 return .none
             }
+        }
+        .ifLet(\.eventDetailFeature, action: \.eventDetailFeature) {
+            EventDetailFeature()
+        }
+        
+        Scope(state: \.auth, action: \.auth) {
+            AuthFeature()
+        }
+        
+        Scope(state: \.homeFeature, action: \.homeFeature) {
+            HomeFeature()
+        }
+        
+        Scope(state: \.ticketsListFeature, action: \.ticketsListFeature) {
+            TicketsListFeature()
+        }
+        
+        Scope(state: \.addTicket, action: \.addTicket) {
+            AddTicketFeature()
+        }
+        
+        Scope(state: \.favoritesFeature, action: \.favoritesFeature) {
+            FavoritesFeature()
+        }
+        
+        Scope(state: \.profileFeature, action: \.profileFeature) {
+            ProfileFeature()
+        }
+        
+        Scope(state: \.sellerProfileFeature, action: \.sellerProfileFeature) {
+            SellerProfileFeature()
+        }
+        
+        Scope(state: \.ticketDetailFeature, action: \.ticketDetailFeature) {
+            TicketDetailFeature()
         }
     }
 }

@@ -28,7 +28,7 @@ public struct HomeFeature {
         case showSearchSheetChanged(Bool)
         
         // Implementação manual de Equatable para cases com parâmetros
-        static func == (lhs: Action, rhs: Action) -> Bool {
+        public static func == (lhs: Action, rhs: Action) -> Bool {
             switch (lhs, rhs) {
             case (.onAppear, .onAppear),
                  (.loadHomeContent, .loadHomeContent),

@@ -5,22 +5,22 @@ import Foundation
 public struct AuthFeature {
     @ObservableState
     public struct State: Equatable {
-        var isAuthenticated = false
-        var currentUser: User?
-        var isFirstLaunch = true
-        var isLoading = false
-        var errorMessage: String?
-        var authToken: String?
-        var currentUserId: String?
+        public var isAuthenticated = false
+        public var currentUser: User?
+        public var isFirstLaunch = true
+        public var isLoading = false
+        public var errorMessage: String?
+        public var authToken: String?
+        public var currentUserId: String?
         
-        var signInForm = SignInForm.State()
-        var signUpForm = SignUpForm.State()
+        public var signInForm = SignInForm.State()
+        public var signUpForm = SignUpForm.State()
         
-        init() {
+        public init() {
             checkAuthStatus()
         }
         
-        mutating func checkAuthStatus() {
+        public mutating func checkAuthStatus() {
             if let userData = UserDefaults.standard.data(forKey: "currentUser"),
                let user = try? JSONDecoder().decode(User.self, from: userData) {
                 currentUser = user
@@ -39,6 +39,7 @@ public struct AuthFeature {
         case signUp(name: String, email: String, password: String)
         case signOut
         case refreshUserProfile
+        case updateCurrentUser(User)
         case authResponse(Result<AuthResponse, NetworkError>)
         case userProfileResponse(Result<User, NetworkError>)
         case clearError
@@ -46,13 +47,16 @@ public struct AuthFeature {
         case signUpForm(SignUpForm.Action)
         
         // Implementação manual de Equatable para cases com múltiplos parâmetros
-        static func == (lhs: Action, rhs: Action) -> Bool {
+        public static func == (lhs: Action, rhs: Action) -> Bool {
             switch (lhs, rhs) {
             case (.onAppear, .onAppear),
                  (.signOut, .signOut),
                  (.refreshUserProfile, .refreshUserProfile),
                  (.clearError, .clearError):
                 return true
+                
+            case let (.updateCurrentUser(user1), .updateCurrentUser(user2)):
+                return user1 == user2
                 
             case let (.signIn(email1, password1), .signIn(email2, password2)):
                 return email1 == email2 && password1 == password2
@@ -136,6 +140,14 @@ public struct AuthFeature {
                     try? await authClient.signOut()
                 }
                 
+            case let .updateCurrentUser(user):
+                // Atualiza o usuário atual no estado
+                state.currentUser = user
+                if let encoded = try? JSONEncoder().encode(user) {
+                    UserDefaults.standard.set(encoded, forKey: "currentUser")
+                }
+                return .none
+                
             case .refreshUserProfile:
                 guard let userId = state.currentUserId else { return .none }
                 return .run { send in
@@ -205,12 +217,14 @@ public struct AuthFeature {
 @Reducer
 public struct SignInForm {
     @ObservableState
-    struct State: Equatable {
-        var email = ""
-        var password = ""
-        var rememberMe = false
-        var showAlert = false
-        var alertMessage = ""
+    public struct State: Equatable {
+        public var email = ""
+        public var password = ""
+        public var rememberMe = false
+        public var showAlert = false
+        public var alertMessage = ""
+        
+        public init() {}
     }
     
     public enum Action: Equatable {
@@ -222,7 +236,7 @@ public struct SignInForm {
         case showAlert(String)
         
         // Implementação manual de Equatable
-        static func == (lhs: Action, rhs: Action) -> Bool {
+        public static func == (lhs: Action, rhs: Action) -> Bool {
             switch (lhs, rhs) {
             case let (.emailChanged(email1), .emailChanged(email2)):
                 return email1 == email2
@@ -265,7 +279,7 @@ public struct SignInForm {
                 guard !state.email.isEmpty else {
                     return .send(.showAlert("Por favor, insira seu email"))
                 }
-                
+                 
                 guard !state.password.isEmpty else {
                     return .send(.showAlert("Por favor, insira sua senha"))
                 }
@@ -291,13 +305,15 @@ public struct SignInForm {
 @Reducer
 public struct SignUpForm {
     @ObservableState
-    struct State: Equatable {
-        var name = ""
-        var email = ""
-        var password = ""
-        var confirmPassword = ""
-        var showAlert = false
-        var alertMessage = ""
+    public struct State: Equatable {
+        public var name = ""
+        public var email = ""
+        public var password = ""
+        public var confirmPassword = ""
+        public var showAlert = false
+        public var alertMessage = ""
+        
+        public init() {}
     }
     
     public enum Action: Equatable {
@@ -310,7 +326,7 @@ public struct SignUpForm {
         case showAlert(String)
         
         // Implementação manual de Equatable
-        static func == (lhs: Action, rhs: Action) -> Bool {
+        public static func == (lhs: Action, rhs: Action) -> Bool {
             switch (lhs, rhs) {
             case let (.nameChanged(name1), .nameChanged(name2)):
                 return name1 == name2
@@ -339,7 +355,7 @@ public struct SignUpForm {
         }
     }
     
-    var body: some ReducerOf<Self> {
+    public var body: some ReducerOf<Self> {
         Reduce { state, action in
             switch action {
             case let .nameChanged(name):
@@ -408,3 +424,4 @@ private func saveUserData(user: User, token: String, userId: String) {
     // Marca que o app já foi aberto
     UserDefaults.standard.set(true, forKey: "hasLaunchedBefore")
 }
+

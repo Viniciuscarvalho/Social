@@ -455,7 +455,7 @@ public struct RegisterRequest: Codable {
     }
 }
 
-public struct AuthResponse: Codable {
+public struct AuthResponse: Codable, Equatable {
     public let user: User
     public let token: String
     public let refreshToken: String?
