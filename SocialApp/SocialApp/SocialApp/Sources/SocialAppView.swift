@@ -4,6 +4,7 @@ import SwiftUI
 
 public struct SocialAppView: View {
     @Bindable var store: StoreOf<SocialAppFeature>
+    @Environment(ThemeManager.self) private var themeManager
     
     public init(store: StoreOf<SocialAppFeature>) {
         self.store = store
@@ -20,6 +21,7 @@ public struct SocialAppView: View {
         .onAppear {
             store.send(.onAppear)
         }
+        .preferredColorScheme(themeManager.colorScheme)
     }
 }
 

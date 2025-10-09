@@ -105,11 +105,15 @@ public struct AuthFeature {
                 state.errorMessage = nil
                 return .run { send in
                     do {
+                        print("🔐 Tentando fazer login: \(email)")
                         let response = try await authClient.signIn(email, password)
+                        print("✅ Login realizado com sucesso: \(response.user.name)")
                         await send(.authResponse(.success(response)))
                     } catch let error as NetworkError {
+                        print("❌ Erro no login (NetworkError): \(error)")
                         await send(.authResponse(.failure(error)))
                     } catch {
+                        print("❌ Erro no login (Desconhecido): \(error)")
                         await send(.authResponse(.failure(.unknown(error))))
                     }
                 }
@@ -119,11 +123,15 @@ public struct AuthFeature {
                 state.errorMessage = nil
                 return .run { send in
                     do {
+                        print("📝 Tentando cadastrar usuário: \(email)")
                         let response = try await authClient.signUp(name, email, password)
+                        print("✅ Cadastro realizado com sucesso: \(response.user.name)")
                         await send(.authResponse(.success(response)))
                     } catch let error as NetworkError {
+                        print("❌ Erro no cadastro (NetworkError): \(error)")
                         await send(.authResponse(.failure(error)))
                     } catch {
+                        print("❌ Erro no cadastro (Desconhecido): \(error)")
                         await send(.authResponse(.failure(.unknown(error))))
                     }
                 }

@@ -21,7 +21,7 @@ public struct TicketsListFeature {
     public enum Action: Equatable {
         case onAppear
         case loadTickets
-        case ticketsResponse(Result<[Ticket], APIError>)
+        case ticketsResponse(Result<[Ticket], NetworkError>)
         case ticketSelected(UUID)
         case favoriteToggled(UUID)
         case filterChanged(TicketsListFilter)
@@ -47,7 +47,7 @@ public struct TicketsListFeature {
                         await send(.ticketsResponse(.success(tickets)))
                     } catch {
                         print("❌ Erro ao carregar tickets: \(error.localizedDescription)")
-                        await send(.ticketsResponse(.failure(APIError(message: error.localizedDescription, code: 500))))
+                        await send(.ticketsResponse(.failure(NetworkError.unknown(error))))
                     }
                 }
                 
@@ -59,7 +59,7 @@ public struct TicketsListFeature {
                 
             case let .ticketsResponse(.failure(error)):
                 state.isLoading = false
-                state.errorMessage = error.message
+                state.errorMessage = error.localizedDescription
                 return .none
                 
             case .ticketSelected:
@@ -71,7 +71,7 @@ public struct TicketsListFeature {
                         try await ticketsClient.toggleFavorite(ticketId)
                         await send(.loadTickets)
                     } catch {
-                        await send(.ticketsResponse(.failure(APIError(message: error.localizedDescription, code: 500))))
+                        await send(.ticketsResponse(.failure(NetworkError.unknown(error))))
                     }
                 }
                 

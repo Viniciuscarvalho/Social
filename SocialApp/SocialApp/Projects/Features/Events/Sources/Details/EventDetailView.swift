@@ -4,10 +4,12 @@ import ComposableArchitecture
 public struct EventDetailView: View {
     @Bindable var store: StoreOf<EventDetailFeature>
     let eventId: UUID
+    let event: Event? // ✅ Evento opcional para evitar chamada API
     
-    public init(store: StoreOf<EventDetailFeature>, eventId: UUID) {
+    public init(store: StoreOf<EventDetailFeature>, eventId: UUID, event: Event? = nil) {
         self.store = store
         self.eventId = eventId
+        self.event = event
     }
     
     public var body: some View {
@@ -24,7 +26,7 @@ public struct EventDetailView: View {
         .navigationBarTitleDisplayMode(.large)
         .onAppear {
             print("🎪 EventDetailView apareceu para evento: \(eventId)")
-            store.send(.onAppear(eventId))
+            store.send(.onAppear(eventId, event)) // ✅ Passa o evento se tiver
         }
     }
     
@@ -144,7 +146,7 @@ public struct EventDetailView: View {
             }
             
             Button("Tentar Novamente") {
-                store.send(.onAppear(eventId))
+                store.send(.onAppear(eventId, event))
             }
             .buttonStyle(.borderedProminent)
         }

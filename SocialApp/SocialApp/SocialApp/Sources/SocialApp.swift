@@ -10,6 +10,7 @@ struct SocialApp: App {
                     SocialAppFeature()
                 }
             )
+            .environment(ThemeManager.shared)
         }
     }
 }

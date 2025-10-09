@@ -18,6 +18,7 @@ public struct CustomTextField: View {
                     .padding(.vertical, 12)
                     .padding(.horizontal, 16)
                     .background(Color.gray.opacity(0.1))
+                    .foregroundColor(.black) // ✅ Texto preto
                     .cornerRadiusCustom(10, corners: .allCorners)
             } else {
                 TextField("", text: $text)
@@ -25,6 +26,7 @@ public struct CustomTextField: View {
                     .padding(.vertical, 12)
                     .padding(.horizontal, 16)
                     .background(Color.gray.opacity(0.1))
+                    .foregroundColor(.black) // ✅ Texto preto
                     .cornerRadiusCustom(10, corners: .allCorners)
                     .autocapitalization(.none)
             }

@@ -1,14 +1,15 @@
 import ComposableArchitecture
-import ComposableArchitecture
 import SwiftUI
 
 public struct TicketDetailView: View {
     @Bindable var store: StoreOf<TicketDetailFeature>
     let ticketId: UUID
+    let ticket: Ticket? // ✅ Ticket opcional para evitar chamada API
     
-    public init(store: StoreOf<TicketDetailFeature>, ticketId: UUID) {
+    public init(store: StoreOf<TicketDetailFeature>, ticketId: UUID, ticket: Ticket? = nil) {
         self.store = store
         self.ticketId = ticketId
+        self.ticket = ticket
     }
     
     public var body: some View {
@@ -18,6 +19,20 @@ public struct TicketDetailView: View {
                     loadingView
                 } else if let ticketDetail = store.ticketDetail {
                     ticketContentView(ticketDetail)
+                } else if let simpleTicket = ticket {
+                    // ✅ Carrega automaticamente os detalhes completos quando só temos o ticket básico
+                    VStack(spacing: 20) {
+                        Text("Carregando detalhes completos...")
+                            .font(.headline)
+                            .foregroundColor(.secondary)
+                        ProgressView()
+                            .scaleEffect(1.2)
+                    }
+                    .onAppear {
+                        if store.ticketDetail == nil {
+                            store.send(.loadTicketDetail(ticketId))
+                        }
+                    }
                 } else {
                     errorView
                 }
@@ -28,7 +43,8 @@ public struct TicketDetailView: View {
         .navigationTitle("Detalhes do Ingresso")
         .navigationBarTitleDisplayMode(.large)
         .onAppear {
-            store.send(.onAppear(ticketId))
+            print("🎫 TicketDetailView apareceu para ticket: \(ticketId)")
+            store.send(.onAppear(ticketId, ticket)) // ✅ Passa o ticket se tiver
         }
     }
     
@@ -129,17 +145,12 @@ public struct TicketDetailView: View {
                     
                     NavigationLink {
                         SellerProfileView(
-                            store: Store(initialState: SellerProfileFeature.State()) {
+                            store: Store(
+                                initialState: SellerProfileFeature.State(sellerId: ticketDetail.seller.id)
+                            ) {
                                 SellerProfileFeature()
                             }
                         )
-                        .onAppear {
-                            // Carrega o perfil específico do vendedor
-                            let sellerStore = Store(initialState: SellerProfileFeature.State()) {
-                                SellerProfileFeature()
-                            }
-                            sellerStore.send(.loadProfileById(ticketDetail.seller.id))
-                        }
                     } label: {
                         HStack {
                             AsyncImage(url: URL(string: ticketDetail.seller.profileImageURL ?? "")) { image in
@@ -214,6 +225,24 @@ public struct TicketDetailView: View {
                 }
             }
         }
+        
+    }
+    
+    // MARK: - Supporting Views
+    
+    struct DetailRow: View {
+        let title: String
+        let value: String
+        
+        var body: some View {
+            HStack {
+                Text(title)
+                    .fontWeight(.semibold)
+                Spacer()
+                Text(value)
+                    .foregroundColor(.secondary)
+            }
+        }
     }
     
     private var errorView: some View {
@@ -232,12 +261,7 @@ public struct TicketDetailView: View {
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
             }
-            
-            Button("Tentar Novamente") {
-                store.send(.onAppear(ticketId))
-            }
-            .buttonStyle(.borderedProminent)
         }
-        .padding()
     }
+    
 }

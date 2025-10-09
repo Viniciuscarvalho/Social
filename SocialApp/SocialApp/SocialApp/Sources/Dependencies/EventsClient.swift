@@ -13,29 +13,35 @@ extension EventsClient: DependencyKey {
     public static let liveValue = EventsClient(
         fetchEvents: {
             do {
-                let apiEvents: [Event] = try await NetworkService.shared.request(
+                print("🌐 Fetching events from API...")
+                let apiEvents: [APIEventResponse] = try await NetworkService.shared.requestArray(
                     endpoint: "/events",
                     method: .GET
                 )
-                return apiEvents
+                print("✅ Successfully fetched \(apiEvents.count) events from API")
+                let events = apiEvents.map { $0.toEvent() }
+                return events
             } catch {
-                // Fallback para JSON local
-                print("API call failed, falling back to local JSON: \(error)")
+                print("❌ API call failed for fetchEvents: \(error)")
+                print("🔄 Falling back to local JSON")
                 return try await loadEventsFromJSON()
             }
         },
         searchEvents: { query in
             do {
+                print("🔍 Searching events for query: \(query)")
                 let queryItems = [URLQueryItem(name: "q", value: query)]
-                let apiEvents: [Event] = try await NetworkService.shared.request(
+                let apiEvents: [APIEventResponse] = try await NetworkService.shared.requestArray(
                     endpoint: "/events",
                     method: .GET,
                     queryItems: queryItems
                 )
-                return apiEvents
+                print("✅ Search returned \(apiEvents.count) events from API")
+                let events = apiEvents.map { $0.toEvent() }
+                return events
             } catch {
-                // Fallback para busca local
-                print("API call failed, falling back to local search: \(error)")
+                print("❌ API search failed: \(error)")
+                print("🔄 Falling back to local search")
                 let events = try await loadEventsFromJSON()
                 return events.filter { event in
                     event.name.localizedCaseInsensitiveContains(query) ||
@@ -46,30 +52,35 @@ extension EventsClient: DependencyKey {
         },
         fetchEventsByCategory: { category in
             do {
+                print("📂 Fetching events for category: \(category.rawValue)")
                 let queryItems = [URLQueryItem(name: "category", value: category.rawValue)]
-                let apiEvents: [Event] = try await NetworkService.shared.request(
+                let apiEvents: [APIEventResponse] = try await NetworkService.shared.requestArray(
                     endpoint: "/events",
                     method: .GET,
                     queryItems: queryItems
                 )
-                return apiEvents
+                print("✅ Category search returned \(apiEvents.count) events from API")
+                let events = apiEvents.map { $0.toEvent() }
+                return events
             } catch {
-                // Fallback para filtro local
-                print("API call failed, falling back to local filtering: \(error)")
+                print("❌ API category search failed: \(error)")
+                print("🔄 Falling back to local filtering")
                 let events = try await loadEventsFromJSON()
                 return events.filter { $0.category == category }
             }
         },
         fetchEventDetail: { id in
             do {
-                let apiEvent: Event = try await NetworkService.shared.request(
+                print("📋 Fetching event detail for ID: \(id)")
+                let apiEvent: APIEventResponse = try await NetworkService.shared.requestSingle(
                     endpoint: "/events/\(id.uuidString)",
                     method: .GET
                 )
-                return apiEvent
+                print("✅ Successfully fetched event detail from API")
+                return apiEvent.toEvent()
             } catch {
-                // Fallback para JSON local
-                print("API call failed, falling back to local JSON: \(error)")
+                print("❌ API event detail failed: \(error)")
+                print("🔄 Falling back to local JSON")
                 let events = try await loadEventsFromJSON()
                 guard let event = events.first(where: { $0.id == id.uuidString }) else {
                     throw NetworkError.notFound

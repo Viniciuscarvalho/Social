@@ -503,24 +503,24 @@ public struct FollowResponse: Codable, Equatable {
     }
 }
 
-public struct UserUpdateRequest: Codable {
-    public let name: String?
-    public let title: String?
-    public let profileImageURL: String?
-    public let email: String?
-    
-    public init(
-        name: String? = nil,
-        title: String? = nil,
-        profileImageURL: String? = nil,
-        email: String? = nil
-    ) {
-        self.name = name
-        self.title = title
-        self.profileImageURL = profileImageURL
-        self.email = email
-    }
-}
+//public struct UserUpdateRequest: Codable {
+//    public let name: String?
+//    public let title: String?
+//    public let profileImageURL: String?
+//    public let email: String?
+//    
+//    public init(
+//        name: String? = nil,
+//        title: String? = nil,
+//        profileImageURL: String? = nil,
+//        email: String? = nil
+//    ) {
+//        self.name = name
+//        self.title = title
+//        self.profileImageURL = profileImageURL
+//        self.email = email
+//    }
+//}
 
 
 // MARK: - Ticket API Models
@@ -550,20 +550,20 @@ public struct CreateTicketRequest: Codable {
     }
 }
 
-public struct FavoriteTicketRequest: Codable {
-    public let ticketId: String
-    
-    public init(ticketId: String) {
-        self.ticketId = ticketId
-    }
-}
-
-public struct PurchaseTicketRequest: Codable {
-    public let ticketId: String
-    public let quantity: Int?
-    
-    public init(ticketId: String, quantity: Int? = 1) {
-        self.ticketId = ticketId
-        self.quantity = quantity
-    }
-}
+//public struct FavoriteTicketRequest: Codable {
+//    public let ticketId: String
+//    
+//    enum CodingKeys: String, CodingKey {
+//        case ticketId = "ticket_id"
+//    }
+//}
+//
+//public struct PurchaseTicketRequest: Codable {
+//    public let ticketId: String
+//    public let quantity: Int?
+//    
+//    public init(ticketId: String, quantity: Int? = 1) {
+//        self.ticketId = ticketId
+//        self.quantity = quantity
+//    }
+//}

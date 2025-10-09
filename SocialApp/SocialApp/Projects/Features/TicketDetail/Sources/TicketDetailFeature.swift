@@ -6,21 +6,24 @@ public struct TicketDetailFeature {
     @ObservableState
     public struct State: Equatable {
         public var ticketDetail: TicketDetail?
+        public var ticket: Ticket? // ✅ Ticket simples opcional
         public var sellerProfile: SellerProfileFeature.State?
         public var isLoading: Bool = false
         public var errorMessage: String?
         public var isPurchasing: Bool = false
         public var currentTicketId: UUID?
         
-        public init() {}
+        public init(ticket: Ticket? = nil) {
+            self.ticket = ticket
+        }
     }
     
     public enum Action: Equatable {
-        case onAppear(UUID)
+        case onAppear(UUID, Ticket?) // ✅ Agora recebe o ticket opcional
         case loadTicketDetail(UUID)
-        case ticketDetailResponse(Result<TicketDetail, APIError>)
+        case ticketDetailResponse(Result<TicketDetail, NetworkError>)
         case purchaseTicket(UUID)
-        case purchaseResponse(Result<TicketDetail, APIError>)
+        case purchaseResponse(Result<TicketDetail, NetworkError>)
         case loadSellerProfile(UUID)
         case sellerProfile(SellerProfileFeature.Action)
     }
@@ -32,9 +35,27 @@ public struct TicketDetailFeature {
     public var body: some ReducerOf<Self> {
         Reduce { state, action in
             switch action {
-            case let .onAppear(ticketId):
+            case let .onAppear(ticketId, ticket):
                 state.currentTicketId = ticketId
-                return .send(.loadTicketDetail(ticketId))
+                
+                // ✅ Se já temos o ticket simples, usa os dados sem fazer chamada API
+                if let existingTicket = ticket {
+                    print("✅ Usando ticket já carregado: \(existingTicket.name)")
+                    state.ticket = existingTicket
+                    
+                    // ✅ Só carrega detalhes completos se realmente precisar de mais informações
+                    // Por exemplo, se não temos informações do vendedor
+                    if existingTicket.sellerId.isEmpty {
+                        print("🔄 Carregando detalhes completos pois faltam informações do vendedor")
+                        return .send(.loadTicketDetail(ticketId))
+                    } else {
+                        print("✅ Dados suficientes, não fazendo chamada API")
+                        return .none
+                    }
+                } else {
+                    print("🔄 Ticket não fornecido, fazendo chamada API para detalhes")
+                    return .send(.loadTicketDetail(ticketId))
+                }
                 
             case let .loadTicketDetail(ticketId):
                 state.isLoading = true
@@ -47,8 +68,8 @@ public struct TicketDetailFeature {
                         await send(.ticketDetailResponse(.success(ticketDetail)))
                     } catch {
                         print("❌ Erro ao carregar detalhes do ticket: \(error.localizedDescription)")
-                        let apiError = error as? APIError ?? APIError(message: error.localizedDescription, code: 500)
-                        await send(.ticketDetailResponse(.failure(apiError)))
+                        let networkError = error as? NetworkError ?? NetworkError.unknown(error)
+                        await send(.ticketDetailResponse(.failure(networkError)))
                     }
                 }
                 
@@ -59,7 +80,7 @@ public struct TicketDetailFeature {
                 
             case let .ticketDetailResponse(.failure(error)):
                 state.isLoading = false
-                state.errorMessage = error.message
+                state.errorMessage = error.localizedDescription
                 return .none
                 
             case let .purchaseTicket(ticketId):
@@ -74,7 +95,7 @@ public struct TicketDetailFeature {
                         await send(.purchaseResponse(.success(ticketDetail)))
                     } catch {
                         print("❌ Erro ao comprar ticket: \(error.localizedDescription)")
-                        await send(.purchaseResponse(.failure(APIError(message: error.localizedDescription, code: 500))))
+                        await send(.purchaseResponse(.failure(NetworkError.unknown(error))))
                     }
                 }
                 
@@ -85,7 +106,7 @@ public struct TicketDetailFeature {
                 
             case let .purchaseResponse(.failure(error)):
                 state.isPurchasing = false
-                state.errorMessage = error.message
+                state.errorMessage = error.localizedDescription
                 return .none
                 
             case let .loadSellerProfile(sellerId):
