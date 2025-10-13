@@ -105,7 +105,8 @@ struct MainTabView: View {
                             state: \.ticketDetailFeature,
                             action: \.ticketDetailFeature
                         ),
-                        ticketId: ticketId
+                        ticketId: ticketId,
+                        ticket: store.ticketDetailFeature.ticket
                     )
                     .toolbar(.hidden, for: .tabBar)
                 }
@@ -149,7 +150,8 @@ struct MainTabView: View {
                             state: \.ticketDetailFeature,
                             action: \.ticketDetailFeature
                         ),
-                        ticketId: ticketId
+                        ticketId: ticketId,
+                        ticket: store.ticketDetailFeature.ticket
                     )
                     .toolbar(.hidden, for: .tabBar)
                 }

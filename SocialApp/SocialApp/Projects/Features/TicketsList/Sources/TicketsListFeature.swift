@@ -36,7 +36,9 @@ public struct TicketsListFeature {
         Reduce { state, action in
             switch action {
             case .onAppear:
-                return .send(.loadTickets)
+                return .run { send in
+                    await send(.loadTickets)
+                }
                 
             case .loadTickets:
                 state.isLoading = true
@@ -81,7 +83,9 @@ public struct TicketsListFeature {
                 return .none
                 
             case .refreshRequested:
-                return .send(.loadTickets)
+                return .run { send in
+                    await send(.loadTickets)
+                }
             }
         }
     }

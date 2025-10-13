@@ -47,14 +47,18 @@ public struct TicketDetailFeature {
                     // Por exemplo, se não temos informações do vendedor
                     if existingTicket.sellerId.isEmpty {
                         print("🔄 Carregando detalhes completos pois faltam informações do vendedor")
-                        return .send(.loadTicketDetail(ticketId))
+                        return .run { send in
+                            await send(.loadTicketDetail(ticketId))
+                        }
                     } else {
                         print("✅ Dados suficientes, não fazendo chamada API")
                         return .none
                     }
                 } else {
                     print("🔄 Ticket não fornecido, fazendo chamada API para detalhes")
-                    return .send(.loadTicketDetail(ticketId))
+                    return .run { send in
+                        await send(.loadTicketDetail(ticketId))
+                    }
                 }
                 
             case let .loadTicketDetail(ticketId):
@@ -111,7 +115,9 @@ public struct TicketDetailFeature {
                 
             case let .loadSellerProfile(sellerId):
                 state.sellerProfile = SellerProfileFeature.State()
-                return .send(.sellerProfile(.loadProfileById(sellerId.uuidString)))
+                return .run { send in
+                    await send(.sellerProfile(.loadProfileById(sellerId.uuidString)))
+                }
                 
             case .sellerProfile:
                 return .none

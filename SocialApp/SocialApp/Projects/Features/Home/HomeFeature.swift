@@ -112,7 +112,9 @@ public struct HomeFeature {
                 return .none
                 
             case .refreshHome:
-                return .send(.loadHomeContent)
+                return .run { send in
+                    await send(.loadHomeContent)
+                }
                 
             case let .showSearchSheetChanged(isShown):
                 state.showSearchSheet = isShown

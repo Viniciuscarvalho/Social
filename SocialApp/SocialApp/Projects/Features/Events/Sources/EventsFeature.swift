@@ -73,7 +73,9 @@ public struct EventsFeature {
         Reduce { state, action in
             switch action {
             case .onAppear:
-                return .send(.loadEvents)
+                return .run { send in
+                    await send(.loadEvents)
+                }
                 
             case .loadEvents:
                 state.isLoading = true
@@ -131,7 +133,9 @@ public struct EventsFeature {
                         }
                     }
                 } else {
-                    return .send(.loadEvents)
+                    return .run { send in
+                        await send(.loadEvents)
+                    }
                 }
                 
             case let .categorySelected(category):
@@ -146,7 +150,9 @@ public struct EventsFeature {
                         }
                     }
                 } else {
-                    return .send(.loadEvents)
+                    return .run { send in
+                        await send(.loadEvents)
+                    }
                 }
                 
             case .searchTapped:
@@ -156,7 +162,9 @@ public struct EventsFeature {
                 return .none
                 
             case .refreshRequested:
-                return .send(.loadEvents)
+                return .run { send in
+                    await send(.loadEvents)
+                }
             }
         }
     }

@@ -5,11 +5,11 @@ let dependencies = Dependencies(
         [
             .remote(
                 url: "https://github.com/pointfreeco/swift-composable-architecture",
-                requirement: .upToNextMajor(from: "1.0.0")
+                requirement: .exact("1.22.3")
             ),
             .remote(
                 url: "https://github.com/pointfreeco/swift-navigation",
-                requirement: .upToNextMajor(from: "1.0.0")
+                requirement: .upToNextMajor(from: "2.0.0")
             ),
             .remote(
                 url: "https://github.com/pointfreeco/swift-dependencies",

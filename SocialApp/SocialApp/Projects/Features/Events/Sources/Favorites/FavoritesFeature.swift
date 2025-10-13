@@ -31,7 +31,9 @@ public struct FavoritesFeature {
         Reduce { state, action in
             switch action {
             case .onAppear:
-                return .send(.loadFavorites)
+                return .run { send in
+                    await send(.loadFavorites)
+                }
                 
             case .loadFavorites:
                 state.isLoading = true
@@ -62,9 +64,13 @@ public struct FavoritesFeature {
                 let isFavorited = state.favoriteEvents.contains { $0.eventId == eventIdString }
                 
                 if isFavorited {
-                    return .send(.removeFromFavorites(eventIdString))
+                    return .run { send in
+                        await send(.removeFromFavorites(eventIdString))
+                    }
                 } else {
-                    return .send(.addToFavorites(event))
+                    return .run { send in
+                        await send(.addToFavorites(event))
+                    }
                 }
                 
             case .eventSelected:

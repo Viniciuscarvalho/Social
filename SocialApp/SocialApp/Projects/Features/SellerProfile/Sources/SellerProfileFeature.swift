@@ -46,7 +46,9 @@ public struct SellerProfileFeature {
                     state.errorMessage = "ID do vendedor não fornecido"
                     return .none
                 }
-                return .send(.loadProfileById(sellerId))
+                return .run { send in
+                    await send(.loadProfileById(sellerId))
+                }
                 
             case let .loadProfileById(userId):
                 state.isLoading = true

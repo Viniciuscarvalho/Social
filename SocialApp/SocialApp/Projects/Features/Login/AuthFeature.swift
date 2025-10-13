@@ -208,10 +208,14 @@ public struct AuthFeature {
                 return .none
                 
             case .signInForm(.signInTapped(let email, let password)):
-                return .send(.signIn(email: email, password: password))
+                return .run { send in
+                    await send(.signIn(email: email, password: password))
+                }
                 
             case .signUpForm(.signUpTapped(let name, let email, let password)):
-                return .send(.signUp(name: name, email: email, password: password))
+                return .run { send in
+                    await send(.signUp(name: name, email: email, password: password))
+                }
                 
             case .signInForm, .signUpForm:
                 return .none
@@ -285,11 +289,15 @@ public struct SignInForm {
                 
             case .signInTapped:
                 guard !state.email.isEmpty else {
-                    return .send(.showAlert("Por favor, insira seu email"))
+                    return .run { send in
+                        await send(.showAlert("Por favor, insira seu email"))
+                    }
                 }
                  
                 guard !state.password.isEmpty else {
-                    return .send(.showAlert("Por favor, insira sua senha"))
+                    return .run { send in
+                        await send(.showAlert("Por favor, insira sua senha"))
+                    }
                 }
                 
                 return .none
@@ -384,19 +392,27 @@ public struct SignUpForm {
                 
             case .signUpTapped:
                 guard !state.name.isEmpty else {
-                    return .send(.showAlert("Por favor, insira seu nome"))
+                    return .run { send in
+                        await send(.showAlert("Por favor, insira seu nome"))
+                    }
                 }
                 
                 guard !state.email.isEmpty else {
-                    return .send(.showAlert("Por favor, insira seu email"))
+                    return .run { send in
+                        await send(.showAlert("Por favor, insira seu email"))
+                    }
                 }
                 
                 guard !state.password.isEmpty else {
-                    return .send(.showAlert("Por favor, insira sua senha"))
+                    return .run { send in
+                        await send(.showAlert("Por favor, insira sua senha"))
+                    }
                 }
                 
                 guard state.password == state.confirmPassword else {
-                    return .send(.showAlert("As senhas não coincidem"))
+                    return .run { send in
+                        await send(.showAlert("As senhas não coincidem"))
+                    }
                 }
                 
                 return .none

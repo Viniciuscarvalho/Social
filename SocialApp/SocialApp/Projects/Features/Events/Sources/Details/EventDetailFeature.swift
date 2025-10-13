@@ -39,7 +39,9 @@ public struct EventDetailFeature {
                     return .none
                 } else {
                     print("🔄 Evento não fornecido, fazendo chamada API")
-                    return .send(.loadEvent(eventId))
+                    return .run { send in
+                        await send(.loadEvent(eventId))
+                    }
                 }
                 
             case let .loadEvent(eventId):

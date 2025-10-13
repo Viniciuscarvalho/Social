@@ -79,7 +79,9 @@ public struct ProfileFeature {
             // MARK: - Lifecycle
                 
             case .onAppear:
-                return .send(.loadUserProfile)
+                return .run { send in
+                    await send(.loadUserProfile)
+                }
                 
             case .loadUserProfile:
                 // Se já temos dados do usuário, não precisa recarregar
