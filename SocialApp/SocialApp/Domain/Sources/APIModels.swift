@@ -15,7 +15,31 @@ public struct APIListResponse<T: Codable>: Codable {
     
     // Computed property para obter os dados independente da estrutura
     var finalData: [T] {
-        return data ?? items ?? results ?? tickets ?? events ?? users ?? []
+        if let data = data { return data }
+        if let items = items { return items }
+        if let results = results { return results }
+        if let tickets = tickets { return tickets }
+        if let events = events { return events }
+        if let users = users { return users }
+        return []
+    }
+    
+    // Custom init para lidar com diferentes estruturas
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        
+        data = try? container.decode([T].self, forKey: .data)
+        items = try? container.decode([T].self, forKey: .items)
+        results = try? container.decode([T].self, forKey: .results)
+        tickets = try? container.decode([T].self, forKey: .tickets)
+        events = try? container.decode([T].self, forKey: .events)
+        users = try? container.decode([T].self, forKey: .users)
+        success = try? container.decode(Bool.self, forKey: .success)
+        message = try? container.decode(String.self, forKey: .message)
+    }
+    
+    enum CodingKeys: String, CodingKey {
+        case data, items, results, tickets, events, users, success, message
     }
 }
 
@@ -57,6 +81,38 @@ public struct APIEventResponse: Codable {
     let created_at: String? // Para compatibilidade com snake_case
     let eventDate: String?
     let event_date: String? // Para compatibilidade com snake_case
+    
+    // Custom init para decodificação flexível
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        
+        id = try container.decode(String.self, forKey: .id)
+        name = try container.decode(String.self, forKey: .name)
+        description = try? container.decode(String.self, forKey: .description)
+        imageURL = try? container.decode(String.self, forKey: .imageURL)
+        image_url = try? container.decode(String.self, forKey: .image_url)
+        startPrice = try? container.decode(Double.self, forKey: .startPrice)
+        start_price = try? container.decode(Double.self, forKey: .start_price)
+        location = try container.decode(APILocationResponse.self, forKey: .location)
+        category = (try? container.decode(String.self, forKey: .category)) ?? "culture"
+        isRecommended = try? container.decode(Bool.self, forKey: .isRecommended)
+        is_recommended = try? container.decode(Bool.self, forKey: .is_recommended)
+        rating = try? container.decode(Double.self, forKey: .rating)
+        reviewCount = try? container.decode(Int.self, forKey: .reviewCount)
+        review_count = try? container.decode(Int.self, forKey: .review_count)
+        createdAt = try? container.decode(String.self, forKey: .createdAt)
+        created_at = try? container.decode(String.self, forKey: .created_at)
+        eventDate = try? container.decode(String.self, forKey: .eventDate)
+        event_date = try? container.decode(String.self, forKey: .event_date)
+    }
+    
+    enum CodingKeys: String, CodingKey {
+        case id, name, description, imageURL, image_url
+        case startPrice, start_price, location, category
+        case isRecommended, is_recommended, rating
+        case reviewCount, review_count, createdAt, created_at
+        case eventDate, event_date
+    }
     
     // Computed properties para conversão
     var finalImageURL: String? {
@@ -123,6 +179,37 @@ public struct APITicketResponse: Codable {
     let isFavorited: Bool?
     let is_favorited: Bool? // Para compatibilidade com snake_case
     
+    // Custom init para decodificação flexível
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        
+        id = try container.decode(String.self, forKey: .id)
+        eventId = try? container.decode(String.self, forKey: .eventId)
+        event_id = try? container.decode(String.self, forKey: .event_id)
+        sellerId = try? container.decode(String.self, forKey: .sellerId)
+        seller_id = try? container.decode(String.self, forKey: .seller_id)
+        name = try container.decode(String.self, forKey: .name)
+        price = try container.decode(Double.self, forKey: .price)
+        originalPrice = try? container.decode(Double.self, forKey: .originalPrice)
+        original_price = try? container.decode(Double.self, forKey: .original_price)
+        ticketType = try? container.decode(String.self, forKey: .ticketType)
+        ticket_type = try? container.decode(String.self, forKey: .ticket_type)
+        status = (try? container.decode(String.self, forKey: .status)) ?? "available"
+        validUntil = try? container.decode(String.self, forKey: .validUntil)
+        valid_until = try? container.decode(String.self, forKey: .valid_until)
+        createdAt = try? container.decode(String.self, forKey: .createdAt)
+        created_at = try? container.decode(String.self, forKey: .created_at)
+        isFavorited = try? container.decode(Bool.self, forKey: .isFavorited)
+        is_favorited = try? container.decode(Bool.self, forKey: .is_favorited)
+    }
+    
+    enum CodingKeys: String, CodingKey {
+        case id, eventId, event_id, sellerId, seller_id, name, price
+        case originalPrice, original_price, ticketType, ticket_type, status
+        case validUntil, valid_until, createdAt, created_at
+        case isFavorited, is_favorited
+    }
+    
     // Computed properties para conversão
     var finalEventId: String {
         return eventId ?? event_id ?? ""
@@ -157,7 +244,7 @@ public struct APITicketResponse: Codable {
 
 public struct APITicketDetailResponse: Codable {
     let id: String
-    let ticketId: String // ✅ Campo que estava causando o erro de decodificação
+    let ticketId: String? // Agora opcional pois nem sempre a API retorna
     let ticket_id: String? // Para compatibilidade com snake_case
     let event: APIEventResponse
     let seller: APIUserResponse
@@ -175,9 +262,41 @@ public struct APITicketDetailResponse: Codable {
     let purchase_date: String? // Para compatibilidade com snake_case
     let status: String
     
+    // Custom init para decodificação flexível
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        
+        id = try container.decode(String.self, forKey: .id)
+        ticketId = try? container.decode(String.self, forKey: .ticketId)
+        ticket_id = try? container.decode(String.self, forKey: .ticket_id)
+        event = try container.decode(APIEventResponse.self, forKey: .event)
+        seller = try container.decode(APIUserResponse.self, forKey: .seller)
+        price = try container.decode(Double.self, forKey: .price)
+        quantity = (try? container.decode(Int.self, forKey: .quantity)) ?? 1
+        ticketType = try? container.decode(String.self, forKey: .ticketType)
+        ticket_type = try? container.decode(String.self, forKey: .ticket_type)
+        validUntil = try? container.decode(String.self, forKey: .validUntil)
+        valid_until = try? container.decode(String.self, forKey: .valid_until)
+        isTransferable = try? container.decode(Bool.self, forKey: .isTransferable)
+        is_transferable = try? container.decode(Bool.self, forKey: .is_transferable)
+        qrCode = try? container.decode(String.self, forKey: .qrCode)
+        qr_code = try? container.decode(String.self, forKey: .qr_code)
+        purchaseDate = try? container.decode(String.self, forKey: .purchaseDate)
+        purchase_date = try? container.decode(String.self, forKey: .purchase_date)
+        status = (try? container.decode(String.self, forKey: .status)) ?? "available"
+    }
+    
+    enum CodingKeys: String, CodingKey {
+        case id, ticketId, ticket_id, event, seller, price, quantity
+        case ticketType, ticket_type, validUntil, valid_until
+        case isTransferable, is_transferable, qrCode, qr_code
+        case purchaseDate, purchase_date, status
+    }
+    
     // Computed properties para conversão
     var finalTicketId: String {
-        return ticketId.isEmpty ? (ticket_id ?? id) : ticketId
+        // Usa ticketId, depois ticket_id, depois id como fallback
+        return ticketId ?? ticket_id ?? id
     }
     
     var finalTicketType: String {

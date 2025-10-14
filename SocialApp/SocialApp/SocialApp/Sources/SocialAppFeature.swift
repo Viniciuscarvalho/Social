@@ -221,7 +221,7 @@ public struct SocialAppFeature {
                 // MARK: - Auth Actions
             case .auth(.authResponse(.success)):
                 // Quando o usuário se autentica, carrega os dados iniciais e sincroniza o perfil
-                if let currentUser = state.currentUser {
+                if let currentUser = state.auth.currentUser {
                     state.profileFeature.user = currentUser
                 }
                 return .run { send in

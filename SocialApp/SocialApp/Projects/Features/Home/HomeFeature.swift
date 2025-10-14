@@ -71,7 +71,23 @@ public struct HomeFeature {
     public var body: some ReducerOf<Self> {
         Reduce { state, action in
             switch action {
-            case .onAppear, .loadHomeContent:
+            case .onAppear:
+                // Só carrega se não tiver dados ainda
+                guard state.homeContent.curatedEvents.isEmpty && state.homeContent.trendingEvents.isEmpty else {
+                    return .none
+                }
+                state.isLoading = true
+                return .run { send in
+                    do {
+                        let homeContent = try await homeClient.loadHomeContent()
+                        await send(.homeContentLoaded(homeContent))
+                    } catch {
+                        // Handle error
+                        await send(.homeContentLoaded(HomeContent()))
+                    }
+                }
+                
+            case .loadHomeContent:
                 state.isLoading = true
                 return .run { send in
                     do {

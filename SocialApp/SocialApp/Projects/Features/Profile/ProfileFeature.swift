@@ -79,12 +79,16 @@ public struct ProfileFeature {
             // MARK: - Lifecycle
                 
             case .onAppear:
-                return .run { send in
-                    await send(.loadUserProfile)
+                // Só carrega da API se não tiver usuário
+                if state.user == nil {
+                    return .run { send in
+                        await send(.loadUserProfile)
+                    }
                 }
+                return .none
                 
             case .loadUserProfile:
-                // Se já temos dados do usuário, não precisa recarregar
+                // Se já temos dados do usuário ou já está carregando, não precisa recarregar
                 guard state.user == nil && !state.isLoading else { return .none }
                 
                 state.isLoading = true
@@ -95,6 +99,9 @@ public struct ProfileFeature {
                         let user = try await userClient.getCurrentUser()
                         await send(.userProfileResponse(.success(user)))
                     } catch {
+                        // Se falhar ao carregar da API, não é um erro crítico
+                        // O usuário já foi sincronizado no SocialAppFeature
+                        print("⚠️ Não foi possível carregar usuário atual: \(error.localizedDescription)")
                         await send(.userProfileResponse(.failure(error)))
                     }
                 }
@@ -107,7 +114,10 @@ public struct ProfileFeature {
                 
             case let .userProfileResponse(.failure(error)):
                 state.isLoading = false
-                state.error = error.localizedDescription
+                // Só mostra erro se não tiver usuário
+                if state.user == nil {
+                    state.error = error.localizedDescription
+                }
                 return .none
             
             // MARK: - Profile Editing

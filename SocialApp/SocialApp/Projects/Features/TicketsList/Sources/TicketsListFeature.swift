@@ -36,6 +36,10 @@ public struct TicketsListFeature {
         Reduce { state, action in
             switch action {
             case .onAppear:
+                // Só carrega se não tiver dados ainda
+                guard state.tickets.isEmpty else {
+                    return .none
+                }
                 return .run { send in
                     await send(.loadTickets)
                 }

@@ -420,7 +420,7 @@ final class NetworkService {
                 let result = try decoder.decode([T].self, from: data)
                 print("✅ Successfully decoded as direct array: \(result.count) items")
                 return result
-            } catch {
+            } catch let arrayError {
                 print("⚠️ Failed to decode as direct array, trying wrapper object...")
                 
                 // Se falhar, tenta decodificar como objeto wrapper
@@ -428,9 +428,34 @@ final class NetworkService {
                     let wrapper = try decoder.decode(APIListResponse<T>.self, from: data)
                     print("✅ Successfully decoded as wrapper object: \(wrapper.finalData.count) items")
                     return wrapper.finalData
-                } catch {
+                } catch let wrapperError {
                     print("❌ Failed to decode both as array and wrapper object")
-                    print("❌ Array decode error: \(error)")
+                    print("❌ Array decode error: \(arrayError)")
+                    print("❌ Wrapper decode error: \(wrapperError)")
+                    
+                    if let decodingError = wrapperError as? DecodingError {
+                        print("🔍 Detailed wrapper decoding error:")
+                        switch decodingError {
+                        case .typeMismatch(let type, let context):
+                            print("   Type mismatch: expected \(type)")
+                            print("   Context: \(context.debugDescription)")
+                            print("   Path: \(context.codingPath.map { $0.stringValue }.joined(separator: "."))")
+                        case .valueNotFound(let type, let context):
+                            print("   Value not found: \(type)")
+                            print("   Context: \(context.debugDescription)")
+                            print("   Path: \(context.codingPath.map { $0.stringValue }.joined(separator: "."))")
+                        case .keyNotFound(let key, let context):
+                            print("   Key not found: \(key.stringValue)")
+                            print("   Context: \(context.debugDescription)")
+                            print("   Path: \(context.codingPath.map { $0.stringValue }.joined(separator: "."))")
+                        case .dataCorrupted(let context):
+                            print("   Data corrupted")
+                            print("   Context: \(context.debugDescription)")
+                            print("   Path: \(context.codingPath.map { $0.stringValue }.joined(separator: "."))")
+                        @unknown default:
+                            print("   Unknown decoding error")
+                        }
+                    }
                     
                     if let jsonString = String(data: data, encoding: .utf8) {
                         print("📄 Full JSON response:")
