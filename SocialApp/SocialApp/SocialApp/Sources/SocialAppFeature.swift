@@ -66,6 +66,7 @@ public struct SocialAppFeature {
         case navigateToEventDetail(UUID)
         case navigateToTicketDetail(UUID)
         case navigateToSellerProfile(UUID)
+        case navigateToEventTickets(UUID) // Nova action para navegar para tickets de um evento
         
         case dismissEventNavigation(UUID?)
         case dismissTicketNavigation(UUID?)
@@ -120,6 +121,9 @@ public struct SocialAppFeature {
                 return uuid1 == uuid2
                 
             case let (.navigateToSellerProfile(uuid1), .navigateToSellerProfile(uuid2)):
+                return uuid1 == uuid2
+                
+            case let (.navigateToEventTickets(uuid1), .navigateToEventTickets(uuid2)):
                 return uuid1 == uuid2
                 
             case let (.dismissEventNavigation(uuid1), .dismissEventNavigation(uuid2)):
@@ -291,6 +295,15 @@ public struct SocialAppFeature {
                 state.selectedSellerId = sellerId
                 return .none
                 
+            case let .navigateToEventTickets(eventId):
+                // Muda para a aba de tickets e fecha o modal de detalhes
+                state.selectedTab = .tickets
+                state.selectedEventId = nil // Fecha o modal de evento
+                // TODO: Adicionar filtro por eventId se a funcionalidade de filtro estiver disponível
+                return .run { send in
+                    await send(.ticketsListFeature(.loadTickets))
+                }
+                
             case .dismissEventNavigation:
                 state.selectedEventId = nil
                 state.eventDetailFeature = nil
@@ -308,13 +321,20 @@ public struct SocialAppFeature {
             case let .homeFeature(.eventSelected(eventIdString)):
                 // Converte String para UUID e busca o evento do state
                 if let eventId = UUID(uuidString: eventIdString) {
-                    // Busca o evento nos arrays do HomeContent
-                    let event = state.homeFeature.homeContent.curatedEvents.first { $0.id == eventIdString }
-                    ?? state.homeFeature.homeContent.trendingEvents.first { $0.id == eventIdString }
+                    // Normaliza o ID para lowercase para consistência
+                    let normalizedIdString = eventIdString.lowercased()
+                    
+                    // Busca o evento nos arrays do HomeContent (comparação case-insensitive)
+                    let event = state.homeFeature.homeContent.curatedEvents.first { $0.id.lowercased() == normalizedIdString }
+                    ?? state.homeFeature.homeContent.trendingEvents.first { $0.id.lowercased() == normalizedIdString }
+                    
+                    // Se encontrou o evento, normaliza o ID dele
+                    var normalizedEvent = event
+                    normalizedEvent?.id = normalizedIdString
                     
                     // Cria o EventDetailFeature.State com o evento (se encontrado)
                     state.selectedEventId = eventId
-                    state.eventDetailFeature = EventDetailFeature.State(eventId: eventId, event: event)
+                    state.eventDetailFeature = EventDetailFeature.State(eventId: eventId, event: normalizedEvent)
                     
                     if event != nil {
                         print("✅ Navegando para evento com dados pré-carregados")
@@ -371,18 +391,14 @@ public struct SocialAppFeature {
                 return .none
                 
             case let .favoritesFeature(.eventSelected(eventId)):
-                // Busca o evento favorito correspondente
+                // Busca o evento favorito correspondente (comparação case-insensitive)
                 let favoriteEvent = state.favoritesFeature.favoriteEvents.first {
-                    UUID(uuidString: $0.eventId) == eventId
+                    $0.eventId.lowercased() == eventId.uuidString.lowercased()
                 }
                 
                 // Reconstrói o Event a partir do FavoriteEvent usando a extensão asEvent
-                var reconstructedEvent: Event?
-                if let fav = favoriteEvent {
-                    reconstructedEvent = fav.asEvent
-                    // Atualiza o evento reconstruído para ter o mesmo ID
-                    reconstructedEvent?.id = eventId.uuidString
-                }
+                // (o ID já vem normalizado em lowercase do FavoriteEvent)
+                let reconstructedEvent: Event? = favoriteEvent?.asEvent
                 
                 // Cria o EventDetailFeature.State com o evento reconstruído
                 state.selectedEventId = eventId
@@ -439,8 +455,17 @@ public struct SocialAppFeature {
             case .ticketDetailFeature:
                 return .none
                 
+            case .eventDetailFeature(.viewAvailableTickets):
+                // Quando o usuário clica em "Ver Tickets Disponíveis" no detalhe do evento
+                if let eventId = state.selectedEventId {
+                    return .run { send in
+                        await send(.navigateToEventTickets(eventId))
+                    }
+                }
+                return .none
+                
             case .eventDetailFeature:
-                // Event detail actions são tratadas internamente
+                // Outras event detail actions são tratadas internamente
                 return .none
             }
     }

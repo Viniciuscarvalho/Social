@@ -3,6 +3,7 @@ import SwiftUI
 
 public struct SearchView: View {
     @Bindable var store: StoreOf<SearchFeature>
+    @Environment(\.dismiss) var dismiss
     
     public init(store: StoreOf<SearchFeature>) {
         self.store = store
@@ -76,7 +77,7 @@ public struct SearchView: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("Cancelar") {
-                        store.send(.cancelSearch)
+                        dismiss()
                     }
                 }
             }

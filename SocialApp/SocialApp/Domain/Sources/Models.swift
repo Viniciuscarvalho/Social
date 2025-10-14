@@ -33,7 +33,7 @@ public struct User: Codable, Identifiable, Equatable {
     }
 }
 
-public struct Location: Codable, Equatable {
+public struct Location: Codable, Equatable, Sendable {
     public var name: String
     public var address: String?
     public var city: String
@@ -52,7 +52,7 @@ public struct Location: Codable, Equatable {
     }
 }
 
-public struct Coordinate: Codable, Equatable {
+public struct Coordinate: Codable, Equatable, Sendable {
     public let latitude: Double
     public let longitude: Double
     
@@ -64,7 +64,7 @@ public struct Coordinate: Codable, Equatable {
 
 // MARK: - Event Domain Models
 
-public struct Event: Codable, Identifiable, Equatable {
+public struct Event: Codable, Identifiable, Equatable, Sendable {
     public var id: String
     public var name: String
     public var description: String?
@@ -124,7 +124,7 @@ extension Event {
     }
 }
 
-public enum EventCategory: String, CaseIterable, Codable, Equatable {
+public enum EventCategory: String, CaseIterable, Codable, Equatable, Sendable {
     case adventure = "adventure"
     case culture = "culture"
     case food = "food"

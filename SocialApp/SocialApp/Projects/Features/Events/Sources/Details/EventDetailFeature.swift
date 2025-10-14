@@ -9,6 +9,7 @@ public struct EventDetailFeature {
         public var event: Event?
         public var isLoading: Bool = false
         public var errorMessage: String?
+        public var isFavorited: Bool = false
         
         public init(eventId: UUID, event: Event? = nil) {
             self.eventId = eventId
@@ -20,9 +21,14 @@ public struct EventDetailFeature {
         case onAppear(UUID, Event?) // ✅ Agora recebe o evento opcional
         case loadEvent(UUID)
         case eventResponse(Result<Event, NetworkError>)
+        case viewAvailableTickets
+        case toggleFavorite
+        case checkFavoriteStatus
+        case favoriteStatusLoaded(Bool)
     }
     
     @Dependency(\.eventsClient) var eventsClient
+    @Dependency(\.favoritesClient) var favoritesClient
     
     public init() {}
     
@@ -36,11 +42,15 @@ public struct EventDetailFeature {
                 if let existingEvent = event {
                     print("✅ Usando evento já carregado: \(existingEvent.name)")
                     state.event = existingEvent
-                    return .none
+                    // Verifica se está favoritado
+                    return .run { send in
+                        await send(.checkFavoriteStatus)
+                    }
                 } else {
                     print("🔄 Evento não fornecido, fazendo chamada API")
                     return .run { send in
                         await send(.loadEvent(eventId))
+                        await send(.checkFavoriteStatus)
                     }
                 }
                 
@@ -63,11 +73,55 @@ public struct EventDetailFeature {
             case let .eventResponse(.success(event)):
                 state.isLoading = false
                 state.event = event
-                return .none
+                // Verifica status de favorito após carregar o evento
+                return .run { send in
+                    await send(.checkFavoriteStatus)
+                }
                 
             case let .eventResponse(.failure(error)):
                 state.isLoading = false
                 state.errorMessage = error.localizedDescription
+                return .none
+                
+            case .viewAvailableTickets:
+                // Esta action será tratada pelo parent (SocialAppFeature)
+                return .none
+                
+            case .toggleFavorite:
+                guard let event = state.event else { 
+                    print("⚠️ Tentou favoritar mas evento é nil")
+                    return .none 
+                }
+                
+                if state.isFavorited {
+                    // Remove dos favoritos
+                    print("❌ Removendo evento dos favoritos: \(event.name)")
+                    return .run { [eventId = state.eventId] send in
+                        await favoritesClient.removeFromFavorites(eventId.uuidString)
+                        print("✅ Evento removido dos favoritos")
+                        await send(.favoriteStatusLoaded(false))
+                    }
+                } else {
+                    // Adiciona aos favoritos
+                    print("❤️ Adicionando evento aos favoritos: \(event.name)")
+                    return .run { send in
+                        await favoritesClient.addToFavorites(event)
+                        print("✅ Evento adicionado aos favoritos")
+                        await send(.favoriteStatusLoaded(true))
+                    }
+                }
+                
+            case .checkFavoriteStatus:
+                return .run { [eventId = state.eventId] send in
+                    print("🔍 Verificando status de favorito para evento: \(eventId)")
+                    let isFavorited = await favoritesClient.isFavorite(eventId.uuidString)
+                    print("💚 Status de favorito carregado: \(isFavorited)")
+                    await send(.favoriteStatusLoaded(isFavorited))
+                }
+                
+            case let .favoriteStatusLoaded(isFavorited):
+                print("✅ Atualizando estado de favorito para: \(isFavorited)")
+                state.isFavorited = isFavorited
                 return .none
             }
         }

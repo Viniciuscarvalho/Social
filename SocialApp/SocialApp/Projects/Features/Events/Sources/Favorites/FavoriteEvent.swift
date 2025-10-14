@@ -13,7 +13,7 @@ public class FavoriteEvent {
     
     public init(eventId: String, eventName: String, eventImageURL: String? = nil, 
                 eventPrice: Double, eventLocation: String, eventDate: Date? = nil) {
-        self.eventId = eventId
+        self.eventId = eventId.lowercased() // Normaliza para lowercase
         self.eventName = eventName
         self.eventImageURL = eventImageURL
         self.eventPrice = eventPrice
@@ -23,7 +23,7 @@ public class FavoriteEvent {
     }
     
     public init(from event: Event) {
-        self.eventId = event.id
+        self.eventId = event.id.lowercased() // Normaliza para lowercase
         self.eventName = event.name
         self.eventImageURL = event.imageURL
         self.eventPrice = event.startPrice
@@ -36,7 +36,7 @@ public class FavoriteEvent {
 // Extension para converter de volta para Event (se necessário)
 extension FavoriteEvent {
     var asEvent: Event {
-        Event(
+        var event = Event(
             name: eventName,
             description: nil,
             imageURL: eventImageURL,
@@ -51,5 +51,8 @@ extension FavoriteEvent {
             category: .culture, // Default category
             eventDate: eventDate
         )
+        // Garante que o ID seja o mesmo que está salvo (já em lowercase)
+        event.id = eventId
+        return event
     }
 }

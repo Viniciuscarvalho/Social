@@ -22,8 +22,6 @@ public struct EventDetailView: View {
                 errorView
             }
         }
-        .navigationTitle("Detalhes do Evento")
-        .navigationBarTitleDisplayMode(.large)
         .onAppear {
             print("🎪 EventDetailView apareceu para evento: \(eventId)")
             store.send(.onAppear(eventId, event)) // ✅ Passa o evento se tiver
@@ -122,8 +120,43 @@ public struct EventDetailView: View {
                             .foregroundColor(.blue)
                             .cornerRadius(12)
                     }
+                    
+                    // Botão Ver Tickets Disponíveis
+                    Button {
+                        store.send(.viewAvailableTickets)
+                    } label: {
+                        HStack {
+                            Image(systemName: "ticket.fill")
+                            Text("Ver Tickets Disponíveis")
+                                .fontWeight(.semibold)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(
+                            LinearGradient(
+                                colors: [Color.blue, Color.purple],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                        )
+                        .foregroundColor(.white)
+                        .cornerRadius(12)
+                    }
+                    .padding(.top, 8)
+                    .padding(.bottom, 100) // Espaço para não ser coberto pela tabBar
                 }
                 .padding()
+            }
+        }
+        .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Button {
+                    store.send(.toggleFavorite)
+                } label: {
+                    Image(systemName: store.isFavorited ? "heart.fill" : "heart")
+                        .foregroundColor(store.isFavorited ? .red : .gray)
+                        .imageScale(.large)
+                }
             }
         }
     }

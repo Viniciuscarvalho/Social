@@ -19,7 +19,7 @@ public struct TicketDetailView: View {
                     loadingView
                 } else if let ticketDetail = store.ticketDetail {
                     ticketContentView(ticketDetail)
-                } else if let simpleTicket = ticket {
+                } else if ticket != nil {
                     // ✅ Carrega automaticamente os detalhes completos quando só temos o ticket básico
                     VStack(spacing: 20) {
                         Text("Carregando detalhes completos...")
@@ -40,8 +40,6 @@ public struct TicketDetailView: View {
             .padding()
             .padding(.bottom, 100)
         }
-        .navigationTitle("Detalhes do Ingresso")
-        .navigationBarTitleDisplayMode(.large)
         .onAppear {
             print("🎫 TicketDetailView apareceu para ticket: \(ticketId)")
             store.send(.onAppear(ticketId, ticket)) // ✅ Passa o ticket se tiver
@@ -203,25 +201,26 @@ public struct TicketDetailView: View {
                 // Trade Button
                 if ticketDetail.status == .available {
                     Button(action: {
-                        // Converter ticketId de String para UUID
-                        if let uuid = UUID(uuidString: ticketDetail.ticketId) {
-                            store.send(.purchaseTicket(uuid))
-                        }
+                        // Por enquanto, sem ação - apenas visual
+                        print("ℹ️ Botão Negociar clicado - funcionalidade em desenvolvimento")
                     }) {
                         HStack {
-                            if store.isPurchasing {
-                                ProgressView()
-                                    .scaleEffect(0.8)
-                            }
-                            Text(store.isPurchasing ? "Processando..." : "Negociar Ingresso")
+                            Image(systemName: "bubble.left.and.bubble.right.fill")
+                            Text("Negociar Ingresso")
+                                .fontWeight(.semibold)
                         }
                         .frame(maxWidth: .infinity)
                         .padding()
-                        .background(Color.blue)
+                        .background(
+                            LinearGradient(
+                                colors: [Color.blue, Color.purple],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                        )
                         .foregroundColor(.white)
-                        .cornerRadius(8)
+                        .cornerRadius(12)
                     }
-                    .disabled(store.isPurchasing)
                 }
             }
         }

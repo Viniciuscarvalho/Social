@@ -84,12 +84,11 @@ struct MainTabView: View {
                     AppColors.backgroundGradient
                         .ignoresSafeArea()
                     
-                    if let eventDetailFeature = store.eventDetailFeature {
+                    if let eventDetailStore = store.scope(state: \.eventDetailFeature, action: \.eventDetailFeature) {
                         EventDetailView(
-                            store: Store(initialState: eventDetailFeature) {
-                                EventDetailFeature()
-                            },
-                            eventId: eventId
+                            store: eventDetailStore,
+                            eventId: eventId,
+                            event: store.eventDetailFeature?.event
                         )
                         .toolbar(.hidden, for: .tabBar)
                     }
@@ -179,12 +178,11 @@ struct MainTabView: View {
                     AppColors.backgroundGradient
                         .ignoresSafeArea()
                     
-                    if let eventDetailFeature = store.eventDetailFeature {
+                    if let eventDetailStore = store.scope(state: \.eventDetailFeature, action: \.eventDetailFeature) {
                         EventDetailView(
-                            store: Store(initialState: eventDetailFeature) {
-                                EventDetailFeature()
-                            },
-                            eventId: eventId
+                            store: eventDetailStore,
+                            eventId: eventId,
+                            event: store.eventDetailFeature?.event
                         )
                         .toolbar(.hidden, for: .tabBar)
                     }
