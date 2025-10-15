@@ -25,6 +25,7 @@ public struct TicketsListFeature {
         case ticketSelected(UUID)
         case favoriteToggled(UUID)
         case filterChanged(TicketsListFilter)
+        case filterByEvent(String?) // Nova action para filtrar por evento específico
         case refreshRequested
     }
     
@@ -86,6 +87,12 @@ public struct TicketsListFeature {
                 state.filteredTickets = filterTickets(state.tickets, with: filter)
                 return .none
                 
+            case let .filterByEvent(eventId):
+                // Atualiza o filtro para mostrar apenas tickets do evento específico
+                state.selectedFilter.eventId = eventId
+                state.filteredTickets = filterTickets(state.tickets, with: state.selectedFilter)
+                return .none
+                
             case .refreshRequested:
                 return .run { send in
                     await send(.loadTickets)
@@ -96,6 +103,13 @@ public struct TicketsListFeature {
     
     private func filterTickets(_ tickets: [Ticket], with filter: TicketsListFilter) -> [Ticket] {
         var filtered = tickets
+        
+        // Filtro por evento específico (prioridade alta)
+        if let eventId = filter.eventId {
+            filtered = filtered.filter { ticket in
+                ticket.eventId.lowercased() == eventId.lowercased()
+            }
+        }
         
         if let priceRange = filter.priceRange {
             filtered = filtered.filter { ticket in

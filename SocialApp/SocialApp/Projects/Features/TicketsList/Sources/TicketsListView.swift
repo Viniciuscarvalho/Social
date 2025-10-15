@@ -14,18 +14,29 @@ public struct TicketsListView: View {
                 loadingView
             } else if store.tickets.isEmpty {
                 emptyStateView
+            } else if store.displayTickets.isEmpty && store.selectedFilter.eventId != nil {
+                filteredEmptyStateView
             } else {
                 ticketsContentView
             }
         }
-        .navigationTitle("Ingressos")
-        .navigationBarTitleDisplayMode(.large)
+        .navigationTitle(navigationTitle)
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
                 Menu {
                     filterMenu
                 } label: {
                     Image(systemName: "line.3.horizontal.decrease.circle")
+                }
+            }
+            
+            // Botão para limpar filtro de evento
+            if store.selectedFilter.eventId != nil {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("Todos") {
+                        store.send(.filterByEvent(nil))
+                    }
+                    .foregroundColor(.blue)
                 }
             }
         }
@@ -36,6 +47,31 @@ public struct TicketsListView: View {
             store.send(.refreshRequested)
         }
     }
+    
+    // MARK: - Computed Properties
+    
+    private var navigationTitle: String {
+        if store.selectedFilter.eventId != nil {
+            return "Ingressos do Evento"
+        }
+        return "Ingressos"
+    }
+    
+    private var shouldShowEmptyState: Bool {
+        if store.selectedFilter.eventId != nil {
+            return store.displayTickets.isEmpty && !store.tickets.isEmpty
+        }
+        return store.tickets.isEmpty
+    }
+    
+    private var emptyStateMessage: String {
+        if store.selectedFilter.eventId != nil {
+            return "Não há ingressos disponíveis para este evento no momento."
+        }
+        return "Nenhum ingresso encontrado. Explore os eventos disponíveis para encontrar ingressos."
+    }
+    
+    // MARK: - Views
     
     private var loadingView: some View {
         VStack(spacing: 20) {
@@ -67,6 +103,29 @@ public struct TicketsListView: View {
             .buttonStyle(.borderedProminent)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+    
+    private var filteredEmptyStateView: some View {
+        VStack(spacing: 20) {
+            Image(systemName: "ticket.fill")
+                .font(.system(size: 60))
+                .foregroundColor(.orange)
+            
+            Text("Nenhum Ingresso Encontrado")
+                .font(.title2)
+                .fontWeight(.semibold)
+            
+            Text("Não há ingressos disponíveis para este evento no momento.")
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
+            
+            Button("Ver Todos os Ingressos") {
+                store.send(.filterByEvent(nil))
+            }
+            .buttonStyle(.borderedProminent)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding()
     }
     
     private var ticketsContentView: some View {

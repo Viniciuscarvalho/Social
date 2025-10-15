@@ -325,6 +325,7 @@ public struct TicketsListFilter: Codable, Equatable {
     public var status: TicketStatus?
     public var sortBy: TicketSortOption
     public var showFavoritesOnly: Bool
+    public var eventId: String? // Novo: filtro por evento específico
     
     public init() {
         self.category = nil
@@ -333,6 +334,7 @@ public struct TicketsListFilter: Codable, Equatable {
         self.status = nil
         self.sortBy = .dateCreated
         self.showFavoritesOnly = false
+        self.eventId = nil
     }
 }
 

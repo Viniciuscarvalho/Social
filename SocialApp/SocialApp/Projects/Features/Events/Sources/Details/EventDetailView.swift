@@ -121,13 +121,13 @@ public struct EventDetailView: View {
                             .cornerRadius(12)
                     }
                     
-                    // Botão Ver Tickets Disponíveis
+                    // Botão Ingressos Disponíveis
                     Button {
                         store.send(.viewAvailableTickets)
                     } label: {
                         HStack {
                             Image(systemName: "ticket.fill")
-                            Text("Ver Tickets Disponíveis")
+                            Text("Ingressos Disponíveis")
                                 .fontWeight(.semibold)
                         }
                         .frame(maxWidth: .infinity)

@@ -221,20 +221,6 @@ public struct ProfileView: View {
                 Divider()
                     .padding(.leading, 52)
                 
-                // Idioma
-                settingsRow(
-                    icon: "globe",
-                    iconColor: AppColors.accentGreen,
-                    title: "Idioma",
-                    subtitle: "Português (Brasil)",
-                    action: {
-                        store.send(.languageSettingsTapped)
-                    }
-                )
-                
-                Divider()
-                    .padding(.leading, 52)
-                
                 // Privacidade
                 settingsRow(
                     icon: "hand.raised.fill",
@@ -260,30 +246,6 @@ public struct ProfileView: View {
             sectionHeader("Notificações")
             
             VStack(spacing: 0) {
-                // Notificações gerais
-                toggleRow(
-                    icon: "bell.fill",
-                    iconColor: AppColors.error,
-                    title: "Notificações",
-                    subtitle: "Receber alertas sobre eventos",
-                    isOn: $store.notificationsEnabled.sending(\.toggleNotifications)
-                )
-                
-                Divider()
-                    .padding(.leading, 52)
-                
-                // Notificações por email
-                toggleRow(
-                    icon: "envelope.fill",
-                    iconColor: AppColors.primary,
-                    title: "Email",
-                    subtitle: "Newsletters e ofertas especiais",
-                    isOn: $store.emailNotifications.sending(\.toggleEmailNotifications)
-                )
-                
-                Divider()
-                    .padding(.leading, 52)
-                
                 // Push notifications
                 toggleRow(
                     icon: "iphone",
@@ -315,20 +277,6 @@ public struct ProfileView: View {
                     subtitle: "Visualizar compras realizadas",
                     action: {
                         store.send(.myTicketsTapped)
-                    }
-                )
-                
-                Divider()
-                    .padding(.leading, 52)
-                
-                // Favoritos
-                settingsRow(
-                    icon: "heart.fill",
-                    iconColor: AppColors.favoriteRed,
-                    title: "Favoritos",
-                    subtitle: "Eventos e ingressos salvos",
-                    action: {
-                        store.send(.favoritesTapped)
                     }
                 )
                 
