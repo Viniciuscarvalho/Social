@@ -38,7 +38,9 @@ public struct SocialAppFeature {
             auth.currentUser
         }
         
-        public init() {}
+        public init() {
+            print("🚀 SocialAppFeature.State inicializado")
+        }
     }
     
     public enum Action: Equatable {
@@ -75,6 +77,7 @@ public struct SocialAppFeature {
         // Add ticket modal actions
         case addTicketTapped
         case setShowingAddTicket(Bool)
+        case setAddTicketEventId(UUID?)
         
         // Implementação manual de Equatable para cases com parâmetros
         public static func == (lhs: Action, rhs: Action) -> Bool {
@@ -137,6 +140,9 @@ public struct SocialAppFeature {
                 
             case let (.setShowingAddTicket(bool1), .setShowingAddTicket(bool2)):
                 return bool1 == bool2
+                
+            case let (.setAddTicketEventId(uuid1), .setAddTicketEventId(uuid2)):
+                return uuid1 == uuid2
                 
             default:
                 return false
@@ -210,6 +216,7 @@ public struct SocialAppFeature {
             state.homeFeature = HomeFeature.State()
             state.ticketsListFeature = TicketsListFeature.State()
             state.addTicket = AddTicketFeature.State()
+            print("🔄 AddTicketFeature.State resetado no signOut")
             state.favoritesFeature = FavoritesFeature.State()
             state.profileFeature = ProfileFeature.State()
             state.sellerProfileFeature = SellerProfileFeature.State()
@@ -273,11 +280,23 @@ public struct SocialAppFeature {
             
             // MARK: - Add Ticket Modal
         case .addTicketTapped:
+            print("🎫 AddTicketTapped - selectedEventId: \(state.selectedEventId?.uuidString ?? "nil")")
             state.showingAddTicket = true
+            // Passa o selectedEventId para o AddTicketFeature se houver um evento selecionado
+            if let selectedEventId = state.selectedEventId {
+                print("✅ Definindo selectedEventId no AddTicket: \(selectedEventId.uuidString)")
+                state.addTicket.selectedEventId = selectedEventId
+            } else {
+                print("⚠️ Nenhum evento selecionado - selectedEventId é nil")
+            }
             return .none
             
         case let .setShowingAddTicket(isShowing):
             state.showingAddTicket = isShowing
+            return .none
+            
+        case let .setAddTicketEventId(eventId):
+            state.addTicket.selectedEventId = eventId
             return .none
             
             // MARK: - Navigation Actions
@@ -334,6 +353,7 @@ public struct SocialAppFeature {
                 normalizedEvent?.id = normalizedIdString
                 
                 // Cria o EventDetailFeature.State com o evento (se encontrado)
+                print("🎪 Definindo selectedEventId para: \(eventId.uuidString)")
                 state.selectedEventId = eventId
                 state.eventDetailFeature = EventDetailFeature.State(eventId: eventId, event: normalizedEvent)
                 
@@ -462,6 +482,18 @@ public struct SocialAppFeature {
                 return .run { send in
                     await send(.navigateToEventTickets(eventId))
                 }
+            }
+            return .none
+            
+        case .eventDetailFeature(.sellTicketForEvent):
+            // Quando o usuário clica em "Vender Ingresso" no detalhe do evento
+            print("🎫 sellTicketForEvent - selectedEventId: \(state.selectedEventId?.uuidString ?? "nil")")
+            if let eventId = state.selectedEventId {
+                print("✅ Abrindo modal AddTicket com eventId: \(eventId.uuidString)")
+                state.showingAddTicket = true
+                state.addTicket.selectedEventId = eventId
+            } else {
+                print("⚠️ selectedEventId é nil - não é possível abrir modal")
             }
             return .none
             

@@ -29,9 +29,80 @@ struct AddTicketView: View {
                     
                     // Formulário
                     VStack(spacing: 16) {
+                        // Seletor de evento ou informação do evento selecionado
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Evento")
+                                .font(.subheadline)
+                                .fontWeight(.semibold)
+                                .foregroundColor(AppColors.primaryText)
+                            
+                            if let eventId = store.selectedEventId {
+                                // Mostra o evento selecionado
+                                let selectedEvent = store.availableEvents.first { UUID(uuidString: $0.id) == eventId }
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(selectedEvent?.name ?? "Evento Selecionado")
+                                        .font(.body)
+                                        .foregroundColor(AppColors.accentGreen)
+                                    Text("ID: \(eventId.uuidString)")
+                                        .font(.caption2)
+                                        .foregroundColor(AppColors.secondaryText)
+                                }
+                                .padding(12)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .background(AppColors.accentGreen.opacity(0.1))
+                                .cornerRadius(12)
+                            } else {
+                                // Picker para selecionar evento
+                                if store.isLoadingEvents {
+                                    HStack {
+                                        ProgressView()
+                                        Text("Carregando eventos...")
+                                            .foregroundColor(AppColors.secondaryText)
+                                    }
+                                    .padding(12)
+                                    .frame(maxWidth: .infinity)
+                                    .background(AppColors.secondaryBackground)
+                                    .cornerRadius(12)
+                                } else if !store.availableEvents.isEmpty {
+                                    Menu {
+                                        ForEach(store.availableEvents, id: \.id) { event in
+                                            Button(event.name) {
+                                                if let eventUUID = UUID(uuidString: event.id) {
+                                                    store.send(.setSelectedEventId(eventUUID))
+                                                }
+                                            }
+                                        }
+                                    } label: {
+                                        HStack {
+                                            Text("Selecione um evento")
+                                                .foregroundColor(AppColors.secondaryText)
+                                            Spacer()
+                                            Image(systemName: "chevron.down")
+                                                .foregroundColor(AppColors.secondaryText)
+                                        }
+                                        .padding(12)
+                                        .background(AppColors.secondaryBackground)
+                                        .cornerRadius(12)
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: 12)
+                                                .stroke(AppColors.separator.opacity(0.5), lineWidth: 1)
+                                        )
+                                    }
+                                } else {
+                                    Text("Nenhum evento disponível")
+                                        .font(.body)
+                                        .foregroundColor(AppColors.secondaryText)
+                                        .padding(12)
+                                        .frame(maxWidth: .infinity)
+                                        .background(AppColors.secondaryBackground)
+                                        .cornerRadius(12)
+                                }
+                            }
+                        }
+                        
                         FormField(
-                            title: "Nome do Evento",
-                            placeholder: "Ex: Rock in Rio 2025",
+                            title: "Nome do Ingresso",
+                            placeholder: "Ex: Pista Premium - Linkin Park",
                             text: $store.ticketName
                         )
                         
@@ -100,6 +171,9 @@ struct AddTicketView: View {
                     }
                     .foregroundColor(AppColors.secondaryText)
                 }
+            }
+            .onAppear {
+                store.send(.onAppear)
             }
         }
     }

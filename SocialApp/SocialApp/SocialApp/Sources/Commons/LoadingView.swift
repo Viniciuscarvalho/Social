@@ -93,3 +93,4 @@ public struct LoadingOverlay: View {
         LoadingOverlay(message: "Processando...")
     }
 }
+

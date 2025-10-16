@@ -188,3 +188,4 @@ public var body: some View {
 - ❌ **Erro**: Com ícone, título, mensagem e botão de retry
 - 📭 **Vazio**: Com ícone, título, mensagem e botão de ação opcional
 - 🎉 **Sucesso**: Mostra o conteúdo principal normalmente
+

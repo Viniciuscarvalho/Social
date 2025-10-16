@@ -121,26 +121,51 @@ public struct EventDetailView: View {
                             .cornerRadius(12)
                     }
                     
-                    // Botão Ingressos Disponíveis
-                    Button {
-                        store.send(.viewAvailableTickets)
-                    } label: {
-                        HStack {
-                            Image(systemName: "ticket.fill")
-                            Text("Ingressos Disponíveis")
-                                .fontWeight(.semibold)
-                        }
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(
-                            LinearGradient(
-                                colors: [Color.blue, Color.purple],
-                                startPoint: .leading,
-                                endPoint: .trailing
+                    // Botões de ação
+                    VStack(spacing: 12) {
+                        // Botão Ingressos Disponíveis
+                        Button {
+                            store.send(.viewAvailableTickets)
+                        } label: {
+                            HStack {
+                                Image(systemName: "ticket.fill")
+                                Text("Ingressos Disponíveis")
+                                    .fontWeight(.semibold)
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(
+                                LinearGradient(
+                                    colors: [Color.blue, Color.purple],
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                )
                             )
-                        )
-                        .foregroundColor(.white)
-                        .cornerRadius(12)
+                            .foregroundColor(.white)
+                            .cornerRadius(12)
+                        }
+                        
+                        // Botão Vender Ingresso
+                        Button {
+                            store.send(.sellTicketForEvent)
+                        } label: {
+                            HStack {
+                                Image(systemName: "plus.circle.fill")
+                                Text("Vender Ingresso")
+                                    .fontWeight(.semibold)
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(
+                                LinearGradient(
+                                    colors: [Color.green, Color.mint],
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                )
+                            )
+                            .foregroundColor(.white)
+                            .cornerRadius(12)
+                        }
                     }
                     .padding(.top, 8)
                     .padding(.bottom, 100) // Espaço para não ser coberto pela tabBar

@@ -22,6 +22,7 @@ public struct EventDetailFeature {
         case loadEvent(UUID)
         case eventResponse(Result<Event, NetworkError>)
         case viewAvailableTickets
+        case sellTicketForEvent // ✅ Nova action para vender ingresso para este evento
         case toggleFavorite
         case checkFavoriteStatus
         case favoriteStatusLoaded(Bool)
@@ -84,6 +85,10 @@ public struct EventDetailFeature {
                 return .none
                 
             case .viewAvailableTickets:
+                // Esta action será tratada pelo parent (SocialAppFeature)
+                return .none
+                
+            case .sellTicketForEvent:
                 // Esta action será tratada pelo parent (SocialAppFeature)
                 return .none
                 

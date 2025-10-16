@@ -13,6 +13,8 @@ public struct AddTicketFeature {
         public var quantity: Int = 1
         public var validUntil: Date = Calendar.current.date(byAdding: .day, value: 30, to: Date()) ?? Date()
         
+        public var availableEvents: [Event] = []
+        public var isLoadingEvents: Bool = false
         public var isPublishing: Bool = false
         public var errorMessage: String?
         public var publishSuccess: Bool = false
@@ -24,18 +26,57 @@ public struct AddTicketFeature {
             selectedEventId != nil
         }
         
-        public init() {}
+        public init(selectedEventId: UUID? = nil) {
+            self.selectedEventId = selectedEventId
+            print("🎫 AddTicketFeature.State inicializado com selectedEventId: \(selectedEventId?.uuidString ?? "nil")")
+        }
     }
     
-    public enum Action: BindableAction, Equatable {
+    public enum Action: BindableAction {
         case binding(BindingAction<State>)
+        case onAppear
+        case loadEvents
+        case eventsLoaded([Event])
+        case eventsLoadFailed(String)
         case publishTicket
         case publishTicketResponse(Result<Ticket, APIError>)
         case dismissSuccess
+        case setSelectedEventId(UUID?)
+        
+        // Implementação manual de Equatable
+        public static func == (lhs: Action, rhs: Action) -> Bool {
+            switch (lhs, rhs) {
+            case (.binding(let action1), .binding(let action2)):
+                return action1 == action2
+            case (.onAppear, .onAppear),
+                 (.loadEvents, .loadEvents),
+                 (.publishTicket, .publishTicket),
+                 (.dismissSuccess, .dismissSuccess):
+                return true
+            case let (.eventsLoaded(events1), .eventsLoaded(events2)):
+                return events1 == events2
+            case let (.eventsLoadFailed(message1), .eventsLoadFailed(message2)):
+                return message1 == message2
+            case let (.publishTicketResponse(result1), .publishTicketResponse(result2)):
+                switch (result1, result2) {
+                case (.success(let ticket1), .success(let ticket2)):
+                    return ticket1 == ticket2
+                case (.failure(let error1), .failure(let error2)):
+                    return error1 == error2
+                default:
+                    return false
+                }
+            case let (.setSelectedEventId(uuid1), .setSelectedEventId(uuid2)):
+                return uuid1 == uuid2
+            default:
+                return false
+            }
+        }
     }
     
     @Dependency(\.ticketsClient) var ticketsClient
     @Dependency(\.userClient) var userClient
+    @Dependency(\.eventsClient) var eventsClient
     
     public init() {}
     
@@ -45,6 +86,35 @@ public struct AddTicketFeature {
         Reduce { state, action in
             switch action {
             case .binding:
+                return .none
+                
+            case .onAppear:
+                // Carrega eventos se não houver evento selecionado
+                if state.selectedEventId == nil {
+                    return .send(.loadEvents)
+                }
+                return .none
+                
+            case .loadEvents:
+                state.isLoadingEvents = true
+                return .run { send in
+                    do {
+                        let events = try await eventsClient.fetchEvents()
+                        await send(.eventsLoaded(events))
+                    } catch {
+                        await send(.eventsLoadFailed(error.localizedDescription))
+                    }
+                }
+                
+            case let .eventsLoaded(events):
+                state.isLoadingEvents = false
+                state.availableEvents = events
+                print("✅ Carregados \(events.count) eventos para seleção")
+                return .none
+                
+            case let .eventsLoadFailed(errorMessage):
+                state.isLoadingEvents = false
+                state.errorMessage = "Erro ao carregar eventos: \(errorMessage)"
                 return .none
                 
             case .publishTicket:
@@ -119,6 +189,11 @@ public struct AddTicketFeature {
                 
             case .dismissSuccess:
                 state.publishSuccess = false
+                return .none
+                
+            case let .setSelectedEventId(eventId):
+                print("🎫 AddTicketFeature - setSelectedEventId: \(eventId?.uuidString ?? "nil")")
+                state.selectedEventId = eventId
                 return .none
             }
         }
