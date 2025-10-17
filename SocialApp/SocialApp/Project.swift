@@ -6,6 +6,10 @@ let project = Project(
         .remote(
             url: "https://github.com/pointfreeco/swift-composable-architecture",
             requirement: .upToNextMajor(from: "1.0.0")
+        ),
+        .remote(
+            url: "https://github.com/supabase/supabase-swift",
+            requirement: .upToNextMajor(from: "2.0.0")
         )
     ],
     settings: .settings(
@@ -34,7 +38,8 @@ let project = Project(
             ],
             resources: ["SocialApp/Resources/**"],
             dependencies: [
-                .package(product: "ComposableArchitecture")
+                .package(product: "ComposableArchitecture"),
+                .package(product: "Supabase")
             ],
             settings: .settings(
                 configurations: [

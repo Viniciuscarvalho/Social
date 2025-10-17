@@ -1,0 +1,9 @@
+// Configurações do Supabase
+// Substitua pelos seus valores reais do dashboard do Supabase
+
+SUPABASE_URL = https://SEU_PROJECT_ID.supabase.co
+SUPABASE_ANON_KEY = SUA_ANON_KEY_AQUI
+
+// Exemplo:
+// SUPABASE_URL = https://abcdefgh.supabase.co
+// SUPABASE_ANON_KEY = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFiY2RlZmdoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mjg5Nzg5MjMsImV4cCI6MjA0NDU1NDkyM30.exemplo_de_chave_anonima_do_supabase

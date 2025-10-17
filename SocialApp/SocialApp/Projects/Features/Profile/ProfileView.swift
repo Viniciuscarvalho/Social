@@ -103,11 +103,9 @@ public struct ProfileView: View {
                         .fontWeight(.semibold)
                         .foregroundColor(AppColors.primaryText)
                     
-                    if let email = user.email {
-                        Text(email)
-                            .font(.subheadline)
-                            .foregroundColor(AppColors.secondaryText)
-                    }
+                    Text(user.email)
+                        .font(.subheadline)
+                        .foregroundColor(AppColors.secondaryText)
                     
                     if let title = user.title {
                         Text(title)
@@ -513,7 +511,7 @@ struct EditProfileView: View {
         self.user = user
         self.onSave = onSave
         self._tempName = State(initialValue: user.name)
-        self._tempEmail = State(initialValue: user.email ?? "")
+        self._tempEmail = State(initialValue: user.email)
         self._tempTitle = State(initialValue: user.title ?? "")
     }
     
@@ -543,7 +541,7 @@ struct EditProfileView: View {
                     Button("Salvar") {
                         var updatedUser = user
                         updatedUser.name = tempName
-                        updatedUser.email = tempEmail.isEmpty ? nil : tempEmail
+                        updatedUser.email = tempEmail
                         updatedUser.title = tempTitle.isEmpty ? nil : tempTitle
                         onSave(updatedUser)
                     }

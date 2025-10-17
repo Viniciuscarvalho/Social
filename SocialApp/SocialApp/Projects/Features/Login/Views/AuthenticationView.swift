@@ -52,7 +52,7 @@ struct AuthenticationView: View {
         .overlay(
             Group {
                 if store.auth.isLoading {
-                    LoadingView()
+                    LoadingOverlay(message: "Carregando...")
                 }
             }
         )
@@ -69,25 +69,4 @@ struct AuthenticationView: View {
 }
 
 // MARK: - Supporting Views
-
-struct LoadingView: View {
-    var body: some View {
-        ZStack {
-            Color.black.opacity(0.3)
-                .ignoresSafeArea()
-            
-            VStack(spacing: 16) {
-                ProgressView()
-                    .scaleEffect(1.5)
-                    .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                
-                Text("Carregando...")
-                    .foregroundColor(.white)
-                    .font(.headline)
-            }
-            .padding(40)
-            .background(Color.black.opacity(0.8))
-            .cornerRadius(16)
-        }
-    }
-}
+// LoadingView genérica está em Commons/LoadingView.swift
