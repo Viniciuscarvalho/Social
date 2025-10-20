@@ -8,7 +8,7 @@ public struct TicketsClient {
     public var fetchTicketDetail: (UUID) async throws -> TicketDetail
     public var purchaseTicket: (UUID) async throws -> Ticket
     public var toggleFavorite: (UUID) async throws -> Void
-    public var createTicket: (Ticket) async throws -> Ticket
+    public var createTicket: (CreateTicketRequest) async throws -> Ticket
 }
 
 extension TicketsClient: DependencyKey {
@@ -122,15 +122,27 @@ extension TicketsClient: DependencyKey {
             createTicket: { request in
                 do {
                     print("➕ Creating ticket: \(request.name)")
+                    print("📋 Ticket details:")
+                    print("   Name: \(request.name)")
+                    print("   Price: \(request.price)")
+                    print("   Event ID: \(request.eventId)")
+                    print("   Type: \(request.ticketType)")
+                    print("   Valid Until: \(request.validUntil)")
+                    
                     let createdTicket: Ticket = try await NetworkService.shared.requestSingle(
                         endpoint: "/tickets",
                         method: .POST,
                         body: request
                     )
-                    print("✅ Successfully created ticket")
+                    print("✅ Successfully created ticket via API")
+                    print("   Created ticket ID: \(createdTicket.id)")
                     return createdTicket
                 } catch {
                     print("❌ Create ticket failed: \(error)")
+                    print("   Error type: \(type(of: error))")
+                    if let networkError = error as? NetworkError {
+                        print("   NetworkError: \(networkError)")
+                    }
                     throw error
                 }
             }
@@ -144,7 +156,18 @@ extension TicketsClient: DependencyKey {
         fetchTicketDetail: { ticketId in SharedMockData.sampleTicketDetail(for: ticketId.uuidString) },
         purchaseTicket: { _ in SharedMockData.sampleTickets[0] },
         toggleFavorite: { _ in },
-        createTicket: { ticket in ticket }
+        createTicket: { request in 
+            // Criar um ticket com os dados da request
+            let ticket = Ticket(
+                eventId: request.eventId,
+                sellerId: "test-seller-id", // ID padrão para testes
+                name: request.name,
+                price: request.price,
+                ticketType: request.ticketType,
+                validUntil: request.validUntil
+            )
+            return ticket
+        }
     )
 }
 

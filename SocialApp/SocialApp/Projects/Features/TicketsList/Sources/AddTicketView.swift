@@ -4,161 +4,16 @@ import SwiftUI
 struct AddTicketView: View {
     @Bindable var store: StoreOf<AddTicketFeature>
     @Environment(\.dismiss) var dismiss
+    @Dependency(\.ticketsClient) var ticketsClient
     
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 20) {
-                    // Header
-                    VStack(spacing: 8) {
-                        Image(systemName: "ticket.fill")
-                            .font(.system(size: 60))
-                            .foregroundColor(AppColors.accentGreen)
-                        
-                        Text("Vender Ingresso")
-                            .font(.title2)
-                            .fontWeight(.bold)
-                            .foregroundColor(AppColors.primaryText)
-                        
-                        Text("Preencha os dados do ingresso que deseja vender")
-                            .font(.subheadline)
-                            .foregroundColor(AppColors.secondaryText)
-                            .multilineTextAlignment(.center)
-                    }
-                    .padding(.top, 20)
-                    
-                    // Formulário
-                    VStack(spacing: 16) {
-                        // Seletor de evento ou informação do evento selecionado
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("Evento")
-                                .font(.subheadline)
-                                .fontWeight(.semibold)
-                                .foregroundColor(AppColors.primaryText)
-                            
-                            if let eventId = store.selectedEventId {
-                                // Mostra o evento selecionado
-                                let selectedEvent = store.availableEvents.first { UUID(uuidString: $0.id) == eventId }
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text(selectedEvent?.name ?? "Evento Selecionado")
-                                        .font(.body)
-                                        .foregroundColor(AppColors.accentGreen)
-                                    Text("ID: \(eventId.uuidString)")
-                                        .font(.caption2)
-                                        .foregroundColor(AppColors.secondaryText)
-                                }
-                                .padding(12)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .background(AppColors.accentGreen.opacity(0.1))
-                                .cornerRadius(12)
-                            } else {
-                                // Picker para selecionar evento
-                                if store.isLoadingEvents {
-                                    HStack {
-                                        ProgressView()
-                                        Text("Carregando eventos...")
-                                            .foregroundColor(AppColors.secondaryText)
-                                    }
-                                    .padding(12)
-                                    .frame(maxWidth: .infinity)
-                                    .background(AppColors.secondaryBackground)
-                                    .cornerRadius(12)
-                                } else if !store.availableEvents.isEmpty {
-                                    Menu {
-                                        ForEach(store.availableEvents, id: \.id) { event in
-                                            Button(event.name) {
-                                                if let eventUUID = UUID(uuidString: event.id) {
-                                                    store.send(.setSelectedEventId(eventUUID))
-                                                }
-                                            }
-                                        }
-                                    } label: {
-                                        HStack {
-                                            Text("Selecione um evento")
-                                                .foregroundColor(AppColors.secondaryText)
-                                            Spacer()
-                                            Image(systemName: "chevron.down")
-                                                .foregroundColor(AppColors.secondaryText)
-                                        }
-                                        .padding(12)
-                                        .background(AppColors.secondaryBackground)
-                                        .cornerRadius(12)
-                                        .overlay(
-                                            RoundedRectangle(cornerRadius: 12)
-                                                .stroke(AppColors.separator.opacity(0.5), lineWidth: 1)
-                                        )
-                                    }
-                                } else {
-                                    Text("Nenhum evento disponível")
-                                        .font(.body)
-                                        .foregroundColor(AppColors.secondaryText)
-                                        .padding(12)
-                                        .frame(maxWidth: .infinity)
-                                        .background(AppColors.secondaryBackground)
-                                        .cornerRadius(12)
-                                }
-                            }
-                        }
-                        
-                        FormField(
-                            title: "Nome do Ingresso",
-                            placeholder: "Ex: Pista Premium - Linkin Park",
-                            text: $store.ticketName
-                        )
-                        
-                        // Picker para tipo de ingresso
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("Tipo de Ingresso")
-                                .font(.subheadline)
-                                .fontWeight(.semibold)
-                                .foregroundColor(AppColors.primaryText)
-                            
-                            Picker("Tipo", selection: $store.ticketType) {
-                                ForEach(TicketType.allCases, id: \.self) { type in
-                                    Text(type.displayName).tag(type)
-                                }
-                            }
-                            .pickerStyle(.menu)
-                            .padding(12)
-                            .background(AppColors.secondaryBackground)
-                            .cornerRadius(12)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 12)
-                                    .stroke(AppColors.separator.opacity(0.5), lineWidth: 1)
-                            )
-                        }
-                        
-                        FormField(
-                            title: "Preço",
-                            placeholder: "R$ 0,00",
-                            text: $store.price,
-                            keyboardType: .decimalPad
-                        )
-                        
-                        FormField(
-                            title: "Descrição",
-                            placeholder: "Detalhes adicionais sobre o ingresso",
-                            text: $store.description,
-                            isTextEditor: true
-                        )
-                    }
-                    .padding(.horizontal)
-                    
-                    // Botão de publicar
-                    Button(action: {
-                        store.send(.publishTicket)
-                        dismiss()
-                    }) {
-                        Text("Publicar Ingresso")
-                            .font(.headline)
-                            .foregroundColor(.white)
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(AppColors.accentGreen.gradient)
-                            .cornerRadius(12)
-                    }
-                    .padding(.horizontal)
-                    .padding(.top, 20)
+                    headerView
+                    formView
+                    testButtonView
+                    publishButtonView
                 }
                 .padding(.bottom, 40)
             }
@@ -175,7 +30,196 @@ struct AddTicketView: View {
             .onAppear {
                 store.send(.onAppear)
             }
+            .onChange(of: store.publishSuccess) { _, success in
+                if success {
+                    dismiss()
+                }
+            }
+            .alert("Erro", isPresented: Binding(
+                get: { store.errorMessage != nil },
+                set: { _ in store.send(.clearError) }
+            )) {
+                Button("OK") { }
+            } message: {
+                Text(store.errorMessage ?? "")
+            }
         }
+    }
+    
+    private var headerView: some View {
+        VStack(spacing: 8) {
+            Image(systemName: "ticket.fill")
+                .font(.system(size: 60))
+                .foregroundColor(AppColors.accentGreen)
+            
+            Text("Vender Ingresso")
+                .font(.title2)
+                .fontWeight(.bold)
+                .foregroundColor(AppColors.primaryText)
+            
+            Text("Preencha os dados do ingresso que deseja vender")
+                .font(.subheadline)
+                .foregroundColor(AppColors.secondaryText)
+                .multilineTextAlignment(.center)
+        }
+        .padding(.top, 20)
+    }
+    
+    private var formView: some View {
+        VStack(spacing: 16) {
+            eventSelectorView
+            FormField(
+                title: "Nome do Ingresso",
+                text: $store.ticketName,
+                placeholder: "Ex: VIP, Pista, Camarote"
+            )
+            FormField(
+                title: "Preço",
+                text: $store.price,
+                placeholder: "Ex: 120,00"
+            )
+            FormField(
+                title: "Tipo",
+                text: Binding(
+                    get: { store.ticketType.displayName },
+                    set: { _ in }
+                ),
+                placeholder: "Selecione o tipo"
+            )
+            FormField(
+                title: "Descrição",
+                text: $store.description,
+                placeholder: "Descrição",
+                isTextEditor: true
+            )
+        }
+        .padding(.horizontal)
+    }
+    
+    private var eventSelectorView: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Evento")
+                .font(.subheadline)
+                .fontWeight(.semibold)
+                .foregroundColor(AppColors.primaryText)
+            
+            if let eventId = store.selectedEventId {
+                let selectedEvent = store.availableEvents.first { UUID(uuidString: $0.id) == eventId }
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(selectedEvent?.name ?? "Evento Selecionado")
+                        .font(.body)
+                        .foregroundColor(AppColors.accentGreen)
+                    Text("ID: \(eventId.uuidString)")
+                        .font(.caption2)
+                        .foregroundColor(AppColors.secondaryText)
+                }
+                .padding(12)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(AppColors.accentGreen.opacity(0.1))
+                .cornerRadius(8)
+            } else {
+                if store.isLoadingEvents {
+                    HStack {
+                        ProgressView()
+                            .scaleEffect(0.8)
+                        Text("Carregando eventos...")
+                            .font(.body)
+                            .foregroundColor(AppColors.secondaryText)
+                    }
+                    .padding(12)
+                    .frame(maxWidth: .infinity)
+                    .background(AppColors.cardBackground)
+                    .cornerRadius(8)
+                } else {
+                    Menu {
+                        ForEach(store.availableEvents, id: \.id) { event in
+                            Button(event.name) {
+                                if let eventId = UUID(uuidString: event.id) {
+                                    store.send(.setSelectedEventId(eventId))
+                                }
+                            }
+                        }
+                    } label: {
+                        HStack {
+                            Text("Selecionar Evento")
+                                .foregroundColor(AppColors.secondaryText)
+                            Spacer()
+                            Image(systemName: "chevron.down")
+                                .foregroundColor(AppColors.secondaryText)
+                        }
+                        .padding(12)
+                        .background(AppColors.cardBackground)
+                        .cornerRadius(8)
+                    }
+                }
+            }
+        }
+    }
+    
+    private var testButtonView: some View {
+        Button(action: {
+            print("🧪 Testando envio para API...")
+            
+            guard let eventId = store.selectedEventId,
+                  let priceValue = AddTicketFeature.parsePrice(store.price),
+                  let userId = UserDefaults.standard.string(forKey: "currentUserId") else {
+                print("❌ Dados insuficientes para teste")
+                return
+            }
+            
+            let testRequest = CreateTicketRequest(
+                eventId: eventId.uuidString,
+                name: store.ticketName,
+                price: priceValue,
+                ticketType: store.ticketType,
+                validUntil: store.validUntil
+            )
+            
+            Task {
+                do {
+                    print("🧪 Enviando ticket de teste para API...")
+                    let createdTicket = try await ticketsClient.createTicket(testRequest)
+                    print("✅ Teste da API bem-sucedido!")
+                    print("   Ticket criado: \(createdTicket.name)")
+                } catch {
+                    print("❌ Teste da API falhou: \(error)")
+                }
+            }
+        }) {
+            Text("🧪 Testar API")
+                .font(.system(size: 12))
+                .foregroundColor(.purple)
+                .frame(maxWidth: .infinity)
+                .frame(height: 30)
+                .background(Color.purple.opacity(0.1))
+                .cornerRadius(15)
+        }
+        .padding(.horizontal)
+        .padding(.top, 8)
+    }
+    
+    private var publishButtonView: some View {
+        Button(action: {
+            store.send(.publishTicket)
+        }) {
+            HStack {
+                if store.isPublishing {
+                    ProgressView()
+                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                        .scaleEffect(0.8)
+                }
+                Text(store.isPublishing ? "Publicando..." : "Publicar Ingresso")
+            }
+            .font(.headline)
+            .foregroundColor(.white)
+            .frame(maxWidth: .infinity)
+            .padding()
+            .background(AppColors.accentGreen.gradient)
+            .cornerRadius(12)
+        }
+        .disabled(store.isPublishing)
+        .padding(.horizontal)
+        .padding(.top, 20)
     }
 }
 
@@ -183,9 +227,8 @@ struct AddTicketView: View {
 
 struct FormField: View {
     let title: String
-    let placeholder: String
     @Binding var text: String
-    var keyboardType: UIKeyboardType = .default
+    let placeholder: String
     var isTextEditor: Bool = false
     
     var body: some View {
@@ -197,25 +240,33 @@ struct FormField: View {
             
             if isTextEditor {
                 TextEditor(text: $text)
-                    .frame(height: 100)
-                    .padding(12)
-                    .background(AppColors.secondaryBackground)
-                    .cornerRadius(12)
+                    .frame(minHeight: 80)
+                    .padding(8)
+                    .background(AppColors.cardBackground)
+                    .cornerRadius(8)
                     .overlay(
-                        RoundedRectangle(cornerRadius: 12)
+                        RoundedRectangle(cornerRadius: 8)
                             .stroke(AppColors.separator.opacity(0.5), lineWidth: 1)
                     )
             } else {
                 TextField(placeholder, text: $text)
-                    .keyboardType(keyboardType)
+                    .textFieldStyle(PlainTextFieldStyle())
                     .padding(12)
-                    .background(AppColors.secondaryBackground)
-                    .cornerRadius(12)
+                    .background(AppColors.cardBackground)
+                    .cornerRadius(8)
                     .overlay(
-                        RoundedRectangle(cornerRadius: 12)
+                        RoundedRectangle(cornerRadius: 8)
                             .stroke(AppColors.separator.opacity(0.5), lineWidth: 1)
                     )
             }
         }
     }
+}
+
+#Preview {
+    AddTicketView(
+        store: Store(initialState: AddTicketFeature.State()) {
+            AddTicketFeature()
+        }
+    )
 }

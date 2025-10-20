@@ -189,3 +189,4 @@ public var body: some View {
 - 📭 **Vazio**: Com ícone, título, mensagem e botão de ação opcional
 - 🎉 **Sucesso**: Mostra o conteúdo principal normalmente
 
+

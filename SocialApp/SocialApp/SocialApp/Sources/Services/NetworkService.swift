@@ -20,6 +20,15 @@ public enum NetworkError: Error, LocalizedError, Equatable {
     case notFound
     case unknown(Error)
     
+    // Casos específicos de autenticação
+    case invalidCredentials(String)
+    case emailNotConfirmed(String)
+    case userNotFound(String)
+    case weakPassword(String)
+    case emailAlreadyExists(String)
+    case authError(String)
+    case httpError(Int, String)
+    
     // Implementação manual de Equatable para case com Error
     public static func == (lhs: NetworkError, rhs: NetworkError) -> Bool {
         switch (lhs, rhs) {
@@ -37,6 +46,17 @@ public enum NetworkError: Error, LocalizedError, Equatable {
             
         case let (.unknown(error1), .unknown(error2)):
             return error1.localizedDescription == error2.localizedDescription
+            
+        case let (.invalidCredentials(msg1), .invalidCredentials(msg2)),
+             let (.emailNotConfirmed(msg1), .emailNotConfirmed(msg2)),
+             let (.userNotFound(msg1), .userNotFound(msg2)),
+             let (.weakPassword(msg1), .weakPassword(msg2)),
+             let (.emailAlreadyExists(msg1), .emailAlreadyExists(msg2)),
+             let (.authError(msg1), .authError(msg2)):
+            return msg1 == msg2
+            
+        case let (.httpError(code1, msg1), .httpError(code2, msg2)):
+            return code1 == code2 && msg1 == msg2
             
         default:
             return false
@@ -63,6 +83,22 @@ public enum NetworkError: Error, LocalizedError, Equatable {
             return "Recurso não encontrado"
         case .unknown(let error):
             return "Erro desconhecido: \(error.localizedDescription)"
+            
+        // Casos específicos de autenticação
+        case .invalidCredentials(let message):
+            return message
+        case .emailNotConfirmed(let message):
+            return message
+        case .userNotFound(let message):
+            return message
+        case .weakPassword(let message):
+            return message
+        case .emailAlreadyExists(let message):
+            return message
+        case .authError(let message):
+            return message
+        case .httpError(let code, let message):
+            return "Erro HTTP \(code): \(message)"
         }
     }
 }
@@ -129,15 +165,33 @@ final class NetworkService {
         // Add authentication token if required
         if requiresAuth, let token = UserDefaults.standard.string(forKey: "authToken") {
             request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+            print("🔐 Auth token added: \(token.prefix(20))...")
+        } else if requiresAuth {
+            print("⚠️ Auth required but no token found!")
         }
         
         // Add request body if provided
         if let body = body {
             do {
-                request.httpBody = try encoder.encode(body)
+                let bodyData = try encoder.encode(body)
+                request.httpBody = bodyData
+                
+                // Log detalhado do body sendo enviado
+                if let jsonString = String(data: bodyData, encoding: .utf8) {
+                    print("📤 Request body for \(endpoint):")
+                    print("   Method: \(method.rawValue)")
+                    print("   URL: \(url)")
+                    print("   Body: \(jsonString)")
+                }
             } catch {
+                print("❌ Failed to encode request body: \(error)")
                 throw NetworkError.unknown(error)
             }
+        } else {
+            print("📤 Request for \(endpoint):")
+            print("   Method: \(method.rawValue)")
+            print("   URL: \(url)")
+            print("   Body: None")
         }
         
         do {
@@ -249,15 +303,33 @@ final class NetworkService {
         // Add authentication token if required
         if requiresAuth, let token = UserDefaults.standard.string(forKey: "authToken") {
             request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+            print("🔐 Auth token added: \(token.prefix(20))...")
+        } else if requiresAuth {
+            print("⚠️ Auth required but no token found!")
         }
         
         // Add request body if provided
         if let body = body {
             do {
-                request.httpBody = try encoder.encode(body)
+                let bodyData = try encoder.encode(body)
+                request.httpBody = bodyData
+                
+                // Log detalhado do body sendo enviado
+                if let jsonString = String(data: bodyData, encoding: .utf8) {
+                    print("📤 Request body for \(endpoint):")
+                    print("   Method: \(method.rawValue)")
+                    print("   URL: \(url)")
+                    print("   Body: \(jsonString)")
+                }
             } catch {
+                print("❌ Failed to encode request body: \(error)")
                 throw NetworkError.unknown(error)
             }
+        } else {
+            print("📤 Request for \(endpoint):")
+            print("   Method: \(method.rawValue)")
+            print("   URL: \(url)")
+            print("   Body: None")
         }
         
         do {
@@ -368,15 +440,33 @@ final class NetworkService {
         // Add authentication token if required
         if requiresAuth, let token = UserDefaults.standard.string(forKey: "authToken") {
             request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+            print("🔐 Auth token added: \(token.prefix(20))...")
+        } else if requiresAuth {
+            print("⚠️ Auth required but no token found!")
         }
         
         // Add request body if provided
         if let body = body {
             do {
-                request.httpBody = try encoder.encode(body)
+                let bodyData = try encoder.encode(body)
+                request.httpBody = bodyData
+                
+                // Log detalhado do body sendo enviado
+                if let jsonString = String(data: bodyData, encoding: .utf8) {
+                    print("📤 Request body for \(endpoint):")
+                    print("   Method: \(method.rawValue)")
+                    print("   URL: \(url)")
+                    print("   Body: \(jsonString)")
+                }
             } catch {
+                print("❌ Failed to encode request body: \(error)")
                 throw NetworkError.unknown(error)
             }
+        } else {
+            print("📤 Request for \(endpoint):")
+            print("   Method: \(method.rawValue)")
+            print("   URL: \(url)")
+            print("   Body: None")
         }
         
         do {

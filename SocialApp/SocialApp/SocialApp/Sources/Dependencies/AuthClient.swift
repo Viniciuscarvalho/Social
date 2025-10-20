@@ -8,19 +8,34 @@ struct AuthClient {
     var signUp: @Sendable (_ name: String, _ email: String, _ password: String) async throws -> AuthResponse
     var signOut: @Sendable () async throws -> Void
     var getCurrentSession: @Sendable () async throws -> (user: User, profile: Profile)?
+    var testCredentials: @Sendable (_ email: String, _ password: String) async throws -> Void
 }
 
 extension AuthClient: DependencyKey {
     static let liveValue = Self(
         signIn: { email, password in
             print("🔐 AuthClient: Fazendo login para \(email)")
+            print("🔐 AuthClient: Cliente Supabase configurado")
             let supabase = SupabaseManager.shared.client
             
             do {
                 // Verificar se o usuário existe primeiro
                 print("🔍 AuthClient: Verificando se usuário existe...")
                 
+                // Tentar buscar usuário na tabela auth.users primeiro
+                do {
+                    let users = try await supabase
+                        .from("auth.users")
+                        .select("id, email, email_confirmed_at")
+                        .eq("email", value: email)
+                        .execute()
+                    print("🔍 AuthClient: Usuário encontrado na tabela auth.users: \(users)")
+                } catch {
+                    print("⚠️ AuthClient: Não foi possível verificar usuário na tabela auth.users: \(error)")
+                }
+                
                 // Fazer login no Supabase
+                print("🔐 AuthClient: Tentando fazer login no Supabase...")
                 let session = try await supabase.auth.signIn(
                     email: email,
                     password: password
@@ -65,13 +80,36 @@ extension AuthClient: DependencyKey {
                 // Log mais detalhado do erro
                 if let authError = error as? AuthError {
                     print("❌ AuthClient: AuthError - \(authError)")
+                    print("❌ AuthClient: AuthError Message - \(authError.message)")
                 } else if let httpError = error as? HTTPError {
                     print("❌ AuthClient: HTTPError - \(httpError)")
+                    print("❌ AuthClient: HTTPError Response - \(httpError.response)")
                 } else {
                     print("❌ AuthClient: Erro desconhecido - \(type(of: error))")
+                    print("❌ AuthClient: Erro detalhado - \(error.localizedDescription)")
                 }
                 
-                throw error
+                // Converter erro para NetworkError baseado na mensagem
+                if let authError = error as? AuthError {
+                    let message = authError.message.lowercased()
+                    if message.contains("invalid") && message.contains("credentials") {
+                        throw NetworkError.invalidCredentials("Credenciais inválidas. Verifique email e senha.")
+                    } else if message.contains("email") && message.contains("confirm") {
+                        throw NetworkError.emailNotConfirmed("Email não confirmado. Verifique sua caixa de entrada.")
+                    } else if message.contains("user") && message.contains("not found") {
+                        throw NetworkError.userNotFound("Usuário não encontrado.")
+                    } else if message.contains("weak") && message.contains("password") {
+                        throw NetworkError.weakPassword("Senha muito fraca.")
+                    } else if message.contains("email") && message.contains("already") {
+                        throw NetworkError.emailAlreadyExists("Email já cadastrado.")
+                    } else {
+                        throw NetworkError.authError(authError.message)
+                    }
+                } else if let httpError = error as? HTTPError {
+                    throw NetworkError.httpError(400, String(describing: httpError.response))
+                } else {
+                    throw NetworkError.unknown(error)
+                }
             }
         },
         signUp: { name, email, password in
@@ -156,13 +194,36 @@ extension AuthClient: DependencyKey {
                 // Log mais detalhado do erro
                 if let authError = error as? AuthError {
                     print("❌ AuthClient: AuthError - \(authError)")
+                    print("❌ AuthClient: AuthError Message - \(authError.message)")
                 } else if let httpError = error as? HTTPError {
                     print("❌ AuthClient: HTTPError - \(httpError)")
+                    print("❌ AuthClient: HTTPError Response - \(httpError.response)")
                 } else {
                     print("❌ AuthClient: Erro desconhecido - \(type(of: error))")
+                    print("❌ AuthClient: Erro detalhado - \(error.localizedDescription)")
                 }
                 
-                throw error
+                // Converter erro para NetworkError baseado na mensagem
+                if let authError = error as? AuthError {
+                    let message = authError.message.lowercased()
+                    if message.contains("invalid") && message.contains("credentials") {
+                        throw NetworkError.invalidCredentials("Credenciais inválidas. Verifique email e senha.")
+                    } else if message.contains("email") && message.contains("confirm") {
+                        throw NetworkError.emailNotConfirmed("Email não confirmado. Verifique sua caixa de entrada.")
+                    } else if message.contains("user") && message.contains("not found") {
+                        throw NetworkError.userNotFound("Usuário não encontrado.")
+                    } else if message.contains("weak") && message.contains("password") {
+                        throw NetworkError.weakPassword("Senha muito fraca.")
+                    } else if message.contains("email") && message.contains("already") {
+                        throw NetworkError.emailAlreadyExists("Email já cadastrado.")
+                    } else {
+                        throw NetworkError.authError(authError.message)
+                    }
+                } else if let httpError = error as? HTTPError {
+                    throw NetworkError.httpError(400, String(describing: httpError.response))
+                } else {
+                    throw NetworkError.unknown(error)
+                }
             }
         },
         signOut: {
@@ -217,6 +278,64 @@ extension AuthClient: DependencyKey {
                 print("❌ AuthClient: Erro ao verificar sessão - \(error)")
                 return nil
             }
+        },
+        testCredentials: { email, password in
+            print("🧪 AuthClient: Testando credenciais para \(email)")
+            let supabase = SupabaseManager.shared.client
+            
+            // Teste 1: Verificar configuração do cliente
+            print("🧪 Teste 1 - Configuração do cliente:")
+            print("   Cliente Supabase configurado")
+            print("   Cliente configurado")
+            
+            // Teste 2: Tentar buscar usuário na tabela auth.users
+            print("🧪 Teste 2 - Buscando usuário na tabela auth.users:")
+            do {
+                let users = try await supabase
+                    .from("auth.users")
+                    .select("id, email, email_confirmed_at, created_at")
+                    .eq("email", value: email)
+                    .execute()
+                print("   ✅ Usuário encontrado: \(users)")
+            } catch {
+                print("   ❌ Erro ao buscar usuário: \(error)")
+            }
+            
+            // Teste 3: Tentar login direto
+            print("🧪 Teste 3 - Tentando login direto:")
+            do {
+                let session = try await supabase.auth.signIn(
+                    email: email,
+                    password: password
+                )
+                print("   ✅ Login bem-sucedido!")
+                print("   User ID: \(session.user.id)")
+                print("   Email: \(session.user.email ?? "N/A")")
+                print("   Email confirmed: \(session.user.emailConfirmedAt != nil)")
+            } catch {
+                print("   ❌ Erro no login: \(error)")
+                
+                // Log detalhado do erro
+                if let authError = error as? AuthError {
+                    print("   AuthError message: \(authError.message)")
+                }
+                if let httpError = error as? HTTPError {
+                    print("   HTTPError response: \(httpError.response)")
+                }
+            }
+            
+            // Teste 4: Verificar se profile existe
+            print("🧪 Teste 4 - Verificando profile:")
+            do {
+                let profiles = try await supabase
+                    .from("profiles")
+                    .select("id, email, name")
+                    .eq("email", value: email)
+                    .execute()
+                print("   ✅ Profile encontrado: \(profiles)")
+            } catch {
+                print("   ❌ Erro ao buscar profile: \(error)")
+            }
         }
     )
     
@@ -224,7 +343,8 @@ extension AuthClient: DependencyKey {
         signIn: unimplemented("AuthClient.signIn"),
         signUp: unimplemented("AuthClient.signUp"),
         signOut: { },
-        getCurrentSession: { nil }
+        getCurrentSession: { nil },
+        testCredentials: unimplemented("AuthClient.testCredentials")
     )
 }
 

@@ -27,6 +27,7 @@ public struct TicketsListFeature {
         case filterChanged(TicketsListFilter)
         case filterByEvent(String?) // Nova action para filtrar por evento específico
         case refreshRequested
+        case addNewTicket(Ticket) // Nova action para adicionar ticket criado
     }
     
     @Dependency(\.ticketsClient) var ticketsClient
@@ -97,6 +98,13 @@ public struct TicketsListFeature {
                 return .run { send in
                     await send(.loadTickets)
                 }
+                
+            case let .addNewTicket(ticket):
+                // Adiciona o novo ticket no início da lista
+                state.tickets.insert(ticket, at: 0)
+                state.filteredTickets = filterTickets(state.tickets, with: state.selectedFilter)
+                print("✅ Novo ticket adicionado à lista: \(ticket.name)")
+                return .none
             }
         }
     }
