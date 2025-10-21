@@ -19,7 +19,8 @@ let package = Package(
         .library(name: "SocialApp", targets: ["SocialApp"])
     ],
     dependencies: [
-        .package(url: "https://github.com/pointfreeco/swift-composable-architecture", exact: "1.22.3")
+        .package(url: "https://github.com/pointfreeco/swift-composable-architecture", exact: "1.22.3"),
+        .package(url: "https://github.com/supabase/supabase-swift", from: "2.0.0")
     ],
     targets: [
         .target(

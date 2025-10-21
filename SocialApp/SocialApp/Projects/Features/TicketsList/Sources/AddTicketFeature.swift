@@ -20,23 +20,14 @@ public struct AddTicketFeature {
         public var publishSuccess: Bool = false
         
         public var isFormValid: Bool {
-            let isValid = !ticketName.isEmpty && 
-            !price.isEmpty && 
-            AddTicketFeature.parsePrice(price) != nil &&
-            selectedEventId != nil
-            
-            print("🔍 Validação do formulário:")
-            print("   Nome: '\(ticketName)' - \(!ticketName.isEmpty ? "✅" : "❌")")
-            print("   Preço: '\(price)' - \(AddTicketFeature.parsePrice(price) != nil ? "✅" : "❌")")
-            print("   Event ID: \(selectedEventId?.uuidString ?? "nil") - \(selectedEventId != nil ? "✅" : "❌")")
-            print("   Resultado: \(isValid ? "✅ VÁLIDO" : "❌ INVÁLIDO")")
-            
-            return isValid
+            return !ticketName.isEmpty && 
+                   !price.isEmpty && 
+                   AddTicketFeature.parsePrice(price) != nil &&
+                   selectedEventId != nil
         }
         
         public init(selectedEventId: UUID? = nil) {
             self.selectedEventId = selectedEventId
-            print("🎫 AddTicketFeature.State inicializado com selectedEventId: \(selectedEventId?.uuidString ?? "nil")")
         }
     }
     
@@ -120,7 +111,6 @@ public struct AddTicketFeature {
             case let .eventsLoaded(events):
                 state.isLoadingEvents = false
                 state.availableEvents = events
-                print("✅ Carregados \(events.count) eventos para seleção")
                 return .none
                 
             case let .eventsLoadFailed(errorMessage):
@@ -129,183 +119,69 @@ public struct AddTicketFeature {
                 return .none
                 
             case .publishTicket:
-                print("📋 Dados do formulário:")
-                print("   Nome: \(state.ticketName)")
-                print("   Tipo: \(state.ticketType.displayName)")
-                print("   Preço: \(state.price)")
-                print("   Descrição: \(state.description)")
-                print("   Event ID: \(state.selectedEventId?.uuidString ?? "nil")")
-                
-                // Validação detalhada
+                // Validação
                 guard state.isFormValid else {
                     state.errorMessage = "Por favor, preencha todos os campos obrigatórios"
-                    print("❌ Validação falhou!")
                     return .none
                 }
                 
                 guard let eventId = state.selectedEventId else {
                     state.errorMessage = "Selecione um evento"
-                    print("❌ Event ID não encontrado!")
                     return .none
                 }
                 
                 guard let priceValue = AddTicketFeature.parsePrice(state.price) else {
                     state.errorMessage = "Preço inválido. Use formato: 120,00 ou 120.00"
-                    print("❌ Preço inválido: '\(state.price)'")
                     return .none
                 }
                 
-                print("✅ Validação passou! Preço parseado: \(priceValue)")
+                // Verificar autenticação
+                guard let _ = UserDefaults.standard.string(forKey: "currentUserId"),
+                      let _ = UserDefaults.standard.string(forKey: "authToken") else {
+                    state.errorMessage = "Usuário não está logado. Faça login novamente."
+                    return .none
+                }
                 
                 state.isPublishing = true
                 state.errorMessage = nil
                 
                 return .run { [state] send in
+                    let createRequest = CreateTicketRequest(
+                        eventId: eventId.uuidString,
+                        name: state.ticketName,
+                        price: priceValue,
+                        ticketType: state.ticketType,
+                        validUntil: state.validUntil
+                    )
+                    
                     do {
-                        print("📝 Publicando novo ticket...")
-                        
-                        // Verificar se usuário está logado
-                        print("🔍 Verificando autenticação...")
-                        let currentUserId = UserDefaults.standard.string(forKey: "currentUserId")
-                        let authToken = UserDefaults.standard.string(forKey: "authToken")
-                        
-                        print("   User ID: \(currentUserId ?? "nil")")
-                        print("   Auth Token: \(authToken?.prefix(20) ?? "nil")...")
-                        
-                        guard let userId = currentUserId, !userId.isEmpty else {
-                            print("❌ Usuário não está logado!")
-                            let authError = APIError(message: "Usuário não está logado. Faça login novamente.", code: 401)
-                            await send(.publishTicketResponse(.failure(authError)))
-                            return
-                        }
-                        
-                        guard let token = authToken, !token.isEmpty else {
-                            print("❌ Token de autenticação não encontrado!")
-                            let authError = APIError(message: "Token de autenticação não encontrado. Faça login novamente.", code: 401)
-                            await send(.publishTicketResponse(.failure(authError)))
-                            return
-                        }
-                        
-                        print("✅ Usuário autenticado: \(userId)")
-                        
-                        // Buscar usuário atual para pegar o sellerId
-                        print("👤 Buscando usuário atual...")
-                        
-                        // Usar dados locais primeiro (mais confiável)
-                        var currentUser: User
-                        if let userData = UserDefaults.standard.data(forKey: "currentUser"),
-                           let localUser = try? JSONDecoder().decode(User.self, from: userData) {
-                            print("✅ Usuário encontrado localmente: \(localUser.name) (ID: \(localUser.id))")
-                            currentUser = localUser
-                        } else {
-                            // Se não encontrar localmente, criar usuário temporário com ID do UserDefaults
-                            print("⚠️ Usuário não encontrado localmente, criando usuário temporário...")
-                            guard let userId = UserDefaults.standard.string(forKey: "currentUserId") else {
-                                print("❌ ID do usuário não encontrado!")
-                                let authError = APIError(message: "ID do usuário não encontrado. Faça login novamente.", code: 401)
-                                await send(.publishTicketResponse(.failure(authError)))
-                                return
-                            }
-                            
-                            // Criar usuário temporário com dados mínimos
-                            currentUser = User(
-                                name: "Usuário",
-                                title: nil,
-                                profileImageURL: nil,
-                                email: "user@example.com"
-                            )
-                            currentUser.id = userId
-                            print("✅ Usuário temporário criado: \(currentUser.name) (ID: \(currentUser.id))")
-                        }
-                        
-                        // Criar request para API
-                        print("🎫 Criando request para API...")
-                        let createRequest = CreateTicketRequest(
-                            eventId: eventId.uuidString,
-                            name: state.ticketName,
-                            price: priceValue,
-                            ticketType: state.ticketType,
-                            validUntil: state.validUntil
+                        let createdTicket = try await ticketsClient.createTicket(createRequest)
+                        await send(.publishTicketResponse(.success(createdTicket)))
+                    } catch {
+                        let apiError = APIError(
+                            message: error.localizedDescription,
+                            code: (error as? NetworkError)?.errorDescription?.hash ?? 500
                         )
-                        
-                        print("🎫 Request criado:")
-                        print("   Nome: \(createRequest.name)")
-                        print("   Preço: \(createRequest.price)")
-                        print("   Tipo: \(createRequest.ticketType.displayName)")
-                        print("   Event ID: \(createRequest.eventId)")
-                        print("   Válido até: \(createRequest.validUntil)")
-                        
-                        // Chamar API para criar ticket
-                        print("🌐 Enviando para API...")
-                        do {
-                            let createdTicket = try await ticketsClient.createTicket(createRequest)
-                            print("✅ Ticket publicado com sucesso!")
-                            print("   ID retornado: \(createdTicket.id)")
-                            print("   Nome: \(createdTicket.name)")
-                            await send(.publishTicketResponse(.success(createdTicket)))
-                        } catch {
-                            print("⚠️ API falhou, mas ticket foi criado localmente")
-                            print("   Erro da API: \(error)")
-                            
-                            // Mesmo com erro da API, consideramos sucesso pois o ticket foi criado
-                            let localTicket = Ticket(
-                                eventId: eventId.uuidString,
-                                sellerId: currentUser.id,
-                                name: state.ticketName,
-                                price: priceValue,
-                                ticketType: state.ticketType,
-                                validUntil: state.validUntil
-                            )
-                            print("✅ Ticket criado localmente com sucesso!")
-                            print("   ID: \(localTicket.id)")
-                            print("   Nome: \(localTicket.name)")
-                            await send(.publishTicketResponse(.success(localTicket)))
-                        }
+                        await send(.publishTicketResponse(.failure(apiError)))
                     }
                 }
                 
             case let .publishTicketResponse(.success(ticket)):
                 state.isPublishing = false
                 state.publishSuccess = true
-                state.errorMessage = nil // Limpa qualquer erro anterior
-                print("🎉 Ticket \(ticket.name) publicado com sucesso!")
+                state.errorMessage = nil
                 
                 // Limpar formulário após sucesso
                 state.ticketName = ""
                 state.price = ""
                 state.description = ""
                 state.quantity = 1
-                // Mantém o selectedEventId se foi passado como parâmetro inicial
-                if state.selectedEventId == nil {
-                    state.selectedEventId = nil
-                }
                 
                 return .none
                 
             case let .publishTicketResponse(.failure(error)):
                 state.isPublishing = false
-                
-                // Tratamento específico para erros de decodificação
-                if let networkError = error as? NetworkError, case .decodingError = networkError {
-                    // Para erros de decodificação, assumimos que o ticket foi criado com sucesso
-                    // mas a resposta da API não estava no formato esperado
-                    print("⚠️ Erro de decodificação detectado, mas ticket pode ter sido criado")
-                    state.publishSuccess = true
-                    state.errorMessage = nil
-                    
-                    // Limpar formulário
-                    state.ticketName = ""
-                    state.price = ""
-                    state.description = ""
-                    state.quantity = 1
-                    
-                    return .none
-                } else {
-                    // Para outros erros, mostrar mensagem de erro
-                    state.errorMessage = error.message
-                    print("❌ Erro ao publicar ticket: \(error.message)")
-                }
-                
+                state.errorMessage = error.message
                 return .none
                 
             case .dismissSuccess:
@@ -313,7 +189,6 @@ public struct AddTicketFeature {
                 return .none
                 
             case let .setSelectedEventId(eventId):
-                print("🎫 AddTicketFeature - setSelectedEventId: \(eventId?.uuidString ?? "nil")")
                 state.selectedEventId = eventId
                 return .none
                 

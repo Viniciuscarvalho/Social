@@ -94,27 +94,6 @@ struct SignInView: View {
                             .foregroundColor(.black)
                     }
                     .frame(maxWidth: .infinity)
-                    
-                    // Botão de teste temporário para debug
-                    Button(action: {
-                        Task {
-                            do {
-                                let authClient = AuthClient.liveValue
-                                try await authClient.testCredentials(store.email, store.password)
-                            } catch {
-                                print("❌ Erro no teste de credenciais: \(error)")
-                            }
-                        }
-                    }) {
-                        Text("🧪 Testar Credenciais (Debug)")
-                            .font(.system(size: 12))
-                            .foregroundColor(.red)
-                            .frame(maxWidth: .infinity)
-                            .frame(height: 30)
-                            .background(Color.red.opacity(0.1))
-                            .cornerRadius(15)
-                    }
-                    .padding(.top, 8)
                 }
                 .padding(30)
                 .background(Color.white)
