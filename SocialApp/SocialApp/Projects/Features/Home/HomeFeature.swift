@@ -26,39 +26,6 @@ public struct HomeFeature {
         case dismissSearch
         case refreshHome
         case showSearchSheetChanged(Bool)
-        
-        // Implementação manual de Equatable para cases com parâmetros
-        public static func == (lhs: Action, rhs: Action) -> Bool {
-            switch (lhs, rhs) {
-            case (.onAppear, .onAppear),
-                 (.loadHomeContent, .loadHomeContent),
-                 (.searchButtonTapped, .searchButtonTapped),
-                 (.dismissSearch, .dismissSearch),
-                 (.refreshHome, .refreshHome):
-                return true
-                
-            case let (.homeContentLoaded(content1), .homeContentLoaded(content2)):
-                return content1 == content2
-                
-            case let (.eventSectionSelected(section1), .eventSectionSelected(section2)):
-                return section1 == section2
-                
-            case let (.eventSelected(id1), .eventSelected(id2)):
-                return id1 == id2
-                
-            case let (.ticketSelected(id1), .ticketSelected(id2)):
-                return id1 == id2
-                
-            case let (.searchTextChanged(text1), .searchTextChanged(text2)):
-                return text1 == text2
-                
-            case let (.showSearchSheetChanged(bool1), .showSearchSheetChanged(bool2)):
-                return bool1 == bool2
-                
-            default:
-                return false
-            }
-        }
     }
     
     public init() {}

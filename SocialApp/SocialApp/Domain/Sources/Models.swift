@@ -584,6 +584,125 @@ public struct CreateTicketRequest: Codable {
         self.ticketType = ticketType
         self.validUntil = validUntil
     }
+    
+    enum CodingKeys: String, CodingKey {
+        case eventId = "event_id"
+        case name
+        case price
+        case originalPrice = "original_price"
+        case ticketType = "ticket_type"
+        case validUntil = "valid_until"
+    }
+}
+
+public struct CreateTicketResponse: Codable {
+    public let id: String
+    public let eventId: String?
+    public let event_id: String? // Para compatibilidade com snake_case
+    public let sellerId: String?
+    public let seller_id: String? // Para compatibilidade com snake_case
+    public let name: String
+    public let price: Double
+    public let originalPrice: Double?
+    public let original_price: Double? // Para compatibilidade com snake_case
+    public let ticketType: String?
+    public let ticket_type: String? // Para compatibilidade com snake_case
+    public let status: String?
+    public let validUntil: String?
+    public let valid_until: String? // Para compatibilidade com snake_case
+    public let createdAt: String?
+    public let created_at: String? // Para compatibilidade com snake_case
+    public let isFavorited: Bool?
+    public let is_favorited: Bool? // Para compatibilidade com snake_case
+    public let message: String? // Mensagem de sucesso da API
+    public let success: Bool? // Status de sucesso
+    
+    // Custom init para decodificação flexível
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        
+        id = try container.decode(String.self, forKey: .id)
+        eventId = try? container.decode(String.self, forKey: .eventId)
+        event_id = try? container.decode(String.self, forKey: .event_id)
+        sellerId = try? container.decode(String.self, forKey: .sellerId)
+        seller_id = try? container.decode(String.self, forKey: .seller_id)
+        name = try container.decode(String.self, forKey: .name)
+        price = try container.decode(Double.self, forKey: .price)
+        originalPrice = try? container.decode(Double.self, forKey: .originalPrice)
+        original_price = try? container.decode(Double.self, forKey: .original_price)
+        ticketType = try? container.decode(String.self, forKey: .ticketType)
+        ticket_type = try? container.decode(String.self, forKey: .ticket_type)
+        status = try? container.decode(String.self, forKey: .status)
+        validUntil = try? container.decode(String.self, forKey: .validUntil)
+        valid_until = try? container.decode(String.self, forKey: .valid_until)
+        createdAt = try? container.decode(String.self, forKey: .createdAt)
+        created_at = try? container.decode(String.self, forKey: .created_at)
+        isFavorited = try? container.decode(Bool.self, forKey: .isFavorited)
+        is_favorited = try? container.decode(Bool.self, forKey: .is_favorited)
+        message = try? container.decode(String.self, forKey: .message)
+        success = try? container.decode(Bool.self, forKey: .success)
+    }
+    
+    enum CodingKeys: String, CodingKey {
+        case id, eventId, event_id, sellerId, seller_id, name, price
+        case originalPrice, original_price, ticketType, ticket_type, status
+        case validUntil, valid_until, createdAt, created_at
+        case isFavorited, is_favorited, message, success
+    }
+    
+    // Converte para Ticket
+    public func toTicket() -> Ticket {
+        var ticket = Ticket(
+            eventId: eventId ?? event_id ?? "",
+            sellerId: sellerId ?? seller_id ?? "",
+            name: name,
+            price: price,
+            ticketType: TicketType(rawValue: ticketType ?? ticket_type ?? "general") ?? .general,
+            validUntil: Date() // Será parseado abaixo
+        )
+        
+        ticket.id = id
+        ticket.originalPrice = originalPrice ?? original_price
+        ticket.status = TicketStatus(rawValue: status ?? "available") ?? .available
+        ticket.isFavorited = isFavorited ?? is_favorited ?? false
+        
+        // Parse das datas
+        let dateFormatter = DateFormatter()
+        dateFormatter.locale = Locale(identifier: "en_US_POSIX")
+        
+        let dateFormats = [
+            "yyyy-MM-dd'T'HH:mm:ss.SSSZ",
+            "yyyy-MM-dd'T'HH:mm:ssZ",
+            "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
+            "yyyy-MM-dd'T'HH:mm:ss'Z'",
+            "yyyy-MM-dd HH:mm:ss",
+            "yyyy-MM-dd"
+        ]
+        
+        let validUntilString = validUntil ?? valid_until ?? ""
+        if !validUntilString.isEmpty {
+            for format in dateFormats {
+                dateFormatter.dateFormat = format
+                if let date = dateFormatter.date(from: validUntilString) {
+                    ticket.validUntil = date
+                    break
+                }
+            }
+        }
+        
+        let createdAtString = createdAt ?? created_at ?? ""
+        if !createdAtString.isEmpty {
+            for format in dateFormats {
+                dateFormatter.dateFormat = format
+                if let date = dateFormatter.date(from: createdAtString) {
+                    ticket.createdAt = date
+                    break
+                }
+            }
+        }
+        
+        return ticket
+    }
 }
 
 // MARK: - API Wrapper Response Models

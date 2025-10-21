@@ -45,41 +45,6 @@ public struct AuthFeature {
         case clearError
         case signInForm(SignInForm.Action)
         case signUpForm(SignUpForm.Action)
-        
-        // Implementação manual de Equatable para cases com múltiplos parâmetros
-        public static func == (lhs: Action, rhs: Action) -> Bool {
-            switch (lhs, rhs) {
-            case (.onAppear, .onAppear),
-                 (.signOut, .signOut),
-                 (.refreshUserProfile, .refreshUserProfile),
-                 (.clearError, .clearError):
-                return true
-                
-            case let (.updateCurrentUser(user1), .updateCurrentUser(user2)):
-                return user1 == user2
-                
-            case let (.signIn(email1, password1), .signIn(email2, password2)):
-                return email1 == email2 && password1 == password2
-                
-            case let (.signUp(name1, email1, password1), .signUp(name2, email2, password2)):
-                return name1 == name2 && email1 == email2 && password1 == password2
-                
-            case let (.authResponse(result1), .authResponse(result2)):
-                return result1 == result2
-                
-            case let (.userProfileResponse(result1), .userProfileResponse(result2)):
-                return result1 == result2
-                
-            case let (.signInForm(action1), .signInForm(action2)):
-                return action1 == action2
-                
-            case let (.signUpForm(action1), .signUpForm(action2)):
-                return action1 == action2
-                
-            default:
-                return false
-            }
-        }
     }
     
     @Dependency(\.authClient) var authClient
@@ -114,7 +79,7 @@ public struct AuthFeature {
                         await send(.authResponse(.failure(error)))
                     } catch {
                         print("❌ Erro no login (Desconhecido): \(error)")
-                        await send(.authResponse(.failure(.unknown(error))))
+                        await send(.authResponse(.failure(.unknown(error.localizedDescription))))
                     }
                 }
                 
@@ -132,7 +97,7 @@ public struct AuthFeature {
                         await send(.authResponse(.failure(error)))
                     } catch {
                         print("❌ Erro no cadastro (Desconhecido): \(error)")
-                        await send(.authResponse(.failure(.unknown(error))))
+                        await send(.authResponse(.failure(.unknown(error.localizedDescription))))
                     }
                 }
                 
@@ -165,7 +130,7 @@ public struct AuthFeature {
                     } catch let error as NetworkError {
                         await send(.userProfileResponse(.failure(error)))
                     } catch {
-                        await send(.userProfileResponse(.failure(.unknown(error))))
+                        await send(.userProfileResponse(.failure(.unknown(error.localizedDescription))))
                     }
                 }
                 
@@ -246,30 +211,6 @@ public struct SignInForm {
         case signInTapped(email: String, password: String)
         case alertDismissed
         case showAlert(String)
-        
-        // Implementação manual de Equatable
-        public static func == (lhs: Action, rhs: Action) -> Bool {
-            switch (lhs, rhs) {
-            case let (.emailChanged(email1), .emailChanged(email2)):
-                return email1 == email2
-                
-            case let (.passwordChanged(password1), .passwordChanged(password2)):
-                return password1 == password2
-                
-            case (.rememberMeToggled, .rememberMeToggled),
-                 (.alertDismissed, .alertDismissed):
-                return true
-                
-            case let (.signInTapped(email1, password1), .signInTapped(email2, password2)):
-                return email1 == email2 && password1 == password2
-                
-            case let (.showAlert(message1), .showAlert(message2)):
-                return message1 == message2
-                
-            default:
-                return false
-            }
-        }
     }
     
     public var body: some ReducerOf<Self> {
@@ -340,35 +281,6 @@ public struct SignUpForm {
         case signUpTapped(name: String, email: String, password: String)
         case alertDismissed
         case showAlert(String)
-        
-        // Implementação manual de Equatable
-        public static func == (lhs: Action, rhs: Action) -> Bool {
-            switch (lhs, rhs) {
-            case let (.nameChanged(name1), .nameChanged(name2)):
-                return name1 == name2
-                
-            case let (.emailChanged(email1), .emailChanged(email2)):
-                return email1 == email2
-                
-            case let (.passwordChanged(password1), .passwordChanged(password2)):
-                return password1 == password2
-                
-            case let (.confirmPasswordChanged(password1), .confirmPasswordChanged(password2)):
-                return password1 == password2
-                
-            case (.alertDismissed, .alertDismissed):
-                return true
-                
-            case let (.signUpTapped(name1, email1, password1), .signUpTapped(name2, email2, password2)):
-                return name1 == name2 && email1 == email2 && password1 == password2
-                
-            case let (.showAlert(message1), .showAlert(message2)):
-                return message1 == message2
-                
-            default:
-                return false
-            }
-        }
     }
     
     public var body: some ReducerOf<Self> {

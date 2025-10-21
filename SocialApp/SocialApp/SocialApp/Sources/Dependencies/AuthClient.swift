@@ -108,7 +108,7 @@ extension AuthClient: DependencyKey {
                 } else if let httpError = error as? HTTPError {
                     throw NetworkError.httpError(400, String(describing: httpError.response))
                 } else {
-                    throw NetworkError.unknown(error)
+                    throw NetworkError.unknown(error.localizedDescription)
                 }
             }
         },
@@ -222,7 +222,7 @@ extension AuthClient: DependencyKey {
                 } else if let httpError = error as? HTTPError {
                     throw NetworkError.httpError(400, String(describing: httpError.response))
                 } else {
-                    throw NetworkError.unknown(error)
+                    throw NetworkError.unknown(error.localizedDescription)
                 }
             }
         },

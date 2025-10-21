@@ -72,7 +72,7 @@ public struct TicketDetailFeature {
                         await send(.ticketDetailResponse(.success(ticketDetail)))
                     } catch {
                         print("❌ Erro ao carregar detalhes do ticket: \(error.localizedDescription)")
-                        let networkError = error as? NetworkError ?? NetworkError.unknown(error)
+                        let networkError = error as? NetworkError ?? NetworkError.unknown(error.localizedDescription)
                         await send(.ticketDetailResponse(.failure(networkError)))
                     }
                 }
@@ -99,7 +99,7 @@ public struct TicketDetailFeature {
                         await send(.purchaseResponse(.success(ticketDetail)))
                     } catch {
                         print("❌ Erro ao comprar ticket: \(error.localizedDescription)")
-                        await send(.purchaseResponse(.failure(NetworkError.unknown(error))))
+                        await send(.purchaseResponse(.failure(NetworkError.unknown(error.localizedDescription))))
                     }
                 }
                 

@@ -5,7 +5,7 @@ let project = Project(
     packages: [
         .remote(
             url: "https://github.com/pointfreeco/swift-composable-architecture",
-            requirement: .upToNextMajor(from: "1.0.0")
+            requirement: .exact("1.22.3")
         ),
         .remote(
             url: "https://github.com/supabase/supabase-swift",

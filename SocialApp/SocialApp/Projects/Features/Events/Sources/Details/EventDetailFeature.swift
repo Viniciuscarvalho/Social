@@ -66,7 +66,7 @@ public struct EventDetailFeature {
                         await send(.eventResponse(.success(event)))
                     } catch {
                         print("❌ Erro ao carregar detalhes do evento: \(error.localizedDescription)")
-                        let networkError = error as? NetworkError ?? NetworkError.unknown(error)
+                        let networkError = error as? NetworkError ?? NetworkError.unknown(error.localizedDescription)
                         await send(.eventResponse(.failure(networkError)))
                     }
                 }

@@ -18,7 +18,7 @@ public enum NetworkError: Error, LocalizedError, Equatable {
     case unauthorized
     case forbidden
     case notFound
-    case unknown(Error)
+    case unknown(String)
     
     // Casos específicos de autenticação
     case invalidCredentials(String)
@@ -28,40 +28,6 @@ public enum NetworkError: Error, LocalizedError, Equatable {
     case emailAlreadyExists(String)
     case authError(String)
     case httpError(Int, String)
-    
-    // Implementação manual de Equatable para case com Error
-    public static func == (lhs: NetworkError, rhs: NetworkError) -> Bool {
-        switch (lhs, rhs) {
-        case (.invalidURL, .invalidURL),
-             (.noData, .noData),
-             (.decodingError, .decodingError),
-             (.networkUnavailable, .networkUnavailable),
-             (.unauthorized, .unauthorized),
-             (.forbidden, .forbidden),
-             (.notFound, .notFound):
-            return true
-            
-        case let (.serverError(code1), .serverError(code2)):
-            return code1 == code2
-            
-        case let (.unknown(error1), .unknown(error2)):
-            return error1.localizedDescription == error2.localizedDescription
-            
-        case let (.invalidCredentials(msg1), .invalidCredentials(msg2)),
-             let (.emailNotConfirmed(msg1), .emailNotConfirmed(msg2)),
-             let (.userNotFound(msg1), .userNotFound(msg2)),
-             let (.weakPassword(msg1), .weakPassword(msg2)),
-             let (.emailAlreadyExists(msg1), .emailAlreadyExists(msg2)),
-             let (.authError(msg1), .authError(msg2)):
-            return msg1 == msg2
-            
-        case let (.httpError(code1, msg1), .httpError(code2, msg2)):
-            return code1 == code2 && msg1 == msg2
-            
-        default:
-            return false
-        }
-    }
     
     public var errorDescription: String? {
         switch self {
@@ -81,8 +47,8 @@ public enum NetworkError: Error, LocalizedError, Equatable {
             return "Acesso negado"
         case .notFound:
             return "Recurso não encontrado"
-        case .unknown(let error):
-            return "Erro desconhecido: \(error.localizedDescription)"
+        case .unknown(let errorMessage):
+            return errorMessage
             
         // Casos específicos de autenticação
         case .invalidCredentials(let message):
@@ -185,7 +151,7 @@ final class NetworkService {
                 }
             } catch {
                 print("❌ Failed to encode request body: \(error)")
-                throw NetworkError.unknown(error)
+                throw NetworkError.unknown(error.localizedDescription)
             }
         } else {
             print("📤 Request for \(endpoint):")
@@ -198,7 +164,7 @@ final class NetworkService {
             let (data, response) = try await session.data(for: request)
             
             guard let httpResponse = response as? HTTPURLResponse else {
-                throw NetworkError.unknown(NSError(domain: "NetworkError", code: 0, userInfo: [NSLocalizedDescriptionKey: "Invalid response"]))
+                throw NetworkError.unknown("Invalid response")
             }
             
             // Handle HTTP status codes
@@ -268,7 +234,7 @@ final class NetworkService {
             if (error as NSError).code == NSURLErrorNotConnectedToInternet {
                 throw NetworkError.networkUnavailable
             } else {
-                throw NetworkError.unknown(error)
+                throw NetworkError.unknown(error.localizedDescription)
             }
         }
     }
@@ -323,7 +289,7 @@ final class NetworkService {
                 }
             } catch {
                 print("❌ Failed to encode request body: \(error)")
-                throw NetworkError.unknown(error)
+                throw NetworkError.unknown(error.localizedDescription)
             }
         } else {
             print("📤 Request for \(endpoint):")
@@ -336,7 +302,7 @@ final class NetworkService {
             let (data, response) = try await session.data(for: request)
             
             guard let httpResponse = response as? HTTPURLResponse else {
-                throw NetworkError.unknown(NSError(domain: "NetworkError", code: 0, userInfo: [NSLocalizedDescriptionKey: "Invalid response"]))
+                throw NetworkError.unknown("Invalid response")
             }
             
             // Handle HTTP status codes
@@ -368,13 +334,39 @@ final class NetworkService {
                 print("📄 Raw response for \(endpoint): \(String(jsonString.prefix(300)))...")
             }
             
-            // Primeiro, tenta decodificar como objeto direto
             do {
                 let result = try decoder.decode(T.self, from: data)
                 print("✅ Successfully decoded as direct object")
                 return result
             } catch {
-                print("⚠️ Failed to decode as direct object, trying wrapper object...")
+                print("⚠️ Failed to decode as direct object: \(error)")
+                
+                // Log detalhado para debugging
+                if let decodingError = error as? DecodingError {
+                    print("🔍 Detailed direct decoding error:")
+                    switch decodingError {
+                    case .typeMismatch(let type, let context):
+                        print("   Type mismatch: expected \(type)")
+                        print("   Context: \(context.debugDescription)")
+                        print("   Path: \(context.codingPath.map { $0.stringValue }.joined(separator: "."))")
+                    case .valueNotFound(let type, let context):
+                        print("   Value not found: \(type)")
+                        print("   Context: \(context.debugDescription)")
+                        print("   Path: \(context.codingPath.map { $0.stringValue }.joined(separator: "."))")
+                    case .keyNotFound(let key, let context):
+                        print("   Key not found: \(key.stringValue)")
+                        print("   Context: \(context.debugDescription)")
+                        print("   Path: \(context.codingPath.map { $0.stringValue }.joined(separator: "."))")
+                    case .dataCorrupted(let context):
+                        print("   Data corrupted")
+                        print("   Context: \(context.debugDescription)")
+                        print("   Path: \(context.codingPath.map { $0.stringValue }.joined(separator: "."))")
+                    @unknown default:
+                        print("   Unknown decoding error")
+                    }
+                }
+                
+                print("⚠️ Trying to decode as wrapper object...")
                 
                 // Se falhar, tenta decodificar como objeto wrapper
                 do {
@@ -389,11 +381,17 @@ final class NetworkService {
                     }
                 } catch {
                     print("❌ Failed to decode both as direct object and wrapper object")
-                    print("❌ Direct decode error: \(error)")
+                    print("❌ Wrapper decode error: \(error)")
                     
                     if let jsonString = String(data: data, encoding: .utf8) {
-                        print("📄 Full JSON response:")
+                        print("📄 Full JSON response for debugging:")
                         print(jsonString)
+                        
+                        // Para endpoints de criação de tickets, log adicional
+                        if endpoint.contains("/tickets") && method == .POST {
+                            print("🎫 This was a CREATE TICKET request that failed decoding")
+                            print("🎫 Consider checking if API response matches expected Ticket or CreateTicketResponse format")
+                        }
                     }
                     
                     throw NetworkError.decodingError
@@ -406,7 +404,7 @@ final class NetworkService {
             if (error as NSError).code == NSURLErrorNotConnectedToInternet {
                 throw NetworkError.networkUnavailable
             } else {
-                throw NetworkError.unknown(error)
+                throw NetworkError.unknown(error.localizedDescription)
             }
         }
     }
@@ -460,7 +458,7 @@ final class NetworkService {
                 }
             } catch {
                 print("❌ Failed to encode request body: \(error)")
-                throw NetworkError.unknown(error)
+                throw NetworkError.unknown(error.localizedDescription)
             }
         } else {
             print("📤 Request for \(endpoint):")
@@ -473,7 +471,7 @@ final class NetworkService {
             let (data, response) = try await session.data(for: request)
             
             guard let httpResponse = response as? HTTPURLResponse else {
-                throw NetworkError.unknown(NSError(domain: "NetworkError", code: 0, userInfo: [NSLocalizedDescriptionKey: "Invalid response"]))
+                throw NetworkError.unknown("Invalid response")
             }
             
             // Handle HTTP status codes
@@ -562,7 +560,7 @@ final class NetworkService {
             if (error as NSError).code == NSURLErrorNotConnectedToInternet {
                 throw NetworkError.networkUnavailable
             } else {
-                throw NetworkError.unknown(error)
+                throw NetworkError.unknown(error.localizedDescription)
             }
         }
     }

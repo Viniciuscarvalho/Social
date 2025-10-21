@@ -55,7 +55,7 @@ public struct TicketsListFeature {
                         await send(.ticketsResponse(.success(tickets)))
                     } catch {
                         print("❌ Erro ao carregar tickets: \(error.localizedDescription)")
-                        await send(.ticketsResponse(.failure(NetworkError.unknown(error))))
+                        await send(.ticketsResponse(.failure(NetworkError.unknown(error.localizedDescription))))
                     }
                 }
                 
@@ -79,7 +79,7 @@ public struct TicketsListFeature {
                         try await ticketsClient.toggleFavorite(ticketId)
                         await send(.loadTickets)
                     } catch {
-                        await send(.ticketsResponse(.failure(NetworkError.unknown(error))))
+                        await send(.ticketsResponse(.failure(NetworkError.unknown(error.localizedDescription))))
                     }
                 }
                 

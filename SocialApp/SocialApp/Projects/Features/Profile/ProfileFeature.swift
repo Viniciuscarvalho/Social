@@ -35,19 +35,19 @@ public struct ProfileFeature {
         // Lifecycle
         case onAppear
         case loadUserProfile
-        case userProfileResponse(Result<User, Error>)
+        case userProfileResponse(Result<User, NetworkError>)
         
         // Profile editing
         case editProfileTapped
         case setShowingEditProfile(Bool)
         case updateProfile(User)
-        case updateProfileResponse(Result<User, Error>)
+        case updateProfileResponse(Result<User, NetworkError>)
         
         // Image picker
         case changeProfileImageTapped
         case setShowingImagePicker(Bool)
         case profileImageSelected(Data)
-        case uploadProfileImageResponse(Result<String, Error>)
+        case uploadProfileImageResponse(Result<String, NetworkError>)
         
         // Settings
         case toggleNotifications(Bool)
@@ -102,7 +102,7 @@ public struct ProfileFeature {
                         // Se falhar ao carregar da API, não é um erro crítico
                         // O usuário já foi sincronizado no SocialAppFeature
                         print("⚠️ Não foi possível carregar usuário atual: \(error.localizedDescription)")
-                        await send(.userProfileResponse(.failure(error)))
+                        await send(.userProfileResponse(.failure(error as? NetworkError ?? NetworkError.unknown(error.localizedDescription))))
                     }
                 }
                 
@@ -138,7 +138,7 @@ public struct ProfileFeature {
                         let user = try await userClient.updateUserProfile(updatedUser)
                         await send(.updateProfileResponse(.success(user)))
                     } catch {
-                        await send(.updateProfileResponse(.failure(error)))
+                        await send(.updateProfileResponse(.failure(error as? NetworkError ?? NetworkError.unknown(error.localizedDescription))))
                     }
                 }
                 
@@ -173,7 +173,7 @@ public struct ProfileFeature {
                         let imageURL = try await userClient.uploadProfileImage(imageData)
                         await send(.uploadProfileImageResponse(.success(imageURL)))
                     } catch {
-                        await send(.uploadProfileImageResponse(.failure(error)))
+                        await send(.uploadProfileImageResponse(.failure(error as? NetworkError ?? NetworkError.unknown(error.localizedDescription))))
                     }
                 }
                 
@@ -237,55 +237,6 @@ public struct ProfileFeature {
                 state.error = nil
                 return .none
             }
-        }
-    }
-}
-
-// MARK: - Error Extension
-
-extension ProfileFeature.Action {
-    public static func == (lhs: ProfileFeature.Action, rhs: ProfileFeature.Action) -> Bool {
-        switch (lhs, rhs) {
-        case (.onAppear, .onAppear),
-             (.loadUserProfile, .loadUserProfile),
-             (.editProfileTapped, .editProfileTapped),
-             (.changeProfileImageTapped, .changeProfileImageTapped),
-             (.myTicketsTapped, .myTicketsTapped),
-             (.favoritesTapped, .favoritesTapped),
-             (.supportTapped, .supportTapped),
-             (.privacySettingsTapped, .privacySettingsTapped),
-             (.languageSettingsTapped, .languageSettingsTapped),
-             (.signOutTapped, .signOutTapped),
-             (.dismissError, .dismissError):
-            return true
-            
-        case let (.setShowingEditProfile(lhs), .setShowingEditProfile(rhs)),
-             let (.setShowingImagePicker(lhs), .setShowingImagePicker(rhs)),
-             let (.toggleNotifications(lhs), .toggleNotifications(rhs)),
-             let (.toggleEmailNotifications(lhs), .toggleEmailNotifications(rhs)),
-             let (.togglePushNotifications(lhs), .togglePushNotifications(rhs)):
-            return lhs == rhs
-            
-        case let (.updateProfile(lhs), .updateProfile(rhs)):
-            return lhs == rhs
-            
-        case let (.profileImageSelected(lhs), .profileImageSelected(rhs)):
-            return lhs == rhs
-            
-        case let (.userProfileResponse(.success(lhs)), .userProfileResponse(.success(rhs))),
-             let (.updateProfileResponse(.success(lhs)), .updateProfileResponse(.success(rhs))):
-            return lhs == rhs
-            
-        case let (.uploadProfileImageResponse(.success(lhs)), .uploadProfileImageResponse(.success(rhs))):
-            return lhs == rhs
-            
-        case (.userProfileResponse(.failure), .userProfileResponse(.failure)),
-             (.updateProfileResponse(.failure), .updateProfileResponse(.failure)),
-             (.uploadProfileImageResponse(.failure), .uploadProfileImageResponse(.failure)):
-            return true
-            
-        default:
-            return false
         }
     }
 }
