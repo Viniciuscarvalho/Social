@@ -31,6 +31,16 @@ public struct User: Codable, Identifiable, Equatable {
         self.tickets = []
         self.createdAt = Date()
     }
+    
+    enum CodingKeys: String, CodingKey {
+        case id, name, title, email, tickets
+        case profileImageURL = "profileImageUrl"
+        case followersCount = "followersCount"
+        case followingCount = "followingCount"
+        case ticketsCount = "ticketsCount"
+        case isVerified = "isVerified"
+        case createdAt = "createdAt"
+    }
 }
 
 public struct Profile: Codable, Identifiable, Equatable {
@@ -147,6 +157,16 @@ public struct Event: Codable, Identifiable, Equatable, Sendable {
         self.reviewCount = nil
         self.createdAt = Date()
         self.eventDate = eventDate
+    }
+    
+    enum CodingKeys: String, CodingKey {
+        case id, name, description, location, category, rating
+        case imageURL = "imageUrl"
+        case startPrice = "startPrice"
+        case isRecommended = "isRecommended"
+        case reviewCount = "reviewCount"
+        case createdAt = "createdAt"
+        case eventDate = "eventDate"
     }
 }
 
@@ -286,6 +306,17 @@ public struct Ticket: Codable, Identifiable, Equatable {
     public var discountPercentage: Double? {
         guard let originalPrice = originalPrice, originalPrice > price else { return nil }
         return ((originalPrice - price) / originalPrice) * 100
+    }
+    
+    enum CodingKeys: String, CodingKey {
+        case id, name, price, status
+        case eventId = "event_id"
+        case sellerId = "seller_id"
+        case originalPrice = "original_price"
+        case ticketType = "ticket_type"
+        case validUntil = "valid_until"
+        case createdAt = "created_at"
+        case isFavorited = "is_favorited"
     }
 }
 
@@ -812,11 +843,19 @@ public struct APIEventResponse: Codable {
     }
     
     enum CodingKeys: String, CodingKey {
-        case id, name, description, imageURL, image_url
-        case startPrice, start_price, location, category
-        case isRecommended, is_recommended, rating
-        case reviewCount, review_count, createdAt, created_at
-        case eventDate, event_date
+        case id, name, description, rating, location, category
+        case imageURL = "imageUrl"
+        case image_url
+        case startPrice
+        case start_price
+        case isRecommended
+        case is_recommended
+        case reviewCount
+        case review_count
+        case createdAt
+        case created_at
+        case eventDate
+        case event_date
     }
     
     // Computed properties para conversão
@@ -1104,6 +1143,11 @@ public struct UserUpdateRequest: Codable {
 
 extension APIEventResponse {
     func toEvent() -> Event {
+        print("🔄 APIEventResponse.toEvent() - Event: \(self.name)")
+        print("   API imageURL: \(self.imageURL ?? "nil")")
+        print("   API image_url: \(self.image_url ?? "nil")")
+        print("   finalImageURL: \(self.finalImageURL ?? "nil")")
+        
         var event = Event(
             name: self.name,
             description: self.description,

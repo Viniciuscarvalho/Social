@@ -30,6 +30,13 @@ public struct SocialAppView: View {
 struct MainTabView: View {
     @Bindable var store: StoreOf<SocialAppFeature>
     
+    // Verifica se estamos em uma tela de detalhes
+    private var isShowingDetail: Bool {
+        store.selectedEventId != nil || 
+        store.selectedTicketId != nil || 
+        store.selectedSellerId != nil
+    }
+    
     var body: some View {
         ZStack(alignment: .bottom) {
             AppColors.backgroundGradient
@@ -52,13 +59,18 @@ struct MainTabView: View {
             .toolbar(.hidden, for: .tabBar)
             .ignoresSafeArea(.keyboard)
             
-            CustomTabBar(
-                selectedTab: $store.selectedTab.sending(\.tabSelected),
-                onAddTicket: {
-                    store.send(.addTicketTapped)
-                }
-            )
+            // TabBar só aparece quando não estiver em tela de detalhes
+            if !isShowingDetail {
+                CustomTabBar(
+                    selectedTab: $store.selectedTab.sending(\.tabSelected),
+                    onAddTicket: {
+                        store.send(.addTicketTapped)
+                    }
+                )
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
         }
+        .animation(.easeInOut(duration: 0.2), value: isShowingDetail)
         .sheet(isPresented: $store.showingAddTicket.sending(\.setShowingAddTicket)) {
             AddTicketView(store: store.scope(state: \.addTicket, action: \.addTicket))
         }
@@ -77,7 +89,7 @@ struct MainTabView: View {
                         action: \.homeFeature
                     )
                 )
-                .padding(.bottom, 100)
+                .padding(.bottom, 120) // Aumentar para acomodar TabBar maior
             }
             .navigationDestination(item: $store.selectedEventId.sending(\.dismissEventNavigation)) { eventId in
                 ZStack {
@@ -137,7 +149,7 @@ struct MainTabView: View {
                         action: \.ticketsListFeature
                     )
                 )
-                .padding(.bottom, 100)
+                .padding(.bottom, 120) // Aumentar para acomodar TabBar maior
             }
             .navigationDestination(item: $store.selectedTicketId.sending(\.dismissTicketNavigation)) { ticketId in
                 ZStack {
@@ -171,7 +183,7 @@ struct MainTabView: View {
                         action: \.favoritesFeature
                     )
                 )
-                .padding(.bottom, 100)
+                .padding(.bottom, 120) // Aumentar para acomodar TabBar maior
             }
             .navigationDestination(item: $store.selectedEventId.sending(\.dismissEventNavigation)) { eventId in
                 ZStack {
@@ -204,7 +216,7 @@ struct MainTabView: View {
                         action: \.profileFeature
                     )
                 )
-                .padding(.bottom, 100)
+                .padding(.bottom, 120) // Aumentar para acomodar TabBar maior
             }
         }
     }
@@ -217,50 +229,63 @@ struct CustomTabBar: View {
     let onAddTicket: () -> Void
     
     var body: some View {
-        HStack(spacing: 0) {
-            // Home
-            TabBarButton(
-                icon: AppTab.home.icon,
-                isSelected: selectedTab == .home
-            ) {
-                selectedTab = .home
-            }
+        VStack(spacing: 0) {
+            Spacer()
             
-            // Tickets
-            TabBarButton(
-                icon: AppTab.tickets.icon,
-                isSelected: selectedTab == .tickets
-            ) {
-                selectedTab = .tickets
+            ZStack(alignment: .center) {
+                // Fundo com material blur e arredondamento
+                RoundedRectangle(cornerRadius: 25)
+                    .fill(.ultraThinMaterial)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 25)
+                            .stroke(AppColors.cardBackground.opacity(0.2), lineWidth: 0.5)
+                    )
+                
+                // Conteúdo da TabBar
+                HStack(spacing: 0) {
+                    // Home
+                    TabBarButton(
+                        icon: AppTab.home.icon,
+                        isSelected: selectedTab == .home
+                    ) {
+                        selectedTab = .home
+                    }
+                    
+                    // Tickets
+                    TabBarButton(
+                        icon: AppTab.tickets.icon,
+                        isSelected: selectedTab == .tickets
+                    ) {
+                        selectedTab = .tickets
+                    }
+                    
+                    // Botão + Central (maior e elevado)
+                    AddButton(action: onAddTicket)
+                    
+                    // Favorites
+                    TabBarButton(
+                        icon: AppTab.favorites.icon,
+                        isSelected: selectedTab == .favorites
+                    ) {
+                        selectedTab = .favorites
+                    }
+                    
+                    // Profile
+                    TabBarButton(
+                        icon: AppTab.profile.icon,
+                        isSelected: selectedTab == .profile
+                    ) {
+                        selectedTab = .profile
+                    }
+                }
+                .frame(height: 60)
+                .padding(.horizontal, 16)
             }
-            
-            // Botão + Central (maior e elevado)
-            AddButton(action: onAddTicket)
-                .padding(.horizontal, 20)
-            
-            // Favorites
-            TabBarButton(
-                icon: AppTab.favorites.icon,
-                isSelected: selectedTab == .favorites
-            ) {
-                selectedTab = .favorites
-            }
-            
-            // Profile
-            TabBarButton(
-                icon: AppTab.profile.icon,
-                isSelected: selectedTab == .profile
-            ) {
-                selectedTab = .profile
-            }
+            .frame(height: 80)
+            .padding(.horizontal, 16)
+            .padding(.bottom, 16)
+            .shadow(color: AppColors.cardShadow.opacity(0.2), radius: 16, x: 0, y: -4)
         }
-        .frame(height: 60)
-        .background(
-            RoundedRectangle(cornerRadius: 25)
-                .fill(AppColors.cardBackground)
-                .shadow(color: AppColors.cardShadow.opacity(0.15), radius: 20, x: 0, y: -8)
-        )
-        .padding(.bottom, 0)
     }
 }
 
@@ -299,15 +324,17 @@ struct AddButton: View {
                             endPoint: .bottomTrailing
                         )
                     )
-                    .frame(width: 50, height: 50)
-                    .shadow(color: AppColors.accentGreen.opacity(0.25), radius: 8, x: 0, y: 4)
+                    .frame(width: 56, height: 56)
+                    .shadow(color: AppColors.accentGreen.opacity(0.4), radius: 12, x: 0, y: 6)
                 
                 Image(systemName: "plus")
-                    .font(.system(size: 18, weight: .bold))
+                    .font(.system(size: 20, weight: .bold))
                     .foregroundColor(.white)
             }
+            .frame(maxWidth: .infinity)
         }
-        .offset(y: -20)
         .buttonStyle(PlainButtonStyle())
+        .offset(y: -20)
+        .zIndex(10)
     }
 }

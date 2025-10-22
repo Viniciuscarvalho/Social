@@ -15,7 +15,13 @@ public struct EventCard: View {
         Button(action: onTap) {
             VStack(alignment: .leading, spacing: 0) {
                 // Event image placeholder
-                AsyncImage(url: event.imageURL.flatMap(URL.init)) { image in
+                AsyncImage(url: event.imageURL.flatMap { urlString in
+                    print("📸 EventCard - Event: \(event.name)")
+                    print("   imageURL: \(urlString)")
+                    let url = URL(string: urlString)
+                    print("   Parsed URL: \(url?.absoluteString ?? "nil")")
+                    return url
+                }) { image in
                     image
                         .resizable()
                         .aspectRatio(contentMode: .fill)
@@ -165,7 +171,7 @@ extension View {
 struct RoundedCorner: Shape {
     var radius: CGFloat = .infinity
     var corners: UIRectCorner = .allCorners
-
+    
     func path(in rect: CGRect) -> Path {
         let path = UIBezierPath(
             roundedRect: rect,
