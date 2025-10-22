@@ -8,6 +8,7 @@ public struct AddTicketFeature {
         public var ticketName: String = ""
         public var ticketType: TicketType = .general
         public var price: String = ""
+        public var originalPrice: String = ""
         public var description: String = ""
         public var selectedEventId: UUID?
         public var quantity: Int = 1
@@ -24,10 +25,12 @@ public struct AddTicketFeature {
                    !price.isEmpty && 
                    AddTicketFeature.parsePrice(price) != nil &&
                    selectedEventId != nil
+            // sellerId removido da validação - vem automaticamente do JWT
         }
         
         public init(selectedEventId: UUID? = nil) {
             self.selectedEventId = selectedEventId
+            // sellerId removido - não é mais necessário
         }
     }
     
@@ -42,6 +45,7 @@ public struct AddTicketFeature {
         case dismissSuccess
         case setSelectedEventId(UUID?)
         case clearError
+        // Removidas as ações de fetch do usuário - não são mais necessárias
     }
     
     @Dependency(\.ticketsClient) var ticketsClient
@@ -91,7 +95,7 @@ public struct AddTicketFeature {
                 return .none
                 
             case .onAppear:
-                // Carrega eventos se não houver evento selecionado
+                // Apenas carrega eventos se necessário
                 if state.selectedEventId == nil {
                     return .send(.loadEvents)
                 }
@@ -135,9 +139,18 @@ public struct AddTicketFeature {
                     return .none
                 }
                 
-                // Verificar autenticação
-                guard let _ = UserDefaults.standard.string(forKey: "currentUserId"),
-                      let _ = UserDefaults.standard.string(forKey: "authToken") else {
+                // Validar originalPrice se fornecido
+                var originalPriceValue: Double? = nil
+                if !state.originalPrice.isEmpty {
+                    guard let parsedOriginalPrice = AddTicketFeature.parsePrice(state.originalPrice) else {
+                        state.errorMessage = "Preço original inválido. Use formato: 120,00 ou 120.00"
+                        return .none
+                    }
+                    originalPriceValue = parsedOriginalPrice
+                }
+                
+                // Verificar autenticação - token é obrigatório agora
+                guard let _ = UserDefaults.standard.string(forKey: "authToken") else {
                     state.errorMessage = "Usuário não está logado. Faça login novamente."
                     return .none
                 }
@@ -148,8 +161,10 @@ public struct AddTicketFeature {
                 return .run { [state] send in
                     let createRequest = CreateTicketRequest(
                         eventId: eventId.uuidString,
+                        // sellerId removido - será injetado automaticamente do JWT
                         name: state.ticketName,
                         price: priceValue,
+                        originalPrice: originalPriceValue,
                         ticketType: state.ticketType,
                         validUntil: state.validUntil
                     )
@@ -174,6 +189,7 @@ public struct AddTicketFeature {
                 // Limpar formulário após sucesso
                 state.ticketName = ""
                 state.price = ""
+                state.originalPrice = ""
                 state.description = ""
                 state.quantity = 1
                 

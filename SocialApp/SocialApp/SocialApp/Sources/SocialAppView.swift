@@ -183,7 +183,7 @@ struct MainTabView: View {
                         action: \.favoritesFeature
                     )
                 )
-                .padding(.bottom, 120) // Aumentar para acomodar TabBar maior
+                .padding(.bottom, 100)
             }
             .navigationDestination(item: $store.selectedEventId.sending(\.dismissEventNavigation)) { eventId in
                 ZStack {

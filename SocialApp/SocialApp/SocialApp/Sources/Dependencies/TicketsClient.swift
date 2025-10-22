@@ -90,68 +90,67 @@ extension TicketsClient: DependencyKey {
             },
             purchaseTicket: { ticketId in
                 do {
-                    print("💰 Purchasing ticket: \(ticketId)")
-                    let purchaseRequest = PurchaseTicketRequest(ticketId: ticketId.uuidString)
+                    print("💰 Comprando ticket: \(ticketId)")
+                    
+                    // Usar NetworkService com autenticação obrigatória
                     let purchasedTicket: Ticket = try await NetworkService.shared.requestSingle(
                         endpoint: "/tickets/\(ticketId.uuidString)/purchase",
                         method: .POST,
-                        body: purchaseRequest
+                        body: PurchaseTicketRequest(), // Body vazio - dados vêm do JWT e URL
+                        requiresAuth: true
                     )
-                    print("✅ Successfully purchased ticket")
+                    
+                    print("✅ Ticket comprado com sucesso: \(purchasedTicket.id)")
                     return purchasedTicket
                 } catch {
-                    print("❌ Purchase ticket failed: \(error)")
+                    print("❌ Erro ao comprar ticket: \(error)")
                     throw error
                 }
             },
             toggleFavorite: { ticketId in
                 do {
-                    print("❤️ Toggling favorite for ticket: \(ticketId)")
-                    let request = FavoriteTicketRequest(ticketId: ticketId.uuidString)
+                    print("❤️ Alterando favorito para ticket: \(ticketId)")
+                    
+                    // Usar NetworkService com autenticação obrigatória
                     let _: APISingleResponse<String> = try await NetworkService.shared.requestSingle(
                         endpoint: "/tickets/\(ticketId.uuidString)/favorite",
                         method: .POST,
-                        body: request
+                        body: FavoriteTicketRequest(), // Body vazio - dados vêm do JWT e URL
+                        requiresAuth: true
                     )
-                    print("✅ Successfully toggled favorite")
+                    
+                    print("✅ Favorito alterado com sucesso")
                 } catch {
-                    print("❌ Toggle favorite failed: \(error)")
+                    print("❌ Erro ao alterar favorito: \(error)")
                     throw error
                 }
             },
             createTicket: { request in
                 do {
-                    print("🎫 Creating ticket: \(request.name)")
+                    print("🎫 Criando ticket: \(request.name)")
+                    print("   Event ID: \(request.eventId)")
+                    print("   Price: \(request.price)")
+                    print("   Ticket Type: \(request.ticketType)")
+                    print("   Valid Until: \(request.validUntil)")
+                    print("   ℹ️ Seller ID será injetado automaticamente do JWT")
                     
-                    // Estratégia principal: usar NetworkService que já tem fallback para wrapper
-                    let apiResponse: CreateTicketResponse = try await NetworkService.shared.requestSingle(
+                    // Usar NetworkService que já inclui autenticação
+                    let createdTicket: CreateTicketResponse = try await NetworkService.shared.requestSingle(
                         endpoint: "/tickets",
                         method: .POST,
-                        body: request
+                        body: request,
+                        requiresAuth: true
                     )
                     
-                    let ticket = apiResponse.toTicket()
-                    print("✅ Ticket created successfully via API: \(ticket.id)")
-                    return ticket
+                    print("✅ Ticket criado com sucesso: \(createdTicket.id)")
+                    return createdTicket.toTicket()
                     
+                } catch let networkError as NetworkError {
+                    print("❌ Erro de rede ao criar ticket: \(networkError)")
+                    throw networkError
                 } catch {
-                    print("⚠️ API call failed: \(error.localizedDescription)")
-                    print("🔄 Creating ticket locally as fallback...")
-                    
-                    // Estratégia de fallback: criar ticket localmente
-                    let currentUserId = UserDefaults.standard.string(forKey: "currentUserId") ?? "local-user"
-                    
-                    let localTicket = Ticket(
-                        eventId: request.eventId,
-                        sellerId: currentUserId,
-                        name: request.name,
-                        price: request.price,
-                        ticketType: request.ticketType,
-                        validUntil: request.validUntil
-                    )
-                    
-                    print("✅ Ticket created locally: \(localTicket.id)")
-                    return localTicket
+                    print("❌ Erro inesperado ao criar ticket: \(error)")
+                    throw NetworkError.unknown("Erro ao criar ticket: \(error.localizedDescription)")
                 }
             }
         )
@@ -165,10 +164,10 @@ extension TicketsClient: DependencyKey {
         purchaseTicket: { _ in SharedMockData.sampleTickets[0] },
         toggleFavorite: { _ in },
         createTicket: { request in 
-            // Criar um ticket com os dados da request
+            // Criar um ticket de teste sem precisar do sellerId
             let ticket = Ticket(
                 eventId: request.eventId,
-                sellerId: "test-seller-id", // ID padrão para testes
+                sellerId: "TEST_SELLER_ID", // ID fixo para testes
                 name: request.name,
                 price: request.price,
                 ticketType: request.ticketType,
