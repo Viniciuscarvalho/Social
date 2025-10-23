@@ -718,7 +718,8 @@ public struct UpdateTicketRequest: Codable {
 public struct CreateTicketResponse: Codable {
     public let id: String
     public let eventId: String?
-    public let sellerId: String
+    public let sellerId: String?  // OPCIONAL - não é mais retornado pela API por segurança
+                                  // O sellerId é injetado automaticamente no backend via JWT
     public let name: String
     public let price: Double
     public let originalPrice: Double?
@@ -736,17 +737,21 @@ public struct CreateTicketResponse: Codable {
         
         id = (try? container.decode(String.self, forKey: .id)) ?? UUID().uuidString
         eventId = try? container.decode(String.self, forKey: .eventId)
-        sellerId = try container.decode(String.self, forKey: .sellerId)
+        
+        // sellerId é completamente opcional pois é injetado no backend via JWT
+        // Usa decodeIfPresent para não falhar se a chave não existir
+        sellerId = try? container.decodeIfPresent(String.self, forKey: .sellerId)
+                  
         name = (try? container.decode(String.self, forKey: .name)) ?? ""
         price = (try? container.decode(Double.self, forKey: .price)) ?? 0.0
-        originalPrice = try? container.decode(Double.self, forKey: .originalPrice)
-        ticketType = try? container.decode(String.self, forKey: .ticketType)
-        status = try? container.decode(String.self, forKey: .status)
-        validUntil = try? container.decode(String.self, forKey: .validUntil)
-        createdAt = try? container.decode(String.self, forKey: .createdAt)
-        isFavorited = try? container.decode(Bool.self, forKey: .isFavorited)
-        message = try? container.decode(String.self, forKey: .message)
-        success = try? container.decode(Bool.self, forKey: .success)
+        originalPrice = try? container.decodeIfPresent(Double.self, forKey: .originalPrice)
+        ticketType = try? container.decodeIfPresent(String.self, forKey: .ticketType)
+        status = try? container.decodeIfPresent(String.self, forKey: .status)
+        validUntil = try? container.decodeIfPresent(String.self, forKey: .validUntil)
+        createdAt = try? container.decodeIfPresent(String.self, forKey: .createdAt)
+        isFavorited = try? container.decodeIfPresent(Bool.self, forKey: .isFavorited)
+        message = try? container.decodeIfPresent(String.self, forKey: .message)
+        success = try? container.decodeIfPresent(Bool.self, forKey: .success)
     }
     
     enum CodingKeys: String, CodingKey {
@@ -769,7 +774,9 @@ public struct CreateTicketResponse: Codable {
     public func toTicket() -> Ticket {
         var ticket = Ticket(
             eventId: eventId ?? "",
-            sellerId: sellerId,
+            // sellerId pode não existir na resposta pois vem do JWT no backend
+            // Usar um ID padrão ou vazio quando não fornecido
+            sellerId: sellerId ?? "", // String vazia quando não fornecido pelo backend
             name: name,
             price: price,
             ticketType: TicketType(rawValue: ticketType ?? "general") ?? .general,
@@ -1044,7 +1051,9 @@ public struct APITicketResponse: Codable {
     }
     
     var finalSellerId: String {
-        return sellerId ?? seller_id ?? ""
+        // Se não vier seller_id na resposta, usa um fallback
+        // Isso é normal quando o seller é determinado pelo JWT no backend
+        return sellerId ?? seller_id ?? "UNKNOWN_SELLER"
     }
     
     var finalOriginalPrice: Double? {
