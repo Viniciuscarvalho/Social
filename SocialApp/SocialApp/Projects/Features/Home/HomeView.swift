@@ -4,9 +4,11 @@ import SwiftUI
 
 public struct HomeView: View {
     @Bindable var store: StoreOf<HomeFeature>
+    let searchStore: StoreOf<SearchFeature>?
     
-    public init(store: StoreOf<HomeFeature>) {
+    public init(store: StoreOf<HomeFeature>, searchStore: StoreOf<SearchFeature>? = nil) {
         self.store = store
+        self.searchStore = searchStore
     }
     
     public var body: some View {
@@ -26,11 +28,18 @@ public struct HomeView: View {
             store.send(.onAppear)
         }
         .sheet(isPresented: $store.showSearchSheet.sending(\.showSearchSheetChanged)) {
-            SearchView(store: Store(initialState: SearchFeature.State()) {
-                SearchFeature()
-            })
-            .onDisappear {
-                store.send(.dismissSearch)
+            if let searchStore = searchStore {
+                SearchView(store: searchStore)
+                    .onDisappear {
+                        store.send(.dismissSearch)
+                    }
+            } else {
+                SearchView(store: Store(initialState: SearchFeature.State()) {
+                    SearchFeature()
+                })
+                .onDisappear {
+                    store.send(.dismissSearch)
+                }
             }
         }
     }

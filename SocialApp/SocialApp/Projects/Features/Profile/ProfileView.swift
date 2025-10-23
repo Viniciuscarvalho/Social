@@ -62,6 +62,13 @@ public struct ProfileView: View {
         } message: {
             Text(store.error ?? "")
         }
+        .sheet(isPresented: $store.showingMyTickets.sending(\.setShowingMyTickets)) {
+            MyTicketsView(
+                store: Store(initialState: MyTicketsFeature.State()) {
+                    MyTicketsFeature()
+                }
+            )
+        }
     }
     
     @ViewBuilder
@@ -272,7 +279,7 @@ public struct ProfileView: View {
                     icon: "ticket.fill",
                     iconColor: AppColors.accentGreen,
                     title: "Meus Ingressos",
-                    subtitle: "Visualizar compras realizadas",
+                    subtitle: "Gerenciar ingressos publicados",
                     action: {
                         store.send(.myTicketsTapped)
                     }

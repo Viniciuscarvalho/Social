@@ -23,6 +23,7 @@ public struct ProfileFeature {
         public var isLoading = false
         public var showingEditProfile = false
         public var showingImagePicker = false
+        public var showingMyTickets = false
         public var notificationsEnabled = true
         public var emailNotifications = true
         public var pushNotifications = false
@@ -56,6 +57,7 @@ public struct ProfileFeature {
         
         // Navigation
         case myTicketsTapped
+        case setShowingMyTickets(Bool)
         case favoritesTapped
         case supportTapped
         case privacySettingsTapped
@@ -208,7 +210,11 @@ public struct ProfileFeature {
             
             // MARK: - Navigation
             case .myTicketsTapped:
-                // Handle navigation to tickets
+                state.showingMyTickets = true
+                return .none
+                
+            case let .setShowingMyTickets(isShowing):
+                state.showingMyTickets = isShowing
                 return .none
                 
             case .favoritesTapped:

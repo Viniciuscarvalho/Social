@@ -64,6 +64,8 @@ public struct SearchView: View {
                                 EventSearchResultCard(event: event) {
                                     if let eventId = UUID(uuidString: event.id) {
                                         store.send(.eventSelected(eventId))
+                                        // Opcional: fechar o search ao selecionar um evento
+                                        // dismiss()
                                     }
                                 }
                             }
@@ -93,54 +95,54 @@ struct EventSearchResultCard: View {
     let action: () -> Void
     
     var body: some View {
-        HStack(spacing: 12) {
-            AsyncImage(url: URL(string: event.imageURL ?? "")) { image in
-                image
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-            } placeholder: {
-                Rectangle()
-                    .fill(Color.gray.opacity(0.3))
-            }
-            .frame(width: 60, height: 60)
-            .cornerRadius(8)
-            
-            VStack(alignment: .leading, spacing: 4) {
-                Text(event.name)
-                    .font(.headline)
-                    .lineLimit(2)
+        Button(action: action) {
+            HStack(spacing: 12) {
+                AsyncImage(url: URL(string: event.imageURL ?? "")) { image in
+                    image
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                } placeholder: {
+                    Rectangle()
+                        .fill(Color.gray.opacity(0.3))
+                }
+                .frame(width: 60, height: 60)
+                .cornerRadius(8)
                 
-                Text(event.location.city)
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(event.name)
+                        .font(.headline)
+                        .lineLimit(2)
+                        .multilineTextAlignment(.leading)
+                    
+                    Text(event.location.city)
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                    
+                    if let eventDate = event.eventDate {
+                        Text(eventDate, style: .date)
+                            .font(.caption)
+                            .foregroundColor(.blue)
+                    }
+                }
                 
-                if let eventDate = event.eventDate {
-                    Text(eventDate, style: .date)
+                Spacer()
+                
+                VStack(alignment: .trailing) {
+                    Text("R$ \(event.startPrice, specifier: "%.2f")")
+                        .font(.headline)
+                        .foregroundColor(.primary)
+                    
+                    Text("a partir de")
                         .font(.caption)
-                        .foregroundColor(.blue)
+                        .foregroundColor(.secondary)
                 }
             }
-            
-            Spacer()
-            
-            VStack(alignment: .trailing) {
-                Text("R$ \(event.startPrice, specifier: "%.2f")")
-                    .font(.headline)
-                    .foregroundColor(.primary)
-                
-                Text("a partir de")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-            }
+            .padding()
+            .background(Color(.systemBackground))
+            .cornerRadius(12)
+            .shadow(color: .black.opacity(0.1), radius: 2, x: 0, y: 1)
         }
-        .padding()
-        .background(Color(.systemBackground))
-        .cornerRadius(12)
-        .shadow(color: .black.opacity(0.1), radius: 2, x: 0, y: 1)
-        .contentShape(Rectangle())
-        .onTapGesture {
-            action()
-        }
+        .buttonStyle(.plain)
     }
 }
 

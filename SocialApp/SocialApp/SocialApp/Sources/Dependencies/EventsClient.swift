@@ -43,10 +43,13 @@ extension EventsClient: DependencyKey {
                 print("❌ API search failed: \(error)")
                 print("🔄 Falling back to local search")
                 let events = try await loadEventsFromJSON()
+                let normalizedQuery = query.lowercased()
                 return events.filter { event in
-                    event.name.localizedCaseInsensitiveContains(query) ||
-                    event.description?.localizedCaseInsensitiveContains(query) == true ||
-                    event.location.name.localizedCaseInsensitiveContains(query)
+                    event.name.lowercased().contains(normalizedQuery) ||
+                    event.description?.lowercased().contains(normalizedQuery) == true ||
+                    event.location.name.lowercased().contains(normalizedQuery) ||
+                    event.location.city.lowercased().contains(normalizedQuery) ||
+                    event.category.displayName.lowercased().contains(normalizedQuery)
                 }
             }
         },

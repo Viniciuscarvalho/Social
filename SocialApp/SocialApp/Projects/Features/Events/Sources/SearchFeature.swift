@@ -16,7 +16,7 @@ public struct SearchFeature {
     public enum Action: Equatable {
         case onAppear
         case searchTextChanged(String)
-        case searchResponse(Result<[Event], APIError>)
+        case searchResponse(Result<[Event], NetworkError>)
         case eventSelected(UUID)
         case clearSearch
         case cancelSearch
@@ -38,25 +38,29 @@ public struct SearchFeature {
                 if text.isEmpty {
                     state.searchResults = []
                     state.isLoading = false
-                    return .none
+                    return .cancel(id: SearchID.search)
                 }
                 
+                // Otimização: só busca com 2+ caracteres
                 if text.count < 2 {
-                    return .none
+                    state.searchResults = []
+                    state.isLoading = false
+                    return .cancel(id: SearchID.search)
                 }
                 
                 state.isLoading = true
                 state.errorMessage = nil
                 
-                return .run { send in
-                    // Debounce the search
-                    try await Task.sleep(nanoseconds: 300_000_000)
+                return .run { [searchText = text] send in
+                    // Debounce melhorado para otimizar busca
+                    try await Task.sleep(nanoseconds: 500_000_000)
                     
                     do {
-                        let events = try await eventsClient.searchEvents(text)
+                        // Filtra eventos por nome, descrição e localização
+                        let events = try await eventsClient.searchEvents(searchText)
                         await send(.searchResponse(.success(events)))
                     } catch {
-                        await send(.searchResponse(.failure(APIError(message: error.localizedDescription, code: 500))))
+                        await send(.searchResponse(.failure(NetworkError.unknown(error.localizedDescription))))
                     }
                 }
                 .cancellable(id: SearchID.search)
@@ -69,7 +73,7 @@ public struct SearchFeature {
                 
             case let .searchResponse(.failure(error)):
                 state.isLoading = false
-                state.errorMessage = error.message
+                state.errorMessage = error.localizedDescription
                 state.searchResults = []
                 return .none
                 

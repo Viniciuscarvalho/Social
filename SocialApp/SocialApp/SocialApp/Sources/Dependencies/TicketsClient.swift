@@ -9,6 +9,8 @@ public struct TicketsClient {
     public var purchaseTicket: (UUID) async throws -> Ticket
     public var toggleFavorite: (UUID) async throws -> Void
     public var createTicket: (CreateTicketRequest) async throws -> Ticket
+    public var fetchMyTickets: () async throws -> [Ticket]
+    public var deleteTicket: (String) async throws -> Void
 }
 
 extension TicketsClient: DependencyKey {
@@ -152,6 +154,42 @@ extension TicketsClient: DependencyKey {
                     print("❌ Erro inesperado ao criar ticket: \(error)")
                     throw NetworkError.unknown("Erro ao criar ticket: \(error.localizedDescription)")
                 }
+            },
+            fetchMyTickets: {
+                do {
+                    print("📱 Fetching my tickets from API...")
+                    let apiTickets: [APITicketResponse] = try await NetworkService.shared.requestArray(
+                        endpoint: "/tickets/my",
+                        method: .GET,
+                        requiresAuth: true
+                    )
+                    print("✅ Successfully fetched \(apiTickets.count) my tickets from API")
+                    let tickets = apiTickets.map { $0.toTicket() }
+                    return tickets
+                } catch {
+                    print("❌ API call failed for fetchMyTickets: \(error)")
+                    print("🔄 Falling back to local mock data")
+                    // Para desenvolvimento, retorna alguns tickets de exemplo
+                    return SharedMockData.sampleTickets.prefix(3).map { ticket in
+                        var myTicket = ticket
+                        myTicket.sellerId = "current_user_id" // Simula os tickets do usuário atual
+                        return myTicket
+                    }
+                }
+            },
+            deleteTicket: { ticketId in
+                do {
+                    print("🗑️ Deleting ticket: \(ticketId)")
+                    let _: APISingleResponse<String> = try await NetworkService.shared.requestSingle(
+                        endpoint: "/tickets/\(ticketId)",
+                        method: .DELETE,
+                        requiresAuth: true
+                    )
+                    print("✅ Ticket deleted successfully")
+                } catch {
+                    print("❌ Error deleting ticket: \(error)")
+                    throw error
+                }
             }
         )
     }
@@ -174,7 +212,9 @@ extension TicketsClient: DependencyKey {
                 validUntil: request.validUntil
             )
             return ticket
-        }
+        },
+        fetchMyTickets: { Array(SharedMockData.sampleTickets.prefix(3)) },
+        deleteTicket: { _ in }
     )
 }
 

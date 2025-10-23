@@ -18,6 +18,7 @@ public struct SocialAppFeature {
         public var sellerProfileFeature = SellerProfileFeature.State()
         public var ticketDetailFeature = TicketDetailFeature.State()
         public var eventDetailFeature: EventDetailFeature.State?
+        public var searchFeature = SearchFeature.State()
         public var navigationPath = NavigationPath()
         
         public var selectedEventId: UUID?
@@ -63,6 +64,7 @@ public struct SocialAppFeature {
         case sellerProfileFeature(SellerProfileFeature.Action)
         case ticketDetailFeature(TicketDetailFeature.Action)
         case eventDetailFeature(EventDetailFeature.Action)
+        case searchFeature(SearchFeature.Action)
         
         // Navigation actions
         case navigateToEventDetail(UUID)
@@ -118,6 +120,10 @@ public struct SocialAppFeature {
             TicketDetailFeature()
         }
         
+        Scope(state: \.searchFeature, action: \.searchFeature) {
+            SearchFeature()
+        }
+        
         // Por último, o .ifLet para features opcionais
         .ifLet(\.eventDetailFeature, action: \.eventDetailFeature) {
             EventDetailFeature()
@@ -151,6 +157,7 @@ public struct SocialAppFeature {
             state.profileFeature = ProfileFeature.State()
             state.sellerProfileFeature = SellerProfileFeature.State()
             state.ticketDetailFeature = TicketDetailFeature.State()
+            state.searchFeature = SearchFeature.State()
             state.navigationPath = NavigationPath()
             state.selectedEventId = nil
             state.selectedTicketId = nil
@@ -429,6 +436,23 @@ public struct SocialAppFeature {
             
         case .eventDetailFeature:
             // Outras event detail actions são tratadas internamente
+            return .none
+            
+            // MARK: - Search Navigation
+        case let .searchFeature(.eventSelected(eventId)):
+            // Quando um evento é selecionado na busca
+            print("🔍 Evento selecionado na busca: \(eventId.uuidString)")
+            
+            // Fecha o search sheet primeiro
+            state.homeFeature.showSearchSheet = false
+            
+            // Cria o EventDetailFeature.State
+            state.selectedEventId = eventId
+            state.eventDetailFeature = EventDetailFeature.State(eventId: eventId, event: nil)
+            
+            return .none
+            
+        case .searchFeature:
             return .none
         }
     }

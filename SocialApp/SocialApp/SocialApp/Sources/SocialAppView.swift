@@ -1,5 +1,4 @@
 import ComposableArchitecture
-import ComposableArchitecture
 import SwiftUI
 
 public struct SocialAppView: View {
@@ -87,6 +86,10 @@ struct MainTabView: View {
                     store: store.scope(
                         state: \.homeFeature,
                         action: \.homeFeature
+                    ),
+                    searchStore: store.scope(
+                        state: \.searchFeature,
+                        action: \.searchFeature
                     )
                 )
                 .padding(.bottom, 120) // Aumentar para acomodar TabBar maior
@@ -97,11 +100,7 @@ struct MainTabView: View {
                         .ignoresSafeArea()
                     
                     if let eventDetailStore = store.scope(state: \.eventDetailFeature, action: \.eventDetailFeature) {
-                        EventDetailView(
-                            store: eventDetailStore,
-                            eventId: eventId,
-                            event: store.eventDetailFeature?.event
-                        )
+                        EventDetailView(store: eventDetailStore, eventId: eventId)
                         .toolbar(.hidden, for: .tabBar)
                     }
                 }
@@ -116,8 +115,7 @@ struct MainTabView: View {
                             state: \.ticketDetailFeature,
                             action: \.ticketDetailFeature
                         ),
-                        ticketId: ticketId,
-                        ticket: store.ticketDetailFeature.ticket
+                        ticketId: ticketId
                     )
                     .toolbar(.hidden, for: .tabBar)
                 }
@@ -161,8 +159,7 @@ struct MainTabView: View {
                             state: \.ticketDetailFeature,
                             action: \.ticketDetailFeature
                         ),
-                        ticketId: ticketId,
-                        ticket: store.ticketDetailFeature.ticket
+                        ticketId: ticketId
                     )
                     .toolbar(.hidden, for: .tabBar)
                 }
@@ -191,11 +188,7 @@ struct MainTabView: View {
                         .ignoresSafeArea()
                     
                     if let eventDetailStore = store.scope(state: \.eventDetailFeature, action: \.eventDetailFeature) {
-                        EventDetailView(
-                            store: eventDetailStore,
-                            eventId: eventId,
-                            event: store.eventDetailFeature?.event
-                        )
+                        EventDetailView(store: eventDetailStore, eventId: eventId)
                         .toolbar(.hidden, for: .tabBar)
                     }
                 }
