@@ -18,6 +18,25 @@ struct MyTicketsView: View {
                 } else {
                     ticketsList
                 }
+                
+                // Overlay para mostrar estado de exclusão
+                if store.isDeletingTicket {
+                    Color.black.opacity(0.3)
+                        .ignoresSafeArea()
+                    
+                    VStack(spacing: 16) {
+                        ProgressView()
+                            .scaleEffect(1.2)
+                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                        
+                        Text("Excluindo ingresso...")
+                            .font(.headline)
+                            .foregroundColor(.white)
+                    }
+                    .padding(24)
+                    .background(Color.black.opacity(0.8))
+                    .cornerRadius(12)
+                }
             }
             .navigationTitle("Meus Ingressos")
             .navigationBarTitleDisplayMode(.large)
@@ -27,13 +46,6 @@ struct MyTicketsView: View {
                         dismiss()
                     }
                     .foregroundColor(AppColors.primaryText)
-                }
-                
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Adicionar") {
-                        store.send(.addNewTicketTapped)
-                    }
-                    .foregroundColor(AppColors.primary)
                 }
             }
             .onAppear {
@@ -84,22 +96,11 @@ struct MyTicketsView: View {
                 .fontWeight(.semibold)
                 .foregroundColor(AppColors.primaryText)
             
-            Text("Você ainda não possui ingressos para vender.\nComece publicando seu primeiro ingresso!")
+            Text("Você ainda não possui ingressos para vender.\nVisite a aba principal para criar seus ingressos!")
                 .font(.body)
                 .foregroundColor(AppColors.secondaryText)
                 .multilineTextAlignment(.center)
                 .lineSpacing(4)
-            
-            Button("Adicionar Primeiro Ingresso") {
-                store.send(.addNewTicketTapped)
-            }
-            .font(.headline)
-            .foregroundColor(.white)
-            .frame(maxWidth: .infinity)
-            .padding()
-            .background(AppColors.accentGreen.gradient)
-            .cornerRadius(12)
-            .padding(.horizontal, 40)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding()
@@ -109,14 +110,32 @@ struct MyTicketsView: View {
         ScrollView {
             LazyVStack(spacing: 12) {
                 ForEach(store.myTickets) { ticket in
-                    MyTicketCard(ticket: ticket) {
+                    MyTicketCard(
+                        ticket: ticket,
+                        currentUserId: store.currentUserId
+                    ) {
                         store.send(.ticketSelected(ticket.id))
                     }
-                    .swipeActions(edge: .trailing) {
-                        Button("Excluir") {
-                            store.send(.deleteTicket(ticket.id))
+                    .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                        // Só mostra o botão de excluir se o ticket pertencer ao usuário
+                        if canDeleteTicket(ticket) {
+                            Button("Excluir") {
+                                store.send(.deleteTicket(ticket.id))
+                            }
+                            .tint(.red)
                         }
-                        .tint(.red)
+                    }
+                    .contextMenu {
+                        Button("Ver Detalhes") {
+                            store.send(.ticketSelected(ticket.id))
+                        }
+                        
+                        // Só mostra o botão de excluir se o ticket pertencer ao usuário
+                        if canDeleteTicket(ticket) {
+                            Button("Excluir Ingresso", role: .destructive) {
+                                store.send(.deleteTicket(ticket.id))
+                            }
+                        }
                     }
                 }
             }
@@ -124,22 +143,50 @@ struct MyTicketsView: View {
             .padding(.vertical, 8)
         }
     }
+    
+    // MARK: - Helper Methods
+    
+    private func canDeleteTicket(_ ticket: Ticket) -> Bool {
+        guard let currentUserId = store.currentUserId else {
+            return false
+        }
+        return ticket.sellerId == currentUserId
+    }
 }
 
 struct MyTicketCard: View {
     let ticket: Ticket
+    let currentUserId: String?
     let onTap: () -> Void
+    
+    private var isOwner: Bool {
+        guard let currentUserId = currentUserId else { return false }
+        return ticket.sellerId == currentUserId
+    }
     
     var body: some View {
         Button(action: onTap) {
             VStack(spacing: 12) {
-                // Header with ticket status
+                // Header with ticket status and ownership indicator
                 HStack {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text(ticket.name)
-                            .font(.headline)
-                            .foregroundColor(AppColors.primaryText)
-                            .multilineTextAlignment(.leading)
+                        HStack(spacing: 8) {
+                            Text(ticket.name)
+                                .font(.headline)
+                                .foregroundColor(AppColors.primaryText)
+                                .multilineTextAlignment(.leading)
+                            
+                            // Ownership indicator
+                            if isOwner {
+                                Image(systemName: "person.crop.circle.fill")
+                                    .font(.caption)
+                                    .foregroundColor(AppColors.accentGreen)
+                            } else {
+                                Image(systemName: "exclamationmark.triangle.fill")
+                                    .font(.caption)
+                                    .foregroundColor(AppColors.warning)
+                            }
+                        }
                         
                         HStack(spacing: 4) {
                             Circle()
@@ -186,9 +233,16 @@ struct MyTicketCard: View {
                         .foregroundColor(AppColors.secondaryText)
                 }
                 
-                // Actions based on status
+                // Actions based on status and ownership
                 HStack(spacing: 12) {
-                    if ticket.status == .available {
+                    if !isOwner {
+                        Image(systemName: "info.circle")
+                            .font(.caption)
+                            .foregroundColor(AppColors.warning)
+                        Text("Não é seu ingresso")
+                            .font(.caption)
+                            .foregroundColor(AppColors.warning)
+                    } else if ticket.status == .available {
                         Image(systemName: "eye")
                             .font(.caption)
                             .foregroundColor(AppColors.secondary)
@@ -251,4 +305,8 @@ struct MyTicketCard: View {
             reducer: { MyTicketsFeature() }
         )
     )
+    .onAppear {
+        // Mock do usuário atual para preview
+        UserDefaults.standard.set("test_user_id", forKey: "currentUserId")
+    }
 }

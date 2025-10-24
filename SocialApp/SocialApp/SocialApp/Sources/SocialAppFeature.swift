@@ -1,6 +1,9 @@
 import ComposableArchitecture
 import SwiftUI
 
+// Importing all required features explicitly
+// (This ensures all features are available for the app state)
+
 @Reducer
 public struct SocialAppFeature {
     @ObservableState
@@ -48,6 +51,7 @@ public struct SocialAppFeature {
         // App lifecycle actions
         case onAppear
         case signOut
+        case syncAuthData // Nova action para sincronizar dados
         
         // Auth actions
         case auth(AuthFeature.Action)
@@ -70,7 +74,7 @@ public struct SocialAppFeature {
         case navigateToEventDetail(UUID)
         case navigateToTicketDetail(UUID)
         case navigateToSellerProfile(UUID)
-        case navigateToEventTickets(UUID) // Nova action para navegar para tickets de um evento
+        case navigateToEventTickets(UUID)
         
         case dismissEventNavigation(UUID?)
         case dismissTicketNavigation(UUID?)
@@ -139,6 +143,33 @@ public struct SocialAppFeature {
             // Então não precisa disparar onAppear novamente
             return .none
             
+        case .syncAuthData:
+            // Sincroniza dados de auth entre AuthFeature.State e UserDefaults
+            print("🔄 Sincronizando dados de auth...")
+            
+            if let currentUser = state.auth.currentUser,
+               let authToken = state.auth.authToken {
+                
+                // Salva todos os dados necessários
+                UserDefaults.standard.set(authToken, forKey: "authToken")
+                UserDefaults.standard.set(currentUser.id, forKey: "currentUserId")
+                
+                if let userData = try? JSONEncoder().encode(currentUser) {
+                    UserDefaults.standard.set(userData, forKey: "currentUser")
+                }
+                
+                print("✅ Dados de auth sincronizados:")
+                print("   Token: \(authToken.prefix(20))...")
+                print("   UserId: \(currentUser.id)")
+                print("   User: \(currentUser.name)")
+            } else {
+                print("❌ Dados de auth incompletos no AuthFeature.State")
+                print("   currentUser: \(state.auth.currentUser?.name ?? "nil")")
+                print("   authToken: \(state.auth.authToken != nil ? "exists" : "nil")")
+            }
+            
+            return .none
+            
         case .signOut:
             // Envia a action para o AuthFeature via Scope
             state.auth.isAuthenticated = false
@@ -171,6 +202,29 @@ public struct SocialAppFeature {
             // Quando o usuário se autentica, carrega os dados iniciais e sincroniza o perfil
             if let currentUser = state.auth.currentUser {
                 state.profileFeature.user = currentUser
+                
+                // Sincroniza dados de auth no UserDefaults para garantir consistência
+                print("🔐 Sincronizando dados de auth após login bem-sucedido...")
+                
+                if let authToken = state.auth.authToken {
+                    UserDefaults.standard.set(authToken, forKey: "authToken")
+                    print("✅ Token salvo no UserDefaults")
+                } else {
+                    print("⚠️ AuthToken não encontrado no AuthFeature.State")
+                }
+                
+                if let currentUserId = state.auth.currentUserId {
+                    UserDefaults.standard.set(currentUserId, forKey: "currentUserId")
+                    print("✅ UserId salvo no UserDefaults: \(currentUserId)")
+                } else if !currentUser.id.isEmpty {
+                    UserDefaults.standard.set(currentUser.id, forKey: "currentUserId")
+                    print("✅ UserId salvo do currentUser.id: \(currentUser.id)")
+                }
+                
+                if let userData = try? JSONEncoder().encode(currentUser) {
+                    UserDefaults.standard.set(userData, forKey: "currentUser")
+                    print("✅ User data salvo no UserDefaults")
+                }
             }
             return .run { send in
                 await send(.homeFeature(.loadHomeContent))
@@ -209,6 +263,24 @@ public struct SocialAppFeature {
                 // Sincroniza dados do usuário quando acessa o perfil
                 if let currentUser = state.currentUser {
                     state.profileFeature.user = currentUser
+                    
+                    // Debug: verifica inconsistência de auth
+                    let hasToken = UserDefaults.standard.string(forKey: "authToken") != nil
+                    let hasUserId = UserDefaults.standard.string(forKey: "currentUserId") != nil
+                    print("🔍 Debug Profile Access:")
+                    print("   Has currentUser: \(currentUser)")
+                    print("   Has authToken in UserDefaults: \(hasToken)")
+                    print("   Has currentUserId in UserDefaults: \(hasUserId)")
+                    print("   Auth.isAuthenticated: \(state.auth.isAuthenticated)")
+                    print("   Auth.authToken: \(state.auth.authToken != nil ? "exists" : "nil")")
+                    
+                    if !hasToken && hasUserId {
+                        print("⚠️ Inconsistência detectada: userId existe mas token não!")
+                        return .run { send in
+                            await send(.syncAuthData)
+                            await send(.profileFeature(.onAppear))
+                        }
+                    }
                 }
                 return .run { send in
                     await send(.profileFeature(.onAppear))
@@ -403,6 +475,21 @@ public struct SocialAppFeature {
             return .run { send in
                 await send(.signOut)
             }
+            
+        case .profileFeature(.onAppear):
+            // Verifica consistência dos dados antes de carregar tickets
+            let hasToken = UserDefaults.standard.string(forKey: "authToken") != nil
+            let hasUserId = UserDefaults.standard.string(forKey: "currentUserId") != nil
+            
+            if !hasToken && hasUserId {
+                print("🔄 Detectada inconsistência de auth, sincronizando...")
+                return .run { send in
+                    await send(.syncAuthData)
+                    // Reenviar onAppear após sincronização
+                    await send(.profileFeature(.onAppear))
+                }
+            }
+            return .none
             
         case .profileFeature:
             return .none

@@ -1,244 +1,173 @@
 import ComposableArchitecture
 import Foundation
 
-/// Feature para o perfil do USUÁRIO LOGADO
-/// 
-/// **Diferença de SellerProfileFeature:**
-/// - ProfileFeature: Perfil do usuário LOGADO (pode editar, configurações)
-/// - SellerProfileFeature: Perfil de OUTRO usuário (apenas visualização)
-///
-/// **Uso:**
-/// Aba "Perfil" do app onde o usuário pode:
-/// - Editar suas informações
-/// - Trocar foto de perfil
-/// - Gerenciar configurações (notificações, privacidade)
-/// - Ver seus próprios tickets
-///
-/// **Editável**: Permite modificar dados pessoais
 @Reducer
 public struct ProfileFeature {
     @ObservableState
     public struct State: Equatable {
         public var user: User?
         public var isLoading = false
+        public var error: String?
+        public var ticketsCount: Int = 0
         public var showingEditProfile = false
         public var showingImagePicker = false
         public var showingMyTickets = false
-        public var notificationsEnabled = true
-        public var emailNotifications = true
-        public var pushNotifications = false
-        public var error: String?
+        public var pushNotifications = true
         
-        public init() {}
+        public init(user: User? = nil) {
+            self.user = user
+        }
     }
     
-    public enum Action: Equatable {
-        // Lifecycle
+    public enum Action {
         case onAppear
         case loadUserProfile
+        case loadTicketsCount
         case userProfileResponse(Result<User, NetworkError>)
+        case ticketsCountResponse(Result<Int, NetworkError>)
         
-        // Profile editing
+        // UI Actions
         case editProfileTapped
+        case changeProfileImageTapped
+        case myTicketsTapped
+        case supportTapped
+        case privacySettingsTapped
+        case signOutTapped
+        case togglePushNotifications(Bool)
+        
+        // Sheet management
         case setShowingEditProfile(Bool)
+        case setShowingImagePicker(Bool)
+        case setShowingMyTickets(Bool)
+        
+        // Profile update
         case updateProfile(User)
         case updateProfileResponse(Result<User, NetworkError>)
         
-        // Image picker
-        case changeProfileImageTapped
-        case setShowingImagePicker(Bool)
-        case profileImageSelected(Data)
-        case uploadProfileImageResponse(Result<String, NetworkError>)
-        
-        // Settings
-        case toggleNotifications(Bool)
-        case toggleEmailNotifications(Bool)
-        case togglePushNotifications(Bool)
-        
-        // Navigation
-        case myTicketsTapped
-        case setShowingMyTickets(Bool)
-        case favoritesTapped
-        case supportTapped
-        case privacySettingsTapped
-        case languageSettingsTapped
-        
-        // Account actions
-        case signOutTapped
-        
-        // Error handling
         case dismissError
     }
     
-    public init() {}
+    @Dependency(\.ticketsClient) var ticketsClient
+    @Dependency(\.profileClient) var profileClient
     
-    @Dependency(\.userClient) var userClient
+    public init() {}
     
     public var body: some ReducerOf<Self> {
         Reduce { state, action in
             switch action {
-                
-            // MARK: - Lifecycle
-                
             case .onAppear:
-                // Só carrega da API se não tiver usuário
-                if state.user == nil {
-                    return .run { send in
-                        await send(.loadUserProfile)
-                    }
+                return .run { send in
+                    await send(.loadUserProfile)
+                    await send(.loadTicketsCount)
                 }
-                return .none
                 
             case .loadUserProfile:
-                // Se já temos dados do usuário ou já está carregando, não precisa recarregar
-                guard state.user == nil && !state.isLoading else { return .none }
+                // Se já temos o usuário, não precisa recarregar
+                guard state.user != nil else { return .none }
+                return .none
                 
+            case .loadTicketsCount:
                 state.isLoading = true
-                state.error = nil
-                
                 return .run { send in
                     do {
-                        let user = try await userClient.getCurrentUser()
-                        await send(.userProfileResponse(.success(user)))
+                        let count = try await ticketsClient.fetchMyTicketsCount()
+                        await send(.ticketsCountResponse(.success(count)))
                     } catch {
-                        // Se falhar ao carregar da API, não é um erro crítico
-                        // O usuário já foi sincronizado no SocialAppFeature
-                        print("⚠️ Não foi possível carregar usuário atual: \(error.localizedDescription)")
-                        await send(.userProfileResponse(.failure(error as? NetworkError ?? NetworkError.unknown(error.localizedDescription))))
+                        let networkError = error as? NetworkError ?? NetworkError.unknown(error.localizedDescription)
+                        await send(.ticketsCountResponse(.failure(networkError)))
                     }
                 }
                 
-            case let .userProfileResponse(.success(user)):
+            case let .ticketsCountResponse(.success(count)):
                 state.isLoading = false
-                state.user = user
-                state.error = nil
-                return .none
+                state.ticketsCount = count
                 
-            case let .userProfileResponse(.failure(error)):
-                state.isLoading = false
-                // Só mostra erro se não tiver usuário
-                if state.user == nil {
-                    state.error = error.localizedDescription
+                // Atualiza também o user.ticketsCount se existir
+                if var user = state.user {
+                    user.ticketsCount = count
+                    state.user = user
                 }
                 return .none
-            
-            // MARK: - Profile Editing
+                
+            case let .ticketsCountResponse(.failure(error)):
+                state.isLoading = false
+                state.error = error.userFriendlyMessage
+                return .none
+                
+            // UI Actions
             case .editProfileTapped:
                 state.showingEditProfile = true
                 return .none
                 
-            case let .setShowingEditProfile(isShowing):
-                state.showingEditProfile = isShowing
+            case .changeProfileImageTapped:
+                state.showingImagePicker = true
                 return .none
                 
+            case .myTicketsTapped:
+                state.showingMyTickets = true
+                return .none
+                
+            case .supportTapped:
+                // TODO: Implementar suporte
+                return .none
+                
+            case .privacySettingsTapped:
+                // TODO: Implementar configurações de privacidade
+                return .none
+                
+            case .signOutTapped:
+                // Esta action será tratada pelo SocialAppFeature
+                return .none
+                
+            case let .togglePushNotifications(enabled):
+                state.pushNotifications = enabled
+                // TODO: Salvar configuração
+                return .none
+                
+            // Sheet management
+            case let .setShowingEditProfile(showing):
+                state.showingEditProfile = showing
+                return .none
+                
+            case let .setShowingImagePicker(showing):
+                state.showingImagePicker = showing
+                return .none
+                
+            case let .setShowingMyTickets(showing):
+                state.showingMyTickets = showing
+                return .none
+                
+            // Profile update
             case let .updateProfile(updatedUser):
                 state.isLoading = true
                 state.error = nil
                 
                 return .run { send in
                     do {
-                        let user = try await userClient.updateUserProfile(updatedUser)
-                        await send(.updateProfileResponse(.success(user)))
+                        // TODO: Implementar update via ProfileClient quando necessário
+                        // Por enquanto, apenas atualiza o estado local
+                        await send(.updateProfileResponse(.success(updatedUser)))
                     } catch {
-                        await send(.updateProfileResponse(.failure(error as? NetworkError ?? NetworkError.unknown(error.localizedDescription))))
+                        let networkError = error as? NetworkError ?? NetworkError.unknown(error.localizedDescription)
+                        await send(.updateProfileResponse(.failure(networkError)))
                     }
                 }
                 
-            case let .updateProfileResponse(.success(user)):
+            case let .updateProfileResponse(.success(updatedUser)):
                 state.isLoading = false
-                state.user = user
+                state.user = updatedUser
                 state.showingEditProfile = false
-                state.error = nil
                 return .none
                 
             case let .updateProfileResponse(.failure(error)):
                 state.isLoading = false
-                state.error = error.localizedDescription
-                return .none
-            
-            // MARK: - Image Picker
-            case .changeProfileImageTapped:
-                state.showingImagePicker = true
+                state.error = error.userFriendlyMessage
                 return .none
                 
-            case let .setShowingImagePicker(isShowing):
-                state.showingImagePicker = isShowing
+            case .userProfileResponse:
+                // TODO: Implementar se necessário
                 return .none
                 
-            case let .profileImageSelected(imageData):
-                state.showingImagePicker = false
-                state.isLoading = true
-                state.error = nil
-                
-                return .run { send in
-                    do {
-                        let imageURL = try await userClient.uploadProfileImage(imageData)
-                        await send(.uploadProfileImageResponse(.success(imageURL)))
-                    } catch {
-                        await send(.uploadProfileImageResponse(.failure(error as? NetworkError ?? NetworkError.unknown(error.localizedDescription))))
-                    }
-                }
-                
-            case let .uploadProfileImageResponse(.success(imageURL)):
-                state.isLoading = false
-                if var user = state.user {
-                    user.profileImageURL = imageURL
-                    state.user = user
-                }
-                return .none
-                
-            case let .uploadProfileImageResponse(.failure(error)):
-                state.isLoading = false
-                state.error = error.localizedDescription
-                return .none
-            
-            // MARK: - Settings
-            case let .toggleNotifications(enabled):
-                state.notificationsEnabled = enabled
-                // TODO: Persist setting
-                return .none
-                
-            case let .toggleEmailNotifications(enabled):
-                state.emailNotifications = enabled
-                // TODO: Persist setting
-                return .none
-                
-            case let .togglePushNotifications(enabled):
-                state.pushNotifications = enabled
-                // TODO: Persist setting
-                return .none
-            
-            // MARK: - Navigation
-            case .myTicketsTapped:
-                state.showingMyTickets = true
-                return .none
-                
-            case let .setShowingMyTickets(isShowing):
-                state.showingMyTickets = isShowing
-                return .none
-                
-            case .favoritesTapped:
-                // Handle navigation to favorites
-                return .none
-                
-            case .supportTapped:
-                // Handle navigation to support
-                return .none
-                
-            case .privacySettingsTapped:
-                // Handle navigation to privacy settings
-                return .none
-                
-            case .languageSettingsTapped:
-                // Handle navigation to language settings
-                return .none
-            
-            // MARK: - Account Actions
-            case .signOutTapped:
-                // O signOut será tratado pelo SocialAppFeature
-                return .none
-            
-            // MARK: - Error Handling
             case .dismissError:
                 state.error = nil
                 return .none
@@ -247,3 +176,70 @@ public struct ProfileFeature {
     }
 }
 
+// MARK: - Equatable Conformance
+
+extension ProfileFeature.Action: Equatable {
+    public static func == (lhs: ProfileFeature.Action, rhs: ProfileFeature.Action) -> Bool {
+        switch (lhs, rhs) {
+        case (.onAppear, .onAppear),
+             (.loadUserProfile, .loadUserProfile),
+             (.loadTicketsCount, .loadTicketsCount),
+             (.editProfileTapped, .editProfileTapped),
+             (.changeProfileImageTapped, .changeProfileImageTapped),
+             (.myTicketsTapped, .myTicketsTapped),
+             (.supportTapped, .supportTapped),
+             (.privacySettingsTapped, .privacySettingsTapped),
+             (.signOutTapped, .signOutTapped),
+             (.dismissError, .dismissError):
+            return true
+            
+        case let (.togglePushNotifications(lhsEnabled), .togglePushNotifications(rhsEnabled)):
+            return lhsEnabled == rhsEnabled
+            
+        case let (.setShowingEditProfile(lhsShowing), .setShowingEditProfile(rhsShowing)):
+            return lhsShowing == rhsShowing
+            
+        case let (.setShowingImagePicker(lhsShowing), .setShowingImagePicker(rhsShowing)):
+            return lhsShowing == rhsShowing
+            
+        case let (.setShowingMyTickets(lhsShowing), .setShowingMyTickets(rhsShowing)):
+            return lhsShowing == rhsShowing
+            
+        case let (.updateProfile(lhsUser), .updateProfile(rhsUser)):
+            return lhsUser == rhsUser
+            
+        case let (.userProfileResponse(lhsResult), .userProfileResponse(rhsResult)):
+            switch (lhsResult, rhsResult) {
+            case let (.success(lhsUser), .success(rhsUser)):
+                return lhsUser == rhsUser
+            case let (.failure(lhsError), .failure(rhsError)):
+                return lhsError == rhsError
+            default:
+                return false
+            }
+            
+        case let (.ticketsCountResponse(lhsResult), .ticketsCountResponse(rhsResult)):
+            switch (lhsResult, rhsResult) {
+            case let (.success(lhsCount), .success(rhsCount)):
+                return lhsCount == rhsCount
+            case let (.failure(lhsError), .failure(rhsError)):
+                return lhsError == rhsError
+            default:
+                return false
+            }
+            
+        case let (.updateProfileResponse(lhsResult), .updateProfileResponse(rhsResult)):
+            switch (lhsResult, rhsResult) {
+            case let (.success(lhsUser), .success(rhsUser)):
+                return lhsUser == rhsUser
+            case let (.failure(lhsError), .failure(rhsError)):
+                return lhsError == rhsError
+            default:
+                return false
+            }
+            
+        default:
+            return false
+        }
+    }
+}

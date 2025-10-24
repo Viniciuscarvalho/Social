@@ -64,9 +64,10 @@ public struct ProfileView: View {
         }
         .sheet(isPresented: $store.showingMyTickets.sending(\.setShowingMyTickets)) {
             MyTicketsView(
-                store: Store(initialState: MyTicketsFeature.State()) {
-                    MyTicketsFeature()
-                }
+                store: Store(
+                    initialState: MyTicketsFeature.State(currentUserId: store.user?.id),
+                    reducer: { MyTicketsFeature() }
+                )
             )
         }
     }
@@ -175,7 +176,7 @@ public struct ProfileView: View {
                 }
                 
                 VStack {
-                    Text("\(user.ticketsCount)")
+                    Text("\(store.user?.ticketsCount ?? store.ticketsCount)")
                         .font(.headline)
                         .foregroundColor(AppColors.primaryText)
                     Text("Tickets")
