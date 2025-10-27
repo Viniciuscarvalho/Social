@@ -33,25 +33,31 @@ public struct HomeFeature {
             homeContent.curatedEvents.prefix(5).map { $0 }
         }
         
-        // Computed: eventos filtrados por tempo
+        // Computed: eventos filtrados por tempo E categoria
         public var filteredEvents: [Event] {
-            let allEvents = homeContent.curatedEvents
+            var events = homeContent.curatedEvents
             
+            // Primeiro, filtra por categoria se selecionada
+            if let category = selectedCategory {
+                events = events.filter { $0.category == category }
+            }
+            
+            // Depois, filtra por tempo
             switch selectedTimeFilter {
             case .all:
-                return allEvents
+                return events
             case .today:
-                return allEvents.filter { event in
+                return events.filter { event in
                     guard let eventDate = event.eventDate else { return false }
                     return Calendar.current.isDateInToday(eventDate)
                 }
             case .tomorrow:
-                return allEvents.filter { event in
+                return events.filter { event in
                     guard let eventDate = event.eventDate else { return false }
                     return Calendar.current.isDateInTomorrow(eventDate)
                 }
             case .thisWeek:
-                return allEvents.filter { event in
+                return events.filter { event in
                     guard let eventDate = event.eventDate else { return false }
                     let calendar = Calendar.current
                     return calendar.isDate(eventDate, equalTo: Date(), toGranularity: .weekOfYear)
@@ -96,6 +102,7 @@ public struct HomeFeature {
         case filterApplied(FilterState)
         case timeFilterSelected(State.TimeFilter)
         case viewAllRecommended
+        case viewAllPopular
     }
     
     public init() {}
@@ -194,6 +201,9 @@ public struct HomeFeature {
                 return .none
                 
             case .viewAllRecommended:
+                return .none // Handled by parent
+                
+            case .viewAllPopular:
                 return .none // Handled by parent
             }
         }

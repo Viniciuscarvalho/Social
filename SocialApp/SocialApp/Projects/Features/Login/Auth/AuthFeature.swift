@@ -22,7 +22,14 @@ public struct AuthFeature {
         
         public mutating func checkAuthStatus() {
             if let userData = UserDefaults.standard.data(forKey: "currentUser"),
-               let user = try? JSONDecoder().decode(User.self, from: userData) {
+               var user = try? JSONDecoder().decode(User.self, from: userData) {
+                
+                // Load interests if saved
+                if let interestsData = UserDefaults.standard.data(forKey: "userInterests"),
+                   let interests = try? JSONDecoder().decode([String].self, from: interestsData) {
+                    user.interests = interests
+                }
+                
                 currentUser = user
                 isAuthenticated = true
                 authToken = UserDefaults.standard.string(forKey: "authToken")

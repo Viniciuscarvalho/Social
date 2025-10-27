@@ -199,7 +199,7 @@ public struct HomeView: View {
                 Spacer()
                 
                 Button {
-                    // View all action
+                    store.send(.viewAllPopular)
                 } label: {
                     Text("View all")
                         .font(.system(size: 14, weight: .medium))

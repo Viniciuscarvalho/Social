@@ -12,12 +12,14 @@ public struct User: Codable, Identifiable, Equatable {
     public var isVerified: Bool
     public var tickets: [Ticket]
     public var createdAt: Date
+    public var interests: [String]?
     
     public init(
         name: String,
         title: String? = nil,
         profileImageURL: String? = nil,
-        email: String? = nil
+        email: String? = nil,
+        interests: [String]? = nil
     ) {
         self.id = UUID().uuidString
         self.name = name
@@ -30,10 +32,11 @@ public struct User: Codable, Identifiable, Equatable {
         self.isVerified = false
         self.tickets = []
         self.createdAt = Date()
+        self.interests = interests
     }
     
     enum CodingKeys: String, CodingKey {
-        case id, name, title, email, tickets
+        case id, name, title, email, tickets, interests
         case profileImageURL = "profileImageUrl"
         case followersCount = "followersCount"
         case followingCount = "followingCount"

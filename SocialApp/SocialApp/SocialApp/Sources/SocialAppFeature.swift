@@ -29,6 +29,7 @@ public struct SocialAppFeature {
         public var selectedSellerId: UUID?
         public var showingAddTicket = false
         public var showingRecommendedEvents = false
+        public var showingPopularEvents = false
         
         // Computed properties for easier access
         public var isAuthenticated: Bool {
@@ -89,6 +90,10 @@ public struct SocialAppFeature {
         // Recommended events navigation
         case showRecommendedEvents
         case setShowingRecommendedEvents(Bool)
+        
+        // Popular events navigation
+        case showPopularEvents
+        case setShowingPopularEvents(Bool)
     }
     
     public init() {}
@@ -176,19 +181,29 @@ public struct SocialAppFeature {
             return .none
             
         case .signOut:
-            // Envia a action para o AuthFeature via Scope
+            print("🚪 Iniciando logout...")
+            
+            // Limpa TODOS os dados do UserDefaults relacionados ao auth
+            UserDefaults.standard.removeObject(forKey: "currentUser")
+            UserDefaults.standard.removeObject(forKey: "authToken")
+            UserDefaults.standard.removeObject(forKey: "currentUserId")
+            UserDefaults.standard.removeObject(forKey: "userInterests")
+            // Mantém hasLaunchedBefore como true
+            print("✅ UserDefaults limpos")
+            
+            // Limpa o estado do AuthFeature
             state.auth.isAuthenticated = false
             state.auth.currentUser = nil
             state.auth.authToken = nil
             state.auth.currentUserId = nil
             state.auth.errorMessage = nil
+            print("✅ Auth state limpo")
             
             // Limpa os dados do app social
             state.selectedTab = .home
             state.homeFeature = HomeFeature.State()
             state.ticketsListFeature = TicketsListFeature.State()
             state.addTicket = AddTicketFeature.State()
-            print("🔄 AddTicketFeature.State resetado no signOut")
             state.favoritesFeature = FavoritesFeature.State()
             state.profileFeature = ProfileFeature.State()
             state.sellerProfileFeature = SellerProfileFeature.State()
@@ -199,7 +214,9 @@ public struct SocialAppFeature {
             state.selectedTicketId = nil
             state.selectedSellerId = nil
             state.showingAddTicket = false
+            print("✅ App state resetado")
             
+            print("🚪 Logout completo - voltando para SignInView")
             return .none
             
             // MARK: - Auth Actions
@@ -231,9 +248,11 @@ public struct SocialAppFeature {
                     print("✅ User data salvo no UserDefaults")
                 }
             }
+            // Carrega apenas HomeContent após login
+            // Tickets serão carregados quando usuário acessar a aba de Tickets
+            print("🎯 Carregando apenas HomeContent após login (otimização)")
             return .run { send in
                 await send(.homeFeature(.loadHomeContent))
-                await send(.ticketsListFeature(.loadTickets))
             }
             
         case .auth(.signOut):
@@ -319,6 +338,14 @@ public struct SocialAppFeature {
             
         case let .setShowingRecommendedEvents(isShowing):
             state.showingRecommendedEvents = isShowing
+            return .none
+            
+        case .showPopularEvents:
+            state.showingPopularEvents = true
+            return .none
+            
+        case let .setShowingPopularEvents(isShowing):
+            state.showingPopularEvents = isShowing
             return .none
             
             // MARK: - Navigation Actions
@@ -468,6 +495,10 @@ public struct SocialAppFeature {
             // Outras actions das features são tratadas pelos seus próprios reducers
         case .homeFeature(.viewAllRecommended):
             state.showingRecommendedEvents = true
+            return .none
+            
+        case .homeFeature(.viewAllPopular):
+            state.showingPopularEvents = true
             return .none
             
         case .homeFeature:

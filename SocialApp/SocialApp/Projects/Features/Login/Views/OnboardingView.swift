@@ -1,3 +1,5 @@
+import ComposableArchitecture
+import SwiftData
 import SwiftUI
 
 struct OnboardingView: View {
@@ -5,6 +7,7 @@ struct OnboardingView: View {
     let onSignInTapped: () -> Void
     
     @State private var currentPage = 0
+    @State private var showSignUp = false
     
     init(onSignUpTapped: @escaping () -> Void = {}, onSignInTapped: @escaping () -> Void = {}) {
         self.onSignUpTapped = onSignUpTapped
@@ -13,88 +16,83 @@ struct OnboardingView: View {
     
     var body: some View {
         ZStack {
-            AppColors.backgroundGradient
+            Color(.systemBackground)
                 .ignoresSafeArea()
             
-            VStack {
+            VStack(spacing: 0) {
                 // Header
                 VStack(spacing: 4) {
                     Text("SocialClub")
-                        .font(.system(size: 24, weight: .light))
-                        .foregroundColor(.white)
+                        .font(.system(size: 28, weight: .bold))
+                        .foregroundColor(.primary)
                     
-                    Text("Negocie seus ingressos")
-                        .font(.system(size: 10))
-                        .foregroundColor(.gray)
+                    Text("Trade your tickets easily")
+                        .font(.system(size: 14))
+                        .foregroundColor(.secondary)
                 }
-                .padding(.top, 20)
+                .padding(.top, 32)
+                .padding(.bottom, 16)
                 
                 Spacer()
                 
-                // Ticket Image Placeholder
-                Image(systemName: "ticket.fill")
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .frame(height: 200)
-                    .foregroundColor(.gray.opacity(0.3))
-                    .padding(.horizontal, 40)
-                
-                Spacer()
-                
-                // Bottom Card
-                VStack(alignment: .leading, spacing: 20) {
-                    Text("Onde você encontra alguém para \nficar com seu ingresso")
-                        .font(.system(size: 32, weight: .bold))
-                        .foregroundColor(.black)
+                // Main Image Placeholder
+                VStack(spacing: 20) {
+                    Image(systemName: "ticket.fill")
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(height: 200)
+                        .foregroundColor(.blue.opacity(0.2))
                     
-                    HStack(spacing: 8) {
-                        Circle()
-                            .fill(Color.black)
-                            .frame(width: 8, height: 8)
-                        Circle()
-                            .fill(Color.gray.opacity(0.3))
-                            .frame(width: 8, height: 8)
-                        Circle()
-                            .fill(Color.gray.opacity(0.3))
-                            .frame(width: 8, height: 8)
+                    VStack(spacing: 12) {
+                        Text("Where you find someone to share your ticket")
+                            .font(.system(size: 28, weight: .bold))
+                            .foregroundColor(.primary)
+                            .multilineTextAlignment(.center)
+                        
+                        Text("Connect with others and trade your event tickets securely and easily.")
+                            .font(.system(size: 16))
+                            .foregroundColor(.secondary)
+                            .multilineTextAlignment(.center)
+                    }
+                }
+                .padding(.horizontal, 20)
+                
+                Spacer()
+                
+                // Action Buttons
+                VStack(spacing: 12) {
+                    Button(action: {
+                        showSignUp = true
+                    }) {
+                        Text("Create Account")
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 50)
+                            .background(AppColors.primary)
+                            .cornerRadius(12)
                     }
                     
-                    VStack(alignment: .leading, spacing: 16) {
-                        Text("Explore.")
-                            .font(.system(size: 20, weight: .bold))
-                            .foregroundColor(.black)
-                        
-                        Text("Aqui você vai achar alguém que queira ficar \ncom seu ingresso, sem precisar sair de casa.")
+                    Button(action: onSignInTapped) {
+                        Text("Already have an account?")
                             .font(.system(size: 14))
-                            .foregroundColor(.gray)
-                            .fixedSize(horizontal: false, vertical: true)
-                        
-                        Button(action: onSignUpTapped) {
-                            Text("Cadastre-se")
-                                .font(.system(size: 16, weight: .semibold))
-                                .foregroundColor(.white)
-                                .frame(maxWidth: .infinity)
-                                .frame(height: 50)
-                                .background(Color.black)
-                                .cornerRadius(25)
-                        }
-                        .padding(.top, 8)
-                        
-                        Button(action: onSignInTapped) {
-                            Text("Já possui conta?")
-                                .font(.system(size: 14))
-                                .foregroundColor(.gray)
-                            Text("Entrar")
-                                .font(.system(size: 14, weight: .semibold))
-                                .foregroundColor(.black)
-                        }
-                        .frame(maxWidth: .infinity)
+                            .foregroundColor(.secondary)
+                        +
+                        Text(" Sign In")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundColor(.blue)
                     }
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 50)
                 }
-                .padding(30)
-                .background(Color.white)
-                .cornerRadius(30, corners: [.topLeft, .topRight])
+                .padding(.horizontal, 20)
+                .padding(.bottom, 32)
             }
+        }
+        .fullScreenCover(isPresented: $showSignUp) {
+            SignUpView(store: Store(initialState: SignUpForm.State()) {
+                SignUpForm()
+            })
         }
     }
 }

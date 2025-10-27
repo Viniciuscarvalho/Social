@@ -2,13 +2,13 @@ import SwiftUI
 
 /// Componente reutilizável para exibir categorias com ícone e contador
 public struct CategoryPill: View {
-    let category: EventCategory
+    let category: EventCategory?
     let count: Int
     let isSelected: Bool
     let action: () -> Void
     
     public init(
-        category: EventCategory,
+        category: EventCategory?,
         count: Int,
         isSelected: Bool = false,
         action: @escaping () -> Void
@@ -33,7 +33,7 @@ public struct CategoryPill: View {
                 }
                 
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(category.displayName)
+                    Text(category?.displayName ?? "All")
                         .font(.system(size: 14, weight: .semibold))
                         .foregroundColor(isSelected ? .primary : .secondary)
                     
@@ -58,7 +58,11 @@ public struct CategoryPill: View {
         .buttonStyle(.plain)
     }
     
-    private func iconForCategory(_ category: EventCategory) -> String {
+    private func iconForCategory(_ category: EventCategory?) -> String {
+        guard let category = category else {
+            return "📋" // Ícone para "All"
+        }
+        
         switch category {
         case .music:
             return "🎵"

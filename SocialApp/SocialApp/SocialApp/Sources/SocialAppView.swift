@@ -84,6 +84,17 @@ struct MainTabView: View {
                 )
             }
         }
+        .sheet(isPresented: $store.showingPopularEvents.sending(\.setShowingPopularEvents)) {
+            NavigationStack {
+                PopularEventsView(
+                    events: store.homeFeature.homeContent.curatedEvents,
+                    onEventSelected: { eventId in
+                        store.send(.homeFeature(.eventSelected(eventId)))
+                        store.send(.setShowingPopularEvents(false))
+                    }
+                )
+            }
+        }
     }
     
     @ViewBuilder

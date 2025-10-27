@@ -15,49 +15,53 @@ extension DependencyValues {
 private enum HomeClientKey: DependencyKey {
     static let liveValue = HomeClient(
         loadHomeContent: {
-            // Usar Task para evitar vazamentos de memória
-            return try await withThrowingTaskGroup(of: Void.self) { group in
-                var events: [Event] = []
-                var tickets: [Ticket] = []
-                var user: User? = nil
-                
-                // Criar dependências localmente para evitar capture cycles
-                let eventsClient = DependencyValues._current.eventsClient
-                let ticketsClient = DependencyValues._current.ticketsClient
-                let userClient = DependencyValues._current.userClient
-                
-                // Buscar eventos
-                group.addTask {
-                    events = try await eventsClient.fetchEvents()
-                }
-                
-                // Buscar tickets disponíveis
-                group.addTask {
-                    tickets = try await ticketsClient.fetchAvailableTickets()
-                }
-                
-                // Buscar usuário atual (opcional)
-                group.addTask {
-                    do {
-                        user = try await userClient.fetchCurrentUser()
-                    } catch {
-                        // Log do erro mas não falha a operação toda
-                        print("Warning: Não foi possível carregar usuário atual: \(error)")
-                        user = nil
-                    }
-                }
-                
-                // Aguardar todas as tasks completarem
-                try await group.waitForAll()
+            print("🚀 Iniciando carregamento otimizado da Home")
+            
+            // Criar dependências localmente para evitar capture cycles
+            let eventsClient = DependencyValues._current.eventsClient
+            let ticketsClient = DependencyValues._current.ticketsClient
+            let userClient = DependencyValues._current.userClient
+            
+            // STEP 1: Carregar usuário primeiro (prioritário)
+            print("📝 Step 1: Carregando dados do usuário...")
+            var user: User? = nil
+            do {
+                user = try await userClient.fetchCurrentUser()
+                print("✅ Usuário carregado: \(user?.name ?? "Unknown")")
+            } catch {
+                print("⚠️ Não foi possível carregar usuário: \(error)")
+                user = nil
+            }
+            
+            // STEP 2: Carregar events e tickets em paralelo usando async let
+            print("📝 Step 2: Carregando eventos e tickets em paralelo...")
+            
+            async let eventsTask = eventsClient.fetchEvents()
+            async let ticketsTask = ticketsClient.fetchAvailableTickets()
+            
+            do {
+                let (events, tickets) = try await (eventsTask, ticketsTask)
+                print("✅ Eventos carregados: \(events.count)")
+                print("✅ Tickets carregados: \(tickets.count)")
                 
                 // Separar eventos curados dos trending
                 let curatedEvents = events.filter { $0.isRecommended }
                 let trendingEvents = events.filter { !$0.isRecommended }
                 
+                print("🎉 Carregamento da Home concluído com sucesso")
                 return HomeContent(
                     curatedEvents: curatedEvents,
                     trendingEvents: trendingEvents,
                     availableTickets: tickets,
+                    user: user
+                )
+            } catch {
+                print("❌ Erro ao carregar eventos/tickets: \(error)")
+                // Retorna conteúdo vazio mas com usuário carregado
+                return HomeContent(
+                    curatedEvents: [],
+                    trendingEvents: [],
+                    availableTickets: [],
                     user: user
                 )
             }
