@@ -18,25 +18,6 @@ struct MyTicketsView: View {
                 } else {
                     ticketsList
                 }
-                
-                // Overlay para mostrar estado de exclusão
-                if store.isDeletingTicket {
-                    Color.black.opacity(0.3)
-                        .ignoresSafeArea()
-                    
-                    VStack(spacing: 16) {
-                        ProgressView()
-                            .scaleEffect(1.2)
-                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                        
-                        Text("Excluindo ingresso...")
-                            .font(.headline)
-                            .foregroundColor(.white)
-                    }
-                    .padding(24)
-                    .background(Color.black.opacity(0.8))
-                    .cornerRadius(12)
-                }
             }
             .navigationTitle("Meus Ingressos")
             .navigationBarTitleDisplayMode(.large)
@@ -51,18 +32,11 @@ struct MyTicketsView: View {
             .onAppear {
                 store.send(.onAppear)
             }
+            .onDisappear {
+                store.send(.onDisappear)
+            }
             .refreshable {
                 store.send(.refresh)
-            }
-            .alert("Excluir Ingresso", isPresented: .constant(store.ticketToDelete != nil)) {
-                Button("Cancelar", role: .cancel) {
-                    store.send(.cancelDelete)
-                }
-                Button("Excluir", role: .destructive) {
-                    store.send(.confirmDelete)
-                }
-            } message: {
-                Text("Tem certeza que deseja excluir este ingresso? Esta ação não pode ser desfeita.")
             }
             .alert("Erro", isPresented: .constant(store.errorMessage != nil)) {
                 Button("OK") {

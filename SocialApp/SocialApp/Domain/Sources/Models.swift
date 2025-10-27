@@ -253,6 +253,18 @@ public struct SearchFilter: Codable, Equatable {
     }
 }
 
+// MARK: - Filter State (usado por Home e Events com FilterSheet)
+
+public struct FilterState: Equatable {
+    public var selectedCategories: Set<EventCategory> = []
+    public var minPrice: Double = 50
+    public var maxPrice: Double = 90
+    public var location: String = ""
+    public var useCurrentLocation: Bool = false
+    
+    public init() {}
+}
+
 public struct PriceRange: Codable, Equatable {
     public let min: Double
     public let max: Double

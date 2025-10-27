@@ -30,6 +30,7 @@ public struct ProfileFeature {
         case editProfileTapped
         case changeProfileImageTapped
         case myTicketsTapped
+        case myTicketsSheetClosed  // Nova action para quando a modal fecha
         case supportTapped
         case privacySettingsTapped
         case signOutTapped
@@ -107,6 +108,12 @@ public struct ProfileFeature {
                 state.showingMyTickets = true
                 return .none
                 
+            case .myTicketsSheetClosed:
+                // Recarrega os tickets quando a modal é fechada
+                return .run { send in
+                    await send(.loadTicketsCount)
+                }
+                
             case .supportTapped:
                 // TODO: Implementar suporte
                 return .none
@@ -143,14 +150,7 @@ public struct ProfileFeature {
                 state.error = nil
                 
                 return .run { send in
-                    do {
-                        // TODO: Implementar update via ProfileClient quando necessário
-                        // Por enquanto, apenas atualiza o estado local
-                        await send(.updateProfileResponse(.success(updatedUser)))
-                    } catch {
-                        let networkError = error as? NetworkError ?? NetworkError.unknown(error.localizedDescription)
-                        await send(.updateProfileResponse(.failure(networkError)))
-                    }
+                    await send(.updateProfileResponse(.success(updatedUser)))
                 }
                 
             case let .updateProfileResponse(.success(updatedUser)):
@@ -172,74 +172,6 @@ public struct ProfileFeature {
                 state.error = nil
                 return .none
             }
-        }
-    }
-}
-
-// MARK: - Equatable Conformance
-
-extension ProfileFeature.Action: Equatable {
-    public static func == (lhs: ProfileFeature.Action, rhs: ProfileFeature.Action) -> Bool {
-        switch (lhs, rhs) {
-        case (.onAppear, .onAppear),
-             (.loadUserProfile, .loadUserProfile),
-             (.loadTicketsCount, .loadTicketsCount),
-             (.editProfileTapped, .editProfileTapped),
-             (.changeProfileImageTapped, .changeProfileImageTapped),
-             (.myTicketsTapped, .myTicketsTapped),
-             (.supportTapped, .supportTapped),
-             (.privacySettingsTapped, .privacySettingsTapped),
-             (.signOutTapped, .signOutTapped),
-             (.dismissError, .dismissError):
-            return true
-            
-        case let (.togglePushNotifications(lhsEnabled), .togglePushNotifications(rhsEnabled)):
-            return lhsEnabled == rhsEnabled
-            
-        case let (.setShowingEditProfile(lhsShowing), .setShowingEditProfile(rhsShowing)):
-            return lhsShowing == rhsShowing
-            
-        case let (.setShowingImagePicker(lhsShowing), .setShowingImagePicker(rhsShowing)):
-            return lhsShowing == rhsShowing
-            
-        case let (.setShowingMyTickets(lhsShowing), .setShowingMyTickets(rhsShowing)):
-            return lhsShowing == rhsShowing
-            
-        case let (.updateProfile(lhsUser), .updateProfile(rhsUser)):
-            return lhsUser == rhsUser
-            
-        case let (.userProfileResponse(lhsResult), .userProfileResponse(rhsResult)):
-            switch (lhsResult, rhsResult) {
-            case let (.success(lhsUser), .success(rhsUser)):
-                return lhsUser == rhsUser
-            case let (.failure(lhsError), .failure(rhsError)):
-                return lhsError == rhsError
-            default:
-                return false
-            }
-            
-        case let (.ticketsCountResponse(lhsResult), .ticketsCountResponse(rhsResult)):
-            switch (lhsResult, rhsResult) {
-            case let (.success(lhsCount), .success(rhsCount)):
-                return lhsCount == rhsCount
-            case let (.failure(lhsError), .failure(rhsError)):
-                return lhsError == rhsError
-            default:
-                return false
-            }
-            
-        case let (.updateProfileResponse(lhsResult), .updateProfileResponse(rhsResult)):
-            switch (lhsResult, rhsResult) {
-            case let (.success(lhsUser), .success(rhsUser)):
-                return lhsUser == rhsUser
-            case let (.failure(lhsError), .failure(rhsError)):
-                return lhsError == rhsError
-            default:
-                return false
-            }
-            
-        default:
-            return false
         }
     }
 }

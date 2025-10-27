@@ -70,6 +70,12 @@ public struct ProfileView: View {
                 )
             )
         }
+        .onChange(of: store.showingMyTickets) { oldValue, newValue in
+            // Quando a modal de MyTickets fecha (newValue = false), recarrega a contagem
+            if oldValue && !newValue {
+                store.send(.myTicketsSheetClosed)
+            }
+        }
     }
     
     @ViewBuilder

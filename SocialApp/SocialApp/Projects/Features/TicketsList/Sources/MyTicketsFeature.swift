@@ -7,9 +7,7 @@ struct MyTicketsFeature {
     struct State: Equatable {
         var myTickets: [Ticket] = []
         var isLoading = false
-        var isDeletingTicket = false
         var errorMessage: String?
-        var ticketToDelete: String?
         var currentUserId: String? // Adiciona ID do usuário atual
         
         init(currentUserId: String? = nil) {
@@ -20,6 +18,7 @@ struct MyTicketsFeature {
     
     enum Action {
         case onAppear
+        case onDisappear
         case refresh
         case loadMyTickets
         case loadMyTicketsResponse(Result<[Ticket], NetworkError>)
@@ -27,11 +26,9 @@ struct MyTicketsFeature {
         // Ticket management
         case ticketSelected(String)
         
-        // Delete actions
+        // Delete actions - simplificado
         case deleteTicket(String)
-        case cancelDelete
-        case confirmDelete
-        case deleteTicketResponse(Result<Bool, NetworkError>)
+        case deleteTicketResponse(Result<Void, NetworkError>)
         
         // Error handling
         case dismissError
@@ -52,6 +49,9 @@ struct MyTicketsFeature {
                 return .run { send in
                     await send(.loadMyTickets)
                 }
+                
+            case .onDisappear:
+                return .none
                 
             case .refresh:
                 return .run { send in
@@ -118,7 +118,17 @@ struct MyTicketsFeature {
                     
                     if let currentUserId = state.currentUserId, ticket.sellerId == currentUserId {
                         print("✅ Ticket pertence ao usuário - permitindo exclusão")
-                        state.ticketToDelete = ticketId
+                        state.errorMessage = nil
+                        
+                        return .run { send in
+                            do {
+                                try await ticketsClient.deleteTicket(ticketId)
+                                await send(.deleteTicketResponse(.success(())))
+                            } catch {
+                                let networkError = error as? NetworkError ?? NetworkError.unknown(error.localizedDescription)
+                                await send(.deleteTicketResponse(.failure(networkError)))
+                            }
+                        }
                     } else {
                         print("❌ Ticket não pertence ao usuário - bloqueando exclusão")
                         state.errorMessage = "Você só pode excluir seus próprios ingressos."
@@ -130,40 +140,7 @@ struct MyTicketsFeature {
                 
                 return .none
                 
-            case .cancelDelete:
-                state.ticketToDelete = nil
-                return .none
-                
-            case .confirmDelete:
-                guard let ticketId = state.ticketToDelete else { return .none }
-                
-                // Verifica se o ticket pertence ao usuário antes de deletar
-                let ticket = state.myTickets.first { $0.id == ticketId }
-                
-                if let currentUserId = state.currentUserId,
-                   let ticket = ticket,
-                   ticket.sellerId != currentUserId {
-                    state.errorMessage = "Você só pode excluir seus próprios ingressos."
-                    state.ticketToDelete = nil
-                    return .none
-                }
-                
-                state.ticketToDelete = nil
-                state.isDeletingTicket = true
-                state.errorMessage = nil
-                
-                return .run { send in
-                    do {
-                        try await ticketsClient.deleteTicket(ticketId)
-                        await send(.deleteTicketResponse(.success(true)))
-                    } catch {
-                        let networkError = error as? NetworkError ?? NetworkError.unknown(error.localizedDescription)
-                        await send(.deleteTicketResponse(.failure(networkError)))
-                    }
-                }
-                
             case .deleteTicketResponse(.success):
-                state.isDeletingTicket = false
                 // Reload tickets after successful deletion
                 return .run { send in
                     await send(.loadMyTickets)
@@ -171,7 +148,6 @@ struct MyTicketsFeature {
                 }
                 
             case let .deleteTicketResponse(.failure(error)):
-                state.isDeletingTicket = false
                 state.errorMessage = "Erro ao excluir ingresso: \(error.userFriendlyMessage)"
                 return .none
                 
@@ -179,50 +155,6 @@ struct MyTicketsFeature {
                 state.errorMessage = nil
                 return .none
             }
-        }
-    }
-}
-
-// MARK: - Action Equatable Conformance
-extension MyTicketsFeature.Action: Equatable {
-    static func == (lhs: MyTicketsFeature.Action, rhs: MyTicketsFeature.Action) -> Bool {
-        switch (lhs, rhs) {
-        case (.onAppear, .onAppear),
-             (.refresh, .refresh),
-             (.loadMyTickets, .loadMyTickets),
-             (.cancelDelete, .cancelDelete),
-             (.confirmDelete, .confirmDelete),
-             (.dismissError, .dismissError):
-            return true
-            
-        case let (.ticketSelected(lhsId), .ticketSelected(rhsId)):
-            return lhsId == rhsId
-            
-        case let (.deleteTicket(lhsId), .deleteTicket(rhsId)):
-            return lhsId == rhsId
-            
-        case let (.loadMyTicketsResponse(lhsResult), .loadMyTicketsResponse(rhsResult)):
-            switch (lhsResult, rhsResult) {
-            case let (.success(lhsTickets), .success(rhsTickets)):
-                return lhsTickets == rhsTickets
-            case let (.failure(lhsError), .failure(rhsError)):
-                return lhsError == rhsError
-            default:
-                return false
-            }
-            
-        case let (.deleteTicketResponse(lhsResult), .deleteTicketResponse(rhsResult)):
-            switch (lhsResult, rhsResult) {
-            case let (.success(lhsBool), .success(rhsBool)):
-                return lhsBool == rhsBool
-            case let (.failure(lhsError), .failure(rhsError)):
-                return lhsError == rhsError
-            default:
-                return false
-            }
-            
-        default:
-            return false
         }
     }
 }

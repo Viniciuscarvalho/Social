@@ -46,6 +46,13 @@ public struct TicketsListView: View {
         .refreshable {
             store.send(.refreshRequested)
         }
+        .alert("Erro", isPresented: .constant(store.errorMessage != nil)) {
+            Button("OK") { 
+                store.send(.refreshRequested)
+            }
+        } message: {
+            Text(store.errorMessage ?? "Erro ao processar a solicitação")
+        }
     }
     
     // MARK: - Computed Properties
@@ -138,6 +145,9 @@ public struct TicketsListView: View {
                             if let ticketId = UUID(uuidString: ticket.id) {
                                 store.send(.ticketSelected(ticketId))
                             }
+                        },
+                        onDelete: {
+                            store.send(.deleteTicket(ticket.id))
                         }
                     )
                 }

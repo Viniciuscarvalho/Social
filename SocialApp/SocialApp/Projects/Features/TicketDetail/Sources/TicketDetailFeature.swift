@@ -24,6 +24,8 @@ public struct TicketDetailFeature {
         case ticketDetailResponse(Result<TicketDetail, NetworkError>)
         case purchaseTicket(UUID)
         case purchaseResponse(Result<TicketDetail, NetworkError>)
+        case validateTicket
+        case validationResponse(Result<Bool, NetworkError>)
         case loadSellerProfile(UUID)
         case sellerProfile(SellerProfileFeature.Action)
     }
@@ -110,6 +112,32 @@ public struct TicketDetailFeature {
                 
             case let .purchaseResponse(.failure(error)):
                 state.isPurchasing = false
+                state.errorMessage = error.localizedDescription
+                return .none
+                
+            case .validateTicket:
+                print("✅ Validando ticket...")
+                return .run { send in
+                    do {
+                        // Simula processo de validação
+                        try await Task.sleep(for: .seconds(1))
+                        print("✅ Ticket válido!")
+                        await send(.validationResponse(.success(true)))
+                    } catch {
+                        print("❌ Erro na validação: \(error.localizedDescription)")
+                        await send(.validationResponse(.failure(NetworkError.unknown(error.localizedDescription))))
+                    }
+                }
+                
+            case let .validationResponse(.success(isValid)):
+                if isValid {
+                    print("✅ Ticket validado com sucesso")
+                } else {
+                    print("❌ Ticket inválido")
+                }
+                return .none
+                
+            case let .validationResponse(.failure(error)):
                 state.errorMessage = error.localizedDescription
                 return .none
                 

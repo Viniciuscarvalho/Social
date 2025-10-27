@@ -7,6 +7,7 @@ public struct EventDetailFeature {
     public struct State: Equatable {
         public var eventId: UUID
         public var event: Event?
+        public var recommendedEvents: [Event] = []
         public var isLoading: Bool = false
         public var errorMessage: String?
         public var isFavorited: Bool = false
@@ -21,11 +22,16 @@ public struct EventDetailFeature {
         case onAppear(UUID, Event?) // ✅ Agora recebe o evento opcional
         case loadEvent(UUID)
         case eventResponse(Result<Event, NetworkError>)
+        case loadRecommendedEvents
+        case recommendedEventsResponse(Result<[Event], NetworkError>)
         case viewAvailableTickets
+        case negotiateTicket // ✅ Botão de negociação
         case sellTicketForEvent // ✅ Nova action para vender ingresso para este evento
+        case viewSellerProfile(String) // ✅ Nova action para ver perfil do vendedor
         case toggleFavorite
         case checkFavoriteStatus
         case favoriteStatusLoaded(Bool)
+        case recommendedEventSelected(String)
     }
     
     @Dependency(\.eventsClient) var eventsClient
@@ -74,9 +80,10 @@ public struct EventDetailFeature {
             case let .eventResponse(.success(event)):
                 state.isLoading = false
                 state.event = event
-                // Verifica status de favorito após carregar o evento
+                // Verifica status de favorito e carrega eventos recomendados após carregar o evento
                 return .run { send in
                     await send(.checkFavoriteStatus)
+                    await send(.loadRecommendedEvents)
                 }
                 
             case let .eventResponse(.failure(error)):
@@ -84,11 +91,53 @@ public struct EventDetailFeature {
                 state.errorMessage = error.localizedDescription
                 return .none
                 
+            case .loadRecommendedEvents:
+                return .run { [event = state.event] send in
+                    do {
+                        // Busca eventos da mesma categoria
+                        if let category = event?.category {
+                            let events = try await eventsClient.fetchEventsByCategory(category)
+                            await send(.recommendedEventsResponse(.success(events)))
+                        } else {
+                            let events = try await eventsClient.fetchEvents()
+                            await send(.recommendedEventsResponse(.success(events)))
+                        }
+                    } catch {
+                        let networkError = error as? NetworkError ?? NetworkError.unknown(error.localizedDescription)
+                        await send(.recommendedEventsResponse(.failure(networkError)))
+                    }
+                }
+                
+            case let .recommendedEventsResponse(.success(events)):
+                // Remove o evento atual e pega até 5 eventos recomendados
+                state.recommendedEvents = events
+                    .filter { $0.id != state.eventId.uuidString }
+                    .prefix(5)
+                    .map { $0 }
+                return .none
+                
+            case .recommendedEventsResponse(.failure):
+                // Ignora erro silenciosamente para não atrapalhar a experiência
+                return .none
+                
             case .viewAvailableTickets:
                 // Esta action será tratada pelo parent (SocialAppFeature)
                 return .none
                 
+            case .negotiateTicket:
+                // Esta action será tratada pelo parent (SocialAppFeature)
+                print("💬 Negotiate Ticket action triggered")
+                return .none
+                
             case .sellTicketForEvent:
+                // Esta action será tratada pelo parent (SocialAppFeature)
+                return .none
+                
+            case .viewSellerProfile:
+                // Esta action será tratada pelo parent (SocialAppFeature)
+                return .none
+                
+            case .recommendedEventSelected:
                 // Esta action será tratada pelo parent (SocialAppFeature)
                 return .none
                 

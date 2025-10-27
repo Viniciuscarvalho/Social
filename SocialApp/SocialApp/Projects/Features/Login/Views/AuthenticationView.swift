@@ -49,13 +49,6 @@ struct AuthenticationView: View {
                 }
             }
         }
-        .overlay(
-            Group {
-                if store.auth.isLoading {
-                    LoadingOverlay(message: "Carregando...")
-                }
-            }
-        )
         .alert("Erro", isPresented: .constant(store.auth.errorMessage != nil)) {
             Button("OK") {
                 store.send(.auth(.clearError))
@@ -67,6 +60,3 @@ struct AuthenticationView: View {
         }
     }
 }
-
-// MARK: - Supporting Views
-// LoadingView genérica está em Commons/LoadingView.swift

@@ -10,6 +10,29 @@ public struct EventsFeature {
         public var selectedCategory: EventCategory?
         public var isLoading: Bool = false
         public var errorMessage: String?
+        public var showFilterSheet: Bool = false
+        public var filterState: FilterState = FilterState()
+        
+        // Computed: eventos populares (primeiros 5 ou com maior rating)
+        public var popularEvents: [Event] {
+            events.prefix(5).map { $0 }
+        }
+        
+        // Computed: eventos por categoria
+        public var eventsByCategory: [EventCategory: [Event]] {
+            var dict: [EventCategory: [Event]] = [:]
+            
+            for event in events {
+                dict[event.category, default: []].append(event)
+            }
+            
+            return dict
+        }
+        
+        // Computed: contagem de eventos por categoria
+        public var categoryCounts: [EventCategory: Int] {
+            eventsByCategory.mapValues { $0.count }
+        }
         
         public var todayEvent: Event? {
             let today = Calendar.current.startOfDay(for: Date())
@@ -63,6 +86,8 @@ public struct EventsFeature {
         case categorySelected(EventCategory?)
         case eventSelected(UUID)
         case refreshRequested
+        case showFilterSheetChanged(Bool)
+        case filterApplied(FilterState)
     }
     
     @Dependency(\.eventsClient) var eventsClient
@@ -165,6 +190,16 @@ public struct EventsFeature {
                 return .run { send in
                     await send(.loadEvents)
                 }
+                
+            case let .showFilterSheetChanged(isShown):
+                state.showFilterSheet = isShown
+                return .none
+                
+            case let .filterApplied(filterState):
+                state.filterState = filterState
+                state.showFilterSheet = false
+                // Aqui você pode adicionar lógica para aplicar filtros
+                return .none
             }
         }
     }

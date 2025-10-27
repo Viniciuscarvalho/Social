@@ -73,6 +73,17 @@ struct MainTabView: View {
         .sheet(isPresented: $store.showingAddTicket.sending(\.setShowingAddTicket)) {
             AddTicketView(store: store.scope(state: \.addTicket, action: \.addTicket))
         }
+        .sheet(isPresented: $store.showingRecommendedEvents.sending(\.setShowingRecommendedEvents)) {
+            NavigationStack {
+                RecommendedEventsView(
+                    events: store.homeFeature.recommendedEvents,
+                    onEventSelected: { eventId in
+                        store.send(.homeFeature(.eventSelected(eventId)))
+                        store.send(.setShowingRecommendedEvents(false))
+                    }
+                )
+            }
+        }
     }
     
     @ViewBuilder
@@ -222,63 +233,67 @@ struct CustomTabBar: View {
     let onAddTicket: () -> Void
     
     var body: some View {
-        VStack(spacing: 0) {
-            Spacer()
-            
-            ZStack(alignment: .center) {
-                // Fundo com material blur e arredondamento
-                RoundedRectangle(cornerRadius: 25)
-                    .fill(.ultraThinMaterial)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 25)
-                            .stroke(AppColors.cardBackground.opacity(0.2), lineWidth: 0.5)
-                    )
-                
-                // Conteúdo da TabBar
-                HStack(spacing: 0) {
-                    // Home
-                    TabBarButton(
-                        icon: AppTab.home.icon,
-                        isSelected: selectedTab == .home
-                    ) {
-                        selectedTab = .home
-                    }
-                    
-                    // Tickets
-                    TabBarButton(
-                        icon: AppTab.tickets.icon,
-                        isSelected: selectedTab == .tickets
-                    ) {
-                        selectedTab = .tickets
-                    }
-                    
-                    // Botão + Central (maior e elevado)
-                    AddButton(action: onAddTicket)
-                    
-                    // Favorites
-                    TabBarButton(
-                        icon: AppTab.favorites.icon,
-                        isSelected: selectedTab == .favorites
-                    ) {
-                        selectedTab = .favorites
-                    }
-                    
-                    // Profile
-                    TabBarButton(
-                        icon: AppTab.profile.icon,
-                        isSelected: selectedTab == .profile
-                    ) {
-                        selectedTab = .profile
-                    }
-                }
-                .frame(height: 60)
-                .padding(.horizontal, 16)
+        HStack(spacing: 0) {
+            // Home
+            TabBarButton(
+                icon: AppTab.home.icon,
+                isSelected: selectedTab == .home
+            ) {
+                selectedTab = .home
             }
-            .frame(height: 80)
-            .padding(.horizontal, 16)
-            .padding(.bottom, 16)
-            .shadow(color: AppColors.cardShadow.opacity(0.2), radius: 16, x: 0, y: -4)
+            
+            // Tickets
+            TabBarButton(
+                icon: AppTab.tickets.icon,
+                isSelected: selectedTab == .tickets
+            ) {
+                selectedTab = .tickets
+            }
+            
+            // Botão + Central (maior e elevado)
+            AddButton(action: onAddTicket)
+                .offset(y: -8)
+            
+            // Favorites
+            TabBarButton(
+                icon: AppTab.favorites.icon,
+                isSelected: selectedTab == .favorites
+            ) {
+                selectedTab = .favorites
+            }
+            
+            // Profile
+            TabBarButton(
+                icon: AppTab.profile.icon,
+                isSelected: selectedTab == .profile
+            ) {
+                selectedTab = .profile
+            }
         }
+        .frame(height: 70)
+        .background(
+            ZStack {
+                // Fundo principal
+                Capsule()
+                    .fill(Color(.systemBackground))
+                    .shadow(color: .black.opacity(0.1), radius: 10, x: 0, y: -2)
+                
+                // Overlay com gradiente sutil
+                Capsule()
+                    .fill(
+                        LinearGradient(
+                            colors: [
+                                Color(.systemBackground),
+                                Color(.systemBackground).opacity(0.95)
+                            ],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    )
+            }
+        )
+        .padding(.horizontal, 20)
+        .padding(.bottom, 20)
     }
 }
 
@@ -289,14 +304,14 @@ struct TabBarButton: View {
     
     var body: some View {
         Button(action: action) {
-            VStack(spacing: 6) {
+            VStack(spacing: 4) {
                 Image(systemName: icon)
-                    .font(.system(size: 18, weight: .medium))
-                    .frame(height: 24)
+                    .font(.system(size: 22, weight: .medium))
+                    .frame(height: 28)
             }
             .frame(maxWidth: .infinity)
             .frame(height: 60)
-            .foregroundColor(isSelected ? AppColors.primary : AppColors.tertiaryText)
+            .foregroundColor(isSelected ? Color.blue : Color.gray)
             .contentShape(Rectangle())
         }
         .buttonStyle(PlainButtonStyle())
@@ -309,25 +324,25 @@ struct AddButton: View {
     var body: some View {
         Button(action: action) {
             ZStack {
+                // Círculo externo maior com gradiente
                 Circle()
                     .fill(
                         LinearGradient(
-                            colors: [AppColors.accentGreen, AppColors.accentGreen.opacity(0.8)],
+                            colors: [Color.blue, Color.purple],
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
                         )
                     )
-                    .frame(width: 56, height: 56)
-                    .shadow(color: AppColors.accentGreen.opacity(0.4), radius: 12, x: 0, y: 6)
+                    .frame(width: 60, height: 60)
+                    .shadow(color: Color.blue.opacity(0.4), radius: 15, x: 0, y: 5)
                 
+                // Ícone +
                 Image(systemName: "plus")
-                    .font(.system(size: 20, weight: .bold))
+                    .font(.system(size: 24, weight: .bold))
                     .foregroundColor(.white)
             }
             .frame(maxWidth: .infinity)
         }
         .buttonStyle(PlainButtonStyle())
-        .offset(y: -20)
-        .zIndex(10)
     }
 }

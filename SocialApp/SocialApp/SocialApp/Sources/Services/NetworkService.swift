@@ -91,8 +91,9 @@ final class NetworkService {
     
     private init() {
         let config = URLSessionConfiguration.default
-        config.timeoutIntervalForRequest = 30
-        config.timeoutIntervalForResource = 60
+        config.timeoutIntervalForRequest = 60
+        config.timeoutIntervalForResource = 120
+        config.waitsForConnectivity = true
         self.session = URLSession(configuration: config)
         
         self.decoder = JSONDecoder()
@@ -403,6 +404,9 @@ final class NetworkService {
         } catch {
             if (error as NSError).code == NSURLErrorNotConnectedToInternet {
                 throw NetworkError.networkUnavailable
+            } else if (error as NSError).code == NSURLErrorCancelled {
+                print("⚠️ Request cancelled - likely due to timeout or view dismissal")
+                throw NetworkError.unknown("Requisição cancelada. Verifique sua conexão.")
             } else {
                 throw NetworkError.unknown(error.localizedDescription)
             }
@@ -559,6 +563,9 @@ final class NetworkService {
         } catch {
             if (error as NSError).code == NSURLErrorNotConnectedToInternet {
                 throw NetworkError.networkUnavailable
+            } else if (error as NSError).code == NSURLErrorCancelled {
+                print("⚠️ Request cancelled - likely due to timeout or view dismissal")
+                throw NetworkError.unknown("Requisição cancelada. Verifique sua conexão.")
             } else {
                 throw NetworkError.unknown(error.localizedDescription)
             }

@@ -7,10 +7,16 @@ public struct SearchFeature {
     public struct State: Equatable {
         public var searchText: String = ""
         public var searchResults: [Event] = []
+        public var recentSearches: [String] = []
         public var isLoading: Bool = false
         public var errorMessage: String?
         
-        public init() {}
+        public init() {
+            // Load recent searches from UserDefaults
+            if let saved = UserDefaults.standard.stringArray(forKey: "recentSearches") {
+                self.recentSearches = saved
+            }
+        }
     }
     
     public enum Action: Equatable {
@@ -20,6 +26,9 @@ public struct SearchFeature {
         case eventSelected(UUID)
         case clearSearch
         case cancelSearch
+        case performSearch(String)
+        case removeRecentSearch(String)
+        case selectRecentSearch(String)
     }
     
     @Dependency(\.eventsClient) var eventsClient
@@ -88,6 +97,34 @@ public struct SearchFeature {
                 
             case .cancelSearch:
                 return .none
+                
+            case let .performSearch(query):
+                guard !query.isEmpty else { return .none }
+                
+                // Add to recent searches
+                var updatedSearches = state.recentSearches.filter { $0 != query }
+                updatedSearches.insert(query, at: 0)
+                updatedSearches = Array(updatedSearches.prefix(10)) // Keep only last 10
+                state.recentSearches = updatedSearches
+                
+                // Save to UserDefaults
+                UserDefaults.standard.set(updatedSearches, forKey: "recentSearches")
+                
+                // Trigger search
+                state.searchText = query
+                return .run { send in
+                    await send(.searchTextChanged(query))
+                }
+                
+            case let .removeRecentSearch(query):
+                state.recentSearches.removeAll { $0 == query }
+                UserDefaults.standard.set(state.recentSearches, forKey: "recentSearches")
+                return .none
+                
+            case let .selectRecentSearch(query):
+                return .run { send in
+                    await send(.performSearch(query))
+                }
             }
         }
     }

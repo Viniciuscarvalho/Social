@@ -3,6 +3,7 @@ import SwiftUI
 
 public struct SellerProfileView: View {
     @Bindable var store: StoreOf<SellerProfileFeature>
+    @Environment(\.dismiss) var dismiss
     
     public init(store: StoreOf<SellerProfileFeature>) {
         self.store = store
@@ -39,7 +40,27 @@ public struct SellerProfileView: View {
         }
         .navigationTitle("Vendedor")
         .navigationBarTitleDisplayMode(.inline)
+        .navigationBarBackButtonHidden(true)
         .preferredColorScheme(.dark)
+        .gesture(
+            DragGesture(minimumDistance: 20, coordinateSpace: .local)
+                .onEnded { value in
+                    if value.translation.width > 100 {
+                        dismiss()
+                    }
+                }
+        )
+        .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                Button {
+                    dismiss()
+                } label: {
+                    Image(systemName: "chevron.left")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundColor(.white)
+                }
+            }
+        }
         .onAppear {
             store.send(.onAppear)
         }

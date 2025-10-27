@@ -3,10 +3,12 @@ import SwiftUI
 public struct TicketCard: View {
     let ticket: Ticket
     let onTap: () -> Void
+    var onDelete: (() -> Void)? = nil
     
-    public init(ticket: Ticket, onTap: @escaping () -> Void) {
+    public init(ticket: Ticket, onTap: @escaping () -> Void, onDelete: (() -> Void)? = nil) {
         self.ticket = ticket
         self.onTap = onTap
+        self.onDelete = onDelete
     }
     
     public var body: some View {
@@ -28,6 +30,15 @@ public struct TicketCard: View {
                 RoundedRectangle(cornerRadius: 16)
                     .stroke(Color(.systemGray6).opacity(0.5), lineWidth: 0.8)
             )
+            .swipeActions(edge: .trailing) {
+                if let onDelete = onDelete {
+                    Button(role: .destructive) {
+                        onDelete()
+                    } label: {
+                        Label("Deletar", systemImage: "trash.fill")
+                    }
+                }
+            }
         }
         .frame(height: 110)
     }

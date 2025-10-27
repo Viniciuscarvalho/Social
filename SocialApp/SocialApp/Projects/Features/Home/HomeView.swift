@@ -1,5 +1,4 @@
 import ComposableArchitecture
-import ComposableArchitecture
 import SwiftUI
 
 public struct HomeView: View {
@@ -13,12 +12,24 @@ public struct HomeView: View {
     
     public var body: some View {
         ScrollView {
-            LazyVStack(spacing: 24) {
+            VStack(spacing: 24) {
+                // Header integrado à página (não fixo)
                 headerSection
-                eventSectionsView
-                availableTicketsSection
+                    .padding(.horizontal, 20)
+                    .padding(.top, 8)
+                
+                // Time Filters
+                timeFiltersSection
+                
+                // Recommended Events Section
+                if !store.recommendedEvents.isEmpty {
+                    recommendedEventsSection
+                }
+                
+                // Popular Events Section
+                popularEventsSection
             }
-            .padding(.horizontal, 16)
+            .padding(.bottom, 100)
         }
         .navigationBarHidden(true)
         .refreshable {
@@ -44,155 +55,481 @@ public struct HomeView: View {
         }
     }
     
-    @ViewBuilder
+    // MARK: - Header Section
+    
     private var headerSection: some View {
-        HStack {
-            VStack(alignment: .leading, spacing: 4) {
-                if let user = store.homeContent.user {
-                    Text("Olá, \(user.name)!")
-                        .font(.title2)
-                        .fontWeight(.semibold)
-                } else {
-                    Text("Olá!")
-                        .font(.title2)
-                        .fontWeight(.semibold)
+        VStack(spacing: 16) {
+            // User greeting and profile
+            HStack(spacing: 12) {
+                // Profile image
+                AsyncImage(url: URL(string: store.homeContent.user?.profileImageURL ?? "")) { image in
+                    image
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                } placeholder: {
+                    Circle()
+                        .fill(
+                            LinearGradient(
+                                colors: [Color.blue.opacity(0.6), Color.purple.opacity(0.6)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .overlay(
+                            Image(systemName: "person.fill")
+                                .font(.system(size: 16))
+                                .foregroundColor(.white)
+                        )
+                }
+                .frame(width: 44, height: 44)
+                .clipShape(Circle())
+                
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Hey! \(store.homeContent.user?.name ?? "User")")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundColor(.primary)
+                    
+                    Text("Let's make your day eventful")
+                        .font(.system(size: 13))
+                        .foregroundColor(.secondary)
                 }
                 
-                Text("Descubra eventos incríveis")
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
+                Spacer()
+                
+                // Notification button
+                Button {
+                    // Notification action
+                } label: {
+                    ZStack {
+                        Circle()
+                            .fill(Color(.systemGray6))
+                            .frame(width: 44, height: 44)
+                        
+                        Image(systemName: "bell.fill")
+                            .font(.system(size: 18))
+                            .foregroundColor(.primary)
+                    }
+                }
             }
             
-            Spacer()
-            
+            // Search bar
             Button {
-                store.send(.searchButtonTapped)
+                store.send(.showSearchSheetChanged(true))
             } label: {
-                Image(systemName: "magnifyingglass")
-                    .font(.title2)
-                    .foregroundColor(.primary)
-                    .frame(width: 44, height: 44)
-                    .background(Color(.systemGray6))
-                    .clipShape(Circle())
+                HStack(spacing: 12) {
+                    Image(systemName: "magnifyingglass")
+                        .font(.system(size: 16))
+                        .foregroundColor(.secondary)
+                    
+                    Text("Search...")
+                        .font(.system(size: 15))
+                        .foregroundColor(.secondary)
+                    
+                    Spacer()
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
+                .background(Color(.systemGray6))
+                .cornerRadius(12)
             }
         }
-        .padding(.top, 8)
     }
     
-    @ViewBuilder
-    private var eventSectionsView: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            // Seção selector
-            HStack {
-                ForEach(EventSection.allCases, id: \.self) { section in
-                    Button {
-                        store.send(.eventSectionSelected(section))
-                    } label: {
-                        Text(section.displayName)
-                            .font(.headline)
-                            .fontWeight(store.selectedEventSection == section ? .bold : .medium)
-                            .foregroundColor(store.selectedEventSection == section ? .primary : .secondary)
-                            .padding(.bottom, 4)
-                            .overlay(
-                                Rectangle()
-                                    .frame(height: 2)
-                                    .foregroundColor(.blue)
-                                    .opacity(store.selectedEventSection == section ? 1 : 0),
-                                alignment: .bottom
-                            )
+    // MARK: - Time Filters Section
+    
+    private var timeFiltersSection: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 12) {
+                ForEach(HomeFeature.State.TimeFilter.allCases, id: \.self) { filter in
+                    TimeFilterChip(
+                        title: filter.rawValue,
+                        isSelected: store.selectedTimeFilter == filter
+                    ) {
+                        store.send(.timeFilterSelected(filter))
                     }
-                    .buttonStyle(PlainButtonStyle())
                 }
+            }
+            .padding(.horizontal, 20)
+        }
+    }
+    
+    // MARK: - Recommended Events Section
+    
+    private var recommendedEventsSection: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            HStack {
+                Text("Recommended Events")
+                    .font(.system(size: 18, weight: .bold))
+                    .foregroundColor(.primary)
+                
                 Spacer()
+                
+                Button {
+                    store.send(.viewAllRecommended)
+                } label: {
+                    Text("View all")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundColor(.blue)
+                }
+            }
+            .padding(.horizontal, 20)
+            
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 16) {
+                    ForEach(store.recommendedEvents.prefix(5)) { event in
+                        RecommendedEventCard(event: event) {
+                            store.send(.eventSelected(event.id))
+                        }
+                    }
+                }
+                .padding(.horizontal, 20)
+            }
+        }
+    }
+    
+    // MARK: - Popular Events Section
+    
+    private var popularEventsSection: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            HStack {
+                Text("Popular Event")
+                    .font(.system(size: 18, weight: .bold))
+                    .foregroundColor(.primary)
+                
+                Spacer()
+                
+                Button {
+                    // View all action
+                } label: {
+                    Text("View all")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundColor(.blue)
+                }
+            }
+            .padding(.horizontal, 20)
+            
+            // Category filters
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 12) {
+                    CategoryFilterChip(
+                        icon: nil,
+                        title: "All",
+                        isSelected: store.selectedCategory == nil
+                    ) {
+                        store.send(.categorySelected(nil))
+                    }
+                    
+                    ForEach([EventCategory.music, EventCategory.culture, EventCategory.business], id: \.self) { category in
+                        CategoryFilterChip(
+                            icon: getCategoryIcon(category),
+                            title: getCategoryTitle(category),
+                            isSelected: store.selectedCategory == category
+                        ) {
+                            store.send(.categorySelected(category))
+                        }
+                    }
+                }
+                .padding(.horizontal, 20)
             }
             
             // Events list
-            if store.isLoading {
-                ProgressView()
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 40)
-            } else {
-                let events = store.selectedEventSection == .curated ? 
-                    store.homeContent.curatedEvents : 
-                    store.homeContent.trendingEvents
-                
-                if events.isEmpty {
-                    Text("Nenhum evento encontrado")
-                        .foregroundColor(.secondary)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 40)
-                } else {
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 20) {
-                            ForEach(events) { event in
-                                EventCard(event: event) {
-                                    store.send(.eventSelected(event.id))
-                                }
-                                .frame(width: 300)
-                            }
-                        }
-                        .padding(.horizontal, 20)
+            VStack(spacing: 16) {
+                ForEach(store.filteredEvents.prefix(10)) { event in
+                    PopularEventListCard(event: event) {
+                        store.send(.eventSelected(event.id))
                     }
-                    .padding(.horizontal, -16)
+                    .padding(.horizontal, 20)
                 }
             }
         }
     }
     
-    @ViewBuilder
-    private var availableTicketsSection: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            HStack {
-                Text("Ingressos Disponíveis")
-                    .font(.headline)
-                    .fontWeight(.bold)
-                Spacer()
-            }
-            
-            if store.homeContent.availableTickets.isEmpty {
-                Text("Nenhum ingresso disponível")
-                    .foregroundColor(.secondary)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 20)
-            } else {
-                LazyVStack(spacing: 12) {
-                    ForEach(store.homeContent.availableTickets) { ticket in
-                        TicketCard(ticket: ticket) {
-                            store.send(.ticketSelected(ticket.id))
-                        }
-                    }
-                }
-            }
+    private func getCategoryIcon(_ category: EventCategory) -> String {
+        switch category {
+        case .music: return "music.note"
+        case .culture: return "paintpalette"
+        case .business: return "briefcase.fill"
+        default: return "star.fill"
+        }
+    }
+    
+    private func getCategoryTitle(_ category: EventCategory) -> String {
+        switch category {
+        case .music: return "Music"
+        case .culture: return "Arts"
+        case .business: return "Business"
+        default: return category.displayName
         }
     }
 }
 
-// MARK: - Search Bar
+// MARK: - Time Filter Chip
 
-private struct SearchBar: View {
-    @Binding var text: String
+struct TimeFilterChip: View {
+    let title: String
+    let isSelected: Bool
+    let action: () -> Void
     
     var body: some View {
-        HStack {
-            Image(systemName: "magnifyingglass")
-                .foregroundColor(.secondary)
-            
-            TextField("Buscar eventos ou ingressos...", text: $text)
-                .textFieldStyle(PlainTextFieldStyle())
-            
-            if !text.isEmpty {
+        Button(action: action) {
+            Text(title)
+                .font(.system(size: 14, weight: isSelected ? .semibold : .regular))
+                .foregroundColor(isSelected ? .white : .primary)
+                .padding(.horizontal, 20)
+                .padding(.vertical, 10)
+                .background(
+                    isSelected
+                        ? LinearGradient(
+                            colors: [Color.blue, Color.blue.opacity(0.8)],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                        : LinearGradient(
+                            colors: [Color(.systemGray6), Color(.systemGray6)],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                )
+                .cornerRadius(20)
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+// MARK: - Category Filter Chip
+
+struct CategoryFilterChip: View {
+    let icon: String?
+    let title: String
+    let isSelected: Bool
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 6) {
+                if let icon = icon {
+                    Image(systemName: icon)
+                        .font(.system(size: 14))
+                }
+                
+                Text(title)
+                    .font(.system(size: 14, weight: isSelected ? .semibold : .regular))
+            }
+            .foregroundColor(isSelected ? .white : .primary)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 10)
+            .background(
+                isSelected
+                    ? LinearGradient(
+                        colors: [Color.blue, Color.blue.opacity(0.8)],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    )
+                    : LinearGradient(
+                        colors: [Color(.systemGray6), Color(.systemGray6)],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    )
+            )
+            .cornerRadius(20)
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+// MARK: - Recommended Event Card
+
+struct RecommendedEventCard: View {
+    let event: Event
+    let onTap: () -> Void
+    
+    var body: some View {
+        Button(action: onTap) {
+            VStack(alignment: .leading, spacing: 0) {
+                // Event image with price badge
+                ZStack(alignment: .topTrailing) {
+                    AsyncImage(url: URL(string: event.imageURL ?? "")) { image in
+                        image
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                    } placeholder: {
+                        Rectangle()
+                            .fill(
+                                LinearGradient(
+                                    colors: [Color.blue.opacity(0.3), Color.purple.opacity(0.3)],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+                    }
+                    .frame(width: 220, height: 160)
+                    .clipped()
+                    
+                    // Price badge
+                    Text("$\(Int(event.startPrice))")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(
+                            Capsule()
+                                .fill(Color.blue)
+                        )
+                        .padding(12)
+                }
+                .frame(width: 220, height: 160)
+                
+                // Event info
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        Text(event.name)
+                            .font(.system(size: 15, weight: .semibold))
+                            .foregroundColor(.primary)
+                            .lineLimit(1)
+                        
+                        Spacer()
+                        
+                        Image(systemName: "heart")
+                            .font(.system(size: 16))
+                            .foregroundColor(.blue)
+                    }
+                    
+                    HStack(spacing: 4) {
+                        Image(systemName: "calendar")
+                            .font(.system(size: 11))
+                            .foregroundColor(.secondary)
+                        
+                        Text(event.dateFormatted)
+                            .font(.system(size: 12))
+                            .foregroundColor(.secondary)
+                        
+                        Text("•")
+                            .font(.system(size: 12))
+                            .foregroundColor(.secondary)
+                        
+                        Text(event.timeRange.components(separatedBy: " - ").first ?? "")
+                            .font(.system(size: 12))
+                            .foregroundColor(.secondary)
+                    }
+                    
+                    HStack(spacing: 4) {
+                        Image(systemName: "location.fill")
+                            .font(.system(size: 11))
+                            .foregroundColor(.secondary)
+                        
+                        Text(event.location.name)
+                            .font(.system(size: 12))
+                            .foregroundColor(.secondary)
+                            .lineLimit(1)
+                    }
+                }
+                .padding(12)
+            }
+            .frame(width: 220)
+            .background(Color(.systemBackground))
+            .cornerRadius(16)
+            .shadow(color: .black.opacity(0.08), radius: 8, x: 0, y: 2)
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+// MARK: - Popular Event List Card
+
+struct PopularEventListCard: View {
+    let event: Event
+    let onTap: () -> Void
+    
+    var body: some View {
+        Button(action: onTap) {
+            HStack(spacing: 12) {
+                // Event image with price badge
+                ZStack(alignment: .topLeading) {
+                    AsyncImage(url: URL(string: event.imageURL ?? "")) { image in
+                        image
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                    } placeholder: {
+                        Rectangle()
+                            .fill(
+                                LinearGradient(
+                                    colors: [Color.blue.opacity(0.3), Color.purple.opacity(0.3)],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+                    }
+                    .frame(width: 80, height: 80)
+                    .clipped()
+                    .cornerRadius(12)
+                    
+                    // Price badge
+                    Text("$\(Int(event.startPrice))")
+                        .font(.system(size: 12, weight: .bold))
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(
+                            Capsule()
+                                .fill(Color.blue)
+                        )
+                        .padding(6)
+                }
+                
+                // Event info
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(event.name)
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundColor(.primary)
+                        .lineLimit(2)
+                    
+                    HStack(spacing: 4) {
+                        Image(systemName: "calendar")
+                            .font(.system(size: 10))
+                            .foregroundColor(.secondary)
+                        
+                        Text(event.dateFormatted)
+                            .font(.system(size: 12))
+                            .foregroundColor(.secondary)
+                        
+                        Text("•")
+                            .font(.system(size: 12))
+                            .foregroundColor(.secondary)
+                        
+                        Text(event.timeRange.components(separatedBy: " - ").first ?? "")
+                            .font(.system(size: 12))
+                            .foregroundColor(.secondary)
+                    }
+                    
+                    HStack(spacing: 4) {
+                        Image(systemName: "location.fill")
+                            .font(.system(size: 10))
+                            .foregroundColor(.secondary)
+                        
+                        Text(event.location.name)
+                            .font(.system(size: 12))
+                            .foregroundColor(.secondary)
+                            .lineLimit(1)
+                    }
+                }
+                
+                Spacer()
+                
+                // Favorite button
                 Button {
-                    text = ""
+                    // Toggle favorite
                 } label: {
-                    Image(systemName: "xmark.circle.fill")
-                        .foregroundColor(.secondary)
+                    Image(systemName: "heart")
+                        .font(.system(size: 18))
+                        .foregroundColor(.blue)
                 }
             }
+            .padding(12)
+            .background(Color(.systemBackground))
+            .cornerRadius(12)
+            .shadow(color: .black.opacity(0.06), radius: 4, x: 0, y: 2)
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 8)
-        .background(Color(.systemGray6))
-        .cornerRadius(10)
+        .buttonStyle(.plain)
     }
 }
 

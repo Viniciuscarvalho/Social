@@ -28,6 +28,9 @@ public struct TicketsListFeature {
         case filterByEvent(String?) // Nova action para filtrar por evento específico
         case refreshRequested
         case addNewTicket(Ticket) // Nova action para adicionar ticket criado
+        case deleteTicket(String) // Nova action para deletar ticket
+        case deleteTicketSuccess // Sucesso na deletação
+        case deleteTicketFailure(String) // Falha na deletação com mensagem
     }
     
     @Dependency(\.ticketsClient) var ticketsClient
@@ -104,6 +107,30 @@ public struct TicketsListFeature {
                 state.tickets.insert(ticket, at: 0)
                 state.filteredTickets = filterTickets(state.tickets, with: state.selectedFilter)
                 print("✅ Novo ticket adicionado à lista: \(ticket.name)")
+                return .none
+                
+            case let .deleteTicket(ticketId):
+                print("🗑️ Iniciando deletação do ticket: \(ticketId)")
+                return .run { send in
+                    do {
+                        try await ticketsClient.deleteTicket(ticketId)
+                        await send(.deleteTicketSuccess)
+                    } catch {
+                        print("❌ Erro ao deletar ticket: \(error.localizedDescription)")
+                        await send(.deleteTicketFailure(error.localizedDescription))
+                    }
+                }
+                
+            case .deleteTicketSuccess:
+                print("✅ Ticket deletado com sucesso")
+                // Recarrega a lista após sucesso
+                return .run { send in
+                    await send(.loadTickets)
+                }
+                
+            case let .deleteTicketFailure(errorMessage):
+                print("❌ Erro na resposta de delete: \(errorMessage)")
+                state.errorMessage = errorMessage
                 return .none
             }
         }

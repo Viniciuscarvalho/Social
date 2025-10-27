@@ -10,6 +10,71 @@ public struct HomeFeature {
         public var selectedEventSection: EventSection = .curated
         public var searchText: String = ""
         public var showSearchSheet: Bool = false
+        public var showFilterSheet: Bool = false
+        public var selectedCategory: EventCategory?
+        public var filterState: FilterState = FilterState()
+        public var selectedTimeFilter: TimeFilter = .all
+        
+        // Time filter options
+        public enum TimeFilter: String, CaseIterable {
+            case all = "All"
+            case today = "Today"
+            case tomorrow = "Tomorrow"
+            case thisWeek = "This Week"
+        }
+        
+        // Computed: eventos recomendados
+        public var recommendedEvents: [Event] {
+            homeContent.curatedEvents.filter { $0.isRecommended }
+        }
+        
+        // Computed: eventos populares (curated ou com maior rating)
+        public var popularEvents: [Event] {
+            homeContent.curatedEvents.prefix(5).map { $0 }
+        }
+        
+        // Computed: eventos filtrados por tempo
+        public var filteredEvents: [Event] {
+            let allEvents = homeContent.curatedEvents
+            
+            switch selectedTimeFilter {
+            case .all:
+                return allEvents
+            case .today:
+                return allEvents.filter { event in
+                    guard let eventDate = event.eventDate else { return false }
+                    return Calendar.current.isDateInToday(eventDate)
+                }
+            case .tomorrow:
+                return allEvents.filter { event in
+                    guard let eventDate = event.eventDate else { return false }
+                    return Calendar.current.isDateInTomorrow(eventDate)
+                }
+            case .thisWeek:
+                return allEvents.filter { event in
+                    guard let eventDate = event.eventDate else { return false }
+                    let calendar = Calendar.current
+                    return calendar.isDate(eventDate, equalTo: Date(), toGranularity: .weekOfYear)
+                }
+            }
+        }
+        
+        // Computed: eventos por categoria
+        public var eventsByCategory: [EventCategory: [Event]] {
+            var dict: [EventCategory: [Event]] = [:]
+            let allEvents = homeContent.curatedEvents + homeContent.trendingEvents
+            
+            for event in allEvents {
+                dict[event.category, default: []].append(event)
+            }
+            
+            return dict
+        }
+        
+        // Computed: contagem de eventos por categoria
+        public var categoryCounts: [EventCategory: Int] {
+            eventsByCategory.mapValues { $0.count }
+        }
         
         public init() {}
     }
@@ -26,6 +91,11 @@ public struct HomeFeature {
         case dismissSearch
         case refreshHome
         case showSearchSheetChanged(Bool)
+        case showFilterSheetChanged(Bool)
+        case categorySelected(EventCategory?)
+        case filterApplied(FilterState)
+        case timeFilterSelected(State.TimeFilter)
+        case viewAllRecommended
     }
     
     public init() {}
@@ -102,6 +172,29 @@ public struct HomeFeature {
             case let .showSearchSheetChanged(isShown):
                 state.showSearchSheet = isShown
                 return .none
+                
+            case let .showFilterSheetChanged(isShown):
+                state.showFilterSheet = isShown
+                return .none
+                
+            case let .categorySelected(category):
+                state.selectedCategory = category
+                // Aqui você pode adicionar lógica para filtrar eventos por categoria
+                return .none
+                
+            case let .filterApplied(filterState):
+                state.filterState = filterState
+                state.showFilterSheet = false
+                // Aqui você pode adicionar lógica para aplicar os filtros
+                // Por exemplo, recarregar eventos com os filtros aplicados
+                return .none
+                
+            case let .timeFilterSelected(filter):
+                state.selectedTimeFilter = filter
+                return .none
+                
+            case .viewAllRecommended:
+                return .none // Handled by parent
             }
         }
     }

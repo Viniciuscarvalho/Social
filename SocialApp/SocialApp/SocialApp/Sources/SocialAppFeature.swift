@@ -28,6 +28,7 @@ public struct SocialAppFeature {
         public var selectedTicketId: UUID?
         public var selectedSellerId: UUID?
         public var showingAddTicket = false
+        public var showingRecommendedEvents = false
         
         // Computed properties for easier access
         public var isAuthenticated: Bool {
@@ -47,7 +48,7 @@ public struct SocialAppFeature {
         }
     }
     
-    public enum Action: Equatable {
+    public enum Action {
         // App lifecycle actions
         case onAppear
         case signOut
@@ -84,6 +85,10 @@ public struct SocialAppFeature {
         case addTicketTapped
         case setShowingAddTicket(Bool)
         case setAddTicketEventId(UUID?)
+        
+        // Recommended events navigation
+        case showRecommendedEvents
+        case setShowingRecommendedEvents(Bool)
     }
     
     public init() {}
@@ -308,6 +313,14 @@ public struct SocialAppFeature {
             state.addTicket.selectedEventId = eventId
             return .none
             
+        case .showRecommendedEvents:
+            state.showingRecommendedEvents = true
+            return .none
+            
+        case let .setShowingRecommendedEvents(isShowing):
+            state.showingRecommendedEvents = isShowing
+            return .none
+            
             // MARK: - Navigation Actions
         case .navigateToEventDetail:
             // Handled in .homeFeature(.eventSelected) and .favoritesFeature(.eventSelected)
@@ -453,6 +466,10 @@ public struct SocialAppFeature {
             
             // MARK: - Other Feature Actions
             // Outras actions das features são tratadas pelos seus próprios reducers
+        case .homeFeature(.viewAllRecommended):
+            state.showingRecommendedEvents = true
+            return .none
+            
         case .homeFeature:
             return .none
             
