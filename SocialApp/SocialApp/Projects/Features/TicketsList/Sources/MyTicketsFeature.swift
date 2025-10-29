@@ -6,13 +6,14 @@ struct MyTicketsFeature {
     @ObservableState
     struct State: Equatable {
         var myTickets: [Ticket] = []
+        var deletedTicketId: String? // Para remover localmente após delete
         var isLoading = false
         var errorMessage: String?
-        var currentUserId: String? // Adiciona ID do usuário atual
+        var currentUserId: String?
+        var totalTicketsCount: Int = 0
         
         init(currentUserId: String? = nil) {
             self.currentUserId = currentUserId ?? UserDefaults.standard.string(forKey: "currentUserId")
-            print("📱 MyTicketsFeature.State inicializado com currentUserId: \(self.currentUserId ?? "nil")")
         }
     }
     
@@ -21,16 +22,11 @@ struct MyTicketsFeature {
         case onDisappear
         case refresh
         case loadMyTickets
-        case loadMyTicketsResponse(Result<[Ticket], NetworkError>)
-        
-        // Ticket management
+        case loadMyTicketsResponse(Result<(tickets: [Ticket], total: Int), NetworkError>)
         case ticketSelected(String)
-        
-        // Delete actions - simplificado
         case deleteTicket(String)
         case deleteTicketResponse(Result<Void, NetworkError>)
-        
-        // Error handling
+        case notifyTicketDeleted
         case dismissError
     }
     
@@ -40,10 +36,8 @@ struct MyTicketsFeature {
         Reduce { state, action in
             switch action {
             case .onAppear:
-                // Atualiza o ID do usuário atual se não estiver definido
                 if state.currentUserId == nil {
                     state.currentUserId = UserDefaults.standard.string(forKey: "currentUserId")
-                    print("📱 MyTicketsFeature.onAppear: currentUserId atualizado para: \(state.currentUserId ?? "nil")")
                 }
                 
                 return .run { send in
@@ -62,36 +56,28 @@ struct MyTicketsFeature {
                 state.isLoading = true
                 state.errorMessage = nil
                 
-                print("📱 MyTicketsFeature.loadMyTickets iniciado")
-                print("   currentUserId: \(state.currentUserId ?? "nil")")
-                
                 return .run { send in
                     do {
-                        let tickets = try await ticketsClient.fetchMyTickets()
-                        print("📱 TicketsClient retornou \(tickets.count) tickets")
-                        for (index, ticket) in tickets.enumerated() {
-                            print("   [\(index)] \(ticket.name) - Seller: \(ticket.sellerId)")
-                        }
-                        await send(.loadMyTicketsResponse(.success(tickets)))
+                        let result = try await ticketsClient.fetchMyTicketsWithPagination()
+                        await send(.loadMyTicketsResponse(.success(result)))
                     } catch {
                         let networkError = error as? NetworkError ?? NetworkError.unknown(error.localizedDescription)
                         await send(.loadMyTicketsResponse(.failure(networkError)))
                     }
                 }
                 
-            case let .loadMyTicketsResponse(.success(tickets)):
+            case let .loadMyTicketsResponse(.success((tickets, total))):
                 state.isLoading = false
+                state.totalTicketsCount = total
                 
-                // Filtra tickets para garantir que são apenas do usuário logado
+
                 if let currentUserId = state.currentUserId {
                     let userTickets = tickets.filter { ticket in
                         return ticket.sellerId == currentUserId
                     }
-                    print("📱 MyTicketsFeature: Filtrados \(userTickets.count) tickets do usuário \(currentUserId) de \(tickets.count) tickets totais")
-                    state.myTickets = userTickets
+                        state.myTickets = userTickets
                 } else {
-                    print("⚠️ MyTicketsFeature: currentUserId é nil, usando todos os tickets retornados")
-                    state.myTickets = tickets
+                        state.myTickets = tickets
                 }
                 
                 state.errorMessage = nil
@@ -103,22 +89,15 @@ struct MyTicketsFeature {
                 return .none
                 
             case .ticketSelected:
-                // Navigate to ticket detail
                 return .none
                 
             case let .deleteTicket(ticketId):
-                // Verifica se o ticket existe e pertence ao usuário
                 let ticket = state.myTickets.first { $0.id == ticketId }
                 
                 if let ticket = ticket {
-                    print("🗑️ Tentando deletar ticket: \(ticket.name)")
-                    print("   Ticket ID: \(ticketId)")
-                    print("   Seller ID: \(ticket.sellerId)")
-                    print("   Current User ID: \(state.currentUserId ?? "nil")")
-                    
                     if let currentUserId = state.currentUserId, ticket.sellerId == currentUserId {
-                        print("✅ Ticket pertence ao usuário - permitindo exclusão")
                         state.errorMessage = nil
+                        state.deletedTicketId = ticketId  // Guardar para remover localmente
                         
                         return .run { send in
                             do {
@@ -130,22 +109,31 @@ struct MyTicketsFeature {
                             }
                         }
                     } else {
-                        print("❌ Ticket não pertence ao usuário - bloqueando exclusão")
                         state.errorMessage = "Você só pode excluir seus próprios ingressos."
                     }
                 } else {
-                    print("❌ Ticket não encontrado na lista de meus tickets")
                     state.errorMessage = "Ingresso não encontrado."
                 }
                 
                 return .none
                 
             case .deleteTicketResponse(.success):
-                // Reload tickets after successful deletion
-                return .run { send in
-                    await send(.loadMyTickets)
-                    // TODO: Notificar ProfileFeature para atualizar a contagem
+                // Remove o ticket localmente ANTES de qualquer outra coisa
+                if let deletedId = state.deletedTicketId {
+                    state.myTickets.removeAll { $0.id == deletedId }
+                    state.totalTicketsCount = max(0, state.totalTicketsCount - 1)
+                    state.deletedTicketId = nil
                 }
+                
+                // Notifica o parent
+                NotificationCenter.default.post(name: NSNotification.Name("TicketDeleted"), object: nil)
+                
+                return .run { send in
+                    await send(.notifyTicketDeleted)
+                }
+                
+            case .notifyTicketDeleted:
+                return .none
                 
             case let .deleteTicketResponse(.failure(error)):
                 state.errorMessage = "Erro ao excluir ingresso: \(error.userFriendlyMessage)"

@@ -122,6 +122,6 @@ struct InterestChip: View {
 
 #Preview {
     SelectInterestsView { interests in
-        print("Selected: \(interests)")
     }
 }
+

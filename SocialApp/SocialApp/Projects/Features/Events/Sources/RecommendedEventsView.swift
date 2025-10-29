@@ -6,16 +6,30 @@ public struct RecommendedEventsView: View {
     let onEventSelected: (String) -> Void
     @Environment(\.dismiss) var dismiss
     
+    @State private var favoriteStores: [String: StoreOf<EventFavoriteFeature>] = [:]
+    
     public init(events: [Event], onEventSelected: @escaping (String) -> Void) {
         self.events = events
         self.onEventSelected = onEventSelected
     }
     
+    
+    private func favoriteStore(for event: Event) -> StoreOf<EventFavoriteFeature> {
+        if let existingStore = favoriteStores[event.id] {
+            return existingStore
+        }
+        
+        let newStore = Store(initialState: EventFavoriteFeature.State(event: event)) {
+            EventFavoriteFeature()
+        }
+        favoriteStores[event.id] = newStore
+        return newStore
+    }
     public var body: some View {
         ScrollView {
             VStack(spacing: 16) {
                 ForEach(events) { event in
-                    RecommendedEventFullCard(event: event) {
+                    RecommendedEventFullCard(event: event, favoriteStore: favoriteStore(for: event)) {
                         onEventSelected(event.id)
                     }
                     .padding(.horizontal, 20)
@@ -53,8 +67,8 @@ public struct RecommendedEventsView: View {
 
 struct RecommendedEventFullCard: View {
     let event: Event
+    @Bindable var favoriteStore: StoreOf<EventFavoriteFeature>
     let onTap: () -> Void
-    @State private var isFavorited: Bool = false
     
     var body: some View {
         Button(action: onTap) {
@@ -103,12 +117,15 @@ struct RecommendedEventFullCard: View {
                         
                         Spacer()
                         
-                        Button {
-                            isFavorited.toggle()
-                        } label: {
-                            Image(systemName: isFavorited ? "heart.fill" : "heart")
-                                .font(.system(size: 18))
-                                .foregroundColor(.blue)
+                        FavoriteButton(
+                            event: event,
+                            isFavorite: favoriteStore.isFavorite,
+                            onTap: {
+                                favoriteStore.send(.toggleFavorite)
+                            }
+                        )
+                        .onAppear {
+                            favoriteStore.send(.onAppear)
                         }
                     }
                     

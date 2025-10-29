@@ -5,46 +5,70 @@ import ComposableArchitecture
 public struct EventCard: View {
     let event: Event
     let onTap: () -> Void
+    let showFavoriteButton: Bool
+    let isFavorite: Bool
+    let onFavorite: (() -> Void)?
     
-    public init(event: Event, onTap: @escaping () -> Void) {
+    public init(event: Event, onTap: @escaping () -> Void, showFavoriteButton: Bool = false, isFavorite: Bool = false, onFavorite: (() -> Void)? = nil) {
         self.event = event
         self.onTap = onTap
+        self.showFavoriteButton = showFavoriteButton
+        self.isFavorite = isFavorite
+        self.onFavorite = onFavorite
     }
     
     public var body: some View {
         Button(action: onTap) {
             VStack(alignment: .leading, spacing: 0) {
-                // Event image placeholder
-                AsyncImage(url: event.imageURL.flatMap { urlString in
-                    print("📸 EventCard - Event: \(event.name)")
-                    print("   imageURL: \(urlString)")
-                    let url = URL(string: urlString)
-                    print("   Parsed URL: \(url?.absoluteString ?? "nil")")
-                    return url
-                }) { image in
-                    image
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                } placeholder: {
-                    ZStack {
-                        Rectangle()
-                            .fill(Color(.systemGray6))
-                            .overlay(
-                                LinearGradient(
-                                    colors: [Color.clear, Color.black.opacity(0.1)],
-                                    startPoint: .top,
-                                    endPoint: .bottom
+                // Event image placeholder with favorite button overlay
+                ZStack(alignment: .topTrailing) {
+                    AsyncImage(url: event.imageURL.flatMap { urlString in
+                        let url = URL(string: urlString)
+                        return url
+                    }) { image in
+                        image
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                    } placeholder: {
+                        ZStack {
+                            Rectangle()
+                                .fill(Color(.systemGray6))
+                                .overlay(
+                                    LinearGradient(
+                                        colors: [Color.clear, Color.black.opacity(0.1)],
+                                        startPoint: .top,
+                                        endPoint: .bottom
+                                    )
                                 )
-                            )
-                        
-                        Image(systemName: "photo")
-                            .foregroundColor(.secondary)
-                            .font(.system(size: 28))
+                            
+                            Image(systemName: "photo")
+                                .foregroundColor(.secondary)
+                                .font(.system(size: 28))
+                        }
+                    }
+                    .frame(height: 180)
+                    .clipped()
+                    .cornerRadius(16, corners: [.topLeft, .topRight])
+                    
+                    // Favorite button overlay
+                    if showFavoriteButton {
+                        Button(action: {
+                            onFavorite?()
+                        }) {
+                            Image(systemName: isFavorite ? "heart.fill" : "heart")
+                                .foregroundColor(isFavorite ? .red : .white)
+                                .font(.system(size: 16, weight: .medium))
+                                .padding(8)
+                                .background(
+                                    Circle()
+                                        .fill(.ultraThinMaterial)
+                                        .shadow(color: .black.opacity(0.1), radius: 2, x: 0, y: 1)
+                                )
+                        }
+                        .buttonStyle(PlainButtonStyle())
+                        .padding(12)
                     }
                 }
-                .frame(height: 180)
-                .clipped()
-                .cornerRadius(16, corners: [.topLeft, .topRight])
                 
                 // Content section with better padding and spacing
                 VStack(alignment: .leading, spacing: 14) {
@@ -180,4 +204,103 @@ struct RoundedCorner: Shape {
         )
         return Path(path.cgPath)
     }
+}
+
+// MARK: - EventCard with Favorites Integration
+
+public struct EventCardWithFavorites: View {
+    let event: Event
+    let onTap: () -> Void
+    @Bindable var favoriteStore: StoreOf<EventFavoriteFeature>
+    
+    public init(event: Event, onTap: @escaping () -> Void, favoriteStore: StoreOf<EventFavoriteFeature>) {
+        self.event = event
+        self.onTap = onTap
+        self.favoriteStore = favoriteStore
+    }
+    
+    public var body: some View {
+        EventCard(
+            event: event,
+            onTap: onTap,
+            showFavoriteButton: true,
+            isFavorite: favoriteStore.isFavorite,
+            onFavorite: {
+                favoriteStore.send(.toggleFavorite)
+            }
+        )
+        .onAppear {
+            favoriteStore.send(.onAppear)
+        }
+    }
+}
+
+// MARK: - Preview and Usage Examples
+
+#Preview("EventCard Simple") {
+    let sampleEvent = Event(
+        name: "Festival de Rock",
+        startPrice: 50.0,
+        location: Location(
+            name: "Arena São Paulo",
+            city: "São Paulo",
+            state: "SP", 
+            country: "Brasil",
+            coordinate: Coordinate(latitude: -23.5505, longitude: -46.6333)
+        ),
+        category: .music
+    )
+    
+    VStack(spacing: 20) {
+        // Card simples sem favorito
+        EventCard(
+            event: sampleEvent,
+            onTap: { print("Event tapped!") }
+        )
+        
+        // Card com botão de favorito simples
+        EventCard(
+            event: sampleEvent,
+            onTap: { print("Event tapped!") },
+            showFavoriteButton: true,
+            isFavorite: false,
+            onFavorite: { print("Favorite tapped!") }
+        )
+        
+        // Card com favorito ativado
+        EventCard(
+            event: sampleEvent,
+            onTap: { print("Event tapped!") },
+            showFavoriteButton: true,
+            isFavorite: true,
+            onFavorite: { print("Unfavorite tapped!") }
+        )
+    }
+    .padding()
+}
+
+#Preview("EventCard with Favorites Feature") {
+    let sampleEvent = Event(
+        name: "Festival de Jazz",
+        startPrice: 75.0,
+        location: Location(
+            name: "Blue Note São Paulo",
+            city: "São Paulo",
+            state: "SP",
+            country: "Brasil", 
+            coordinate: Coordinate(latitude: -23.5505, longitude: -46.6333)
+        ),
+        category: .music
+    )
+    
+    EventCardWithFavorites(
+        event: sampleEvent,
+        onTap: { print("Event tapped for details!") },
+        favoriteStore: Store(
+            initialState: EventFavoriteFeature.State(event: sampleEvent)
+        ) {
+            EventFavoriteFeature()
+        }
+    )
+    .padding()
 }

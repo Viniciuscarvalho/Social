@@ -5,9 +5,23 @@ public struct HomeView: View {
     @Bindable var store: StoreOf<HomeFeature>
     let searchStore: StoreOf<SearchFeature>?
     
+    @State private var favoriteStores: [String: StoreOf<EventFavoriteFeature>] = [:]
+    
     public init(store: StoreOf<HomeFeature>, searchStore: StoreOf<SearchFeature>? = nil) {
         self.store = store
         self.searchStore = searchStore
+    }
+    
+    private func favoriteStore(for event: Event) -> StoreOf<EventFavoriteFeature> {
+        if let existingStore = favoriteStores[event.id] {
+            return existingStore
+        }
+        
+        let newStore = Store(initialState: EventFavoriteFeature.State(event: event)) {
+            EventFavoriteFeature()
+        }
+        favoriteStores[event.id] = newStore
+        return newStore
     }
     
     public var body: some View {
@@ -177,7 +191,7 @@ public struct HomeView: View {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 16) {
                     ForEach(store.recommendedEvents.prefix(5)) { event in
-                        RecommendedEventCard(event: event) {
+                        RecommendedEventCard(event: event, favoriteStore: favoriteStore(for: event)) {
                             store.send(.eventSelected(event.id))
                         }
                     }
@@ -235,7 +249,7 @@ public struct HomeView: View {
             // Events list
             VStack(spacing: 16) {
                 ForEach(store.filteredEvents.prefix(10)) { event in
-                    PopularEventListCard(event: event) {
+                    PopularEventListCard(event: event, favoriteStore: favoriteStore(for: event)) {
                         store.send(.eventSelected(event.id))
                     }
                     .padding(.horizontal, 20)
@@ -341,6 +355,7 @@ struct CategoryFilterChip: View {
 
 struct RecommendedEventCard: View {
     let event: Event
+    @Bindable var favoriteStore: StoreOf<EventFavoriteFeature>
     let onTap: () -> Void
     
     var body: some View {
@@ -389,9 +404,16 @@ struct RecommendedEventCard: View {
                         
                         Spacer()
                         
-                        Image(systemName: "heart")
-                            .font(.system(size: 16))
-                            .foregroundColor(.blue)
+                        FavoriteButton(
+                            event: event,
+                            isFavorite: favoriteStore.isFavorite,
+                            onTap: {
+                                favoriteStore.send(.toggleFavorite)
+                            }
+                        )
+                        .onAppear {
+                            favoriteStore.send(.onAppear)
+                        }
                     }
                     
                     HStack(spacing: 4) {
@@ -438,6 +460,7 @@ struct RecommendedEventCard: View {
 
 struct PopularEventListCard: View {
     let event: Event
+    @Bindable var favoriteStore: StoreOf<EventFavoriteFeature>
     let onTap: () -> Void
     
     var body: some View {
@@ -516,12 +539,15 @@ struct PopularEventListCard: View {
                 Spacer()
                 
                 // Favorite button
-                Button {
-                    // Toggle favorite
-                } label: {
-                    Image(systemName: "heart")
-                        .font(.system(size: 18))
-                        .foregroundColor(.blue)
+                FavoriteButton(
+                    event: event,
+                    isFavorite: favoriteStore.isFavorite,
+                    onTap: {
+                        favoriteStore.send(.toggleFavorite)
+                    }
+                )
+                .onAppear {
+                    favoriteStore.send(.onAppear)
                 }
             }
             .padding(12)

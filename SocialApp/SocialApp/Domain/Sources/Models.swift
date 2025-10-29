@@ -658,6 +658,100 @@ public struct UsersListResponse: Codable, Equatable {
     }
 }
 
+public struct TicketsListResponse: Codable {
+    public let tickets: [APITicketResponse]
+    public let pagination: PaginationInfo
+    
+    public init(tickets: [APITicketResponse], pagination: PaginationInfo) {
+        self.tickets = tickets
+        self.pagination = pagination
+    }
+    
+    // Custom init para decodificação resiliente
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        
+        // Tenta decodificar tickets de diferentes formatos
+        var ticketsArray: [APITicketResponse]?
+        
+        // Primeiro tenta o formato esperado "tickets"
+        ticketsArray = try? container.decode([APITicketResponse].self, forKey: .tickets)
+        
+        // Se falhar, tenta dentro de um objeto "data"
+        if ticketsArray == nil {
+            if let dataContainer = try? container.nestedContainer(keyedBy: DataCodingKeys.self, forKey: .data) {
+                ticketsArray = try? dataContainer.decode([APITicketResponse].self, forKey: .tickets)
+            }
+        }
+        
+        // Se falhar, tenta data como array direto
+        if ticketsArray == nil {
+            ticketsArray = try? container.decode([APITicketResponse].self, forKey: .data)
+        }
+        
+        self.tickets = ticketsArray ?? []
+        
+        // Decodifica pagination
+        do {
+            self.pagination = try container.decode(PaginationInfo.self, forKey: .pagination)
+        } catch {
+            // Fallback para paginação padrão se não encontrada
+            self.pagination = PaginationInfo(total: self.tickets.count, page: 1, limit: 20, totalPages: 1)
+        }
+    }
+    
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(tickets, forKey: .tickets)
+        try container.encode(pagination, forKey: .pagination)
+    }
+    
+    enum CodingKeys: String, CodingKey {
+        case tickets, pagination, data
+    }
+    
+    enum DataCodingKeys: String, CodingKey {
+        case tickets
+    }
+}
+
+public struct PaginationInfo: Codable, Equatable {
+    public let total: Int
+    public let page: Int
+    public let limit: Int
+    public let totalPages: Int
+    
+    public init(total: Int, page: Int = 1, limit: Int = 20, totalPages: Int = 1) {
+        self.total = total
+        self.page = page
+        self.limit = limit
+        self.totalPages = totalPages
+    }
+    
+    enum CodingKeys: String, CodingKey {
+        case total, page, limit
+        case totalPages = "total_pages"
+    }
+    
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        
+        total = (try? container.decode(Int.self, forKey: .total)) ?? 0
+        page = (try? container.decode(Int.self, forKey: .page)) ?? 1
+        limit = (try? container.decode(Int.self, forKey: .limit)) ?? 20
+        totalPages = (try? container.decode(Int.self, forKey: .totalPages)) ?? 1
+    }
+    
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(total, forKey: .total)
+        try container.encode(page, forKey: .page)
+        try container.encode(limit, forKey: .limit)
+        try container.encode(totalPages, forKey: .totalPages)
+    }
+}
+
+
 public struct FollowResponse: Codable, Equatable {
     public let isFollowing: Bool
     public let followersCount: Int
@@ -1247,11 +1341,6 @@ public struct UserUpdateRequest: Codable {
 
 extension APIEventResponse {
     func toEvent() -> Event {
-        print("🔄 APIEventResponse.toEvent() - Event: \(self.name)")
-        print("   API imageURL: \(self.imageURL ?? "nil")")
-        print("   API image_url: \(self.image_url ?? "nil")")
-        print("   finalImageURL: \(self.finalImageURL ?? "nil")")
-        
         var event = Event(
             name: self.name,
             description: self.description,

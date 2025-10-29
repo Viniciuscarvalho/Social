@@ -30,7 +30,7 @@ public struct ProfileFeature {
         case editProfileTapped
         case changeProfileImageTapped
         case myTicketsTapped
-        case myTicketsSheetClosed  // Nova action para quando a modal fecha
+        case myTicketsSheetClosed
         case supportTapped
         case privacySettingsTapped
         case signOutTapped
@@ -44,6 +44,9 @@ public struct ProfileFeature {
         // Profile update
         case updateProfile(User)
         case updateProfileResponse(Result<User, NetworkError>)
+        
+        // Ticket management notifications
+        case ticketDeleted // Nova action para quando um ticket for deletado
         
         case dismissError
     }
@@ -63,7 +66,6 @@ public struct ProfileFeature {
                 }
                 
             case .loadUserProfile:
-                // Se já temos o usuário, não precisa recarregar
                 guard state.user != nil else { return .none }
                 return .none
                 
@@ -83,7 +85,6 @@ public struct ProfileFeature {
                 state.isLoading = false
                 state.ticketsCount = count
                 
-                // Atualiza também o user.ticketsCount se existir
                 if var user = state.user {
                     user.ticketsCount = count
                     state.user = user
@@ -95,7 +96,6 @@ public struct ProfileFeature {
                 state.error = error.userFriendlyMessage
                 return .none
                 
-            // UI Actions
             case .editProfileTapped:
                 state.showingEditProfile = true
                 return .none
@@ -109,29 +109,28 @@ public struct ProfileFeature {
                 return .none
                 
             case .myTicketsSheetClosed:
-                // Recarrega os tickets quando a modal é fechada
+                return .run { send in
+                    await send(.loadTicketsCount)
+                }
+                
+            case .ticketDeleted:
                 return .run { send in
                     await send(.loadTicketsCount)
                 }
                 
             case .supportTapped:
-                // TODO: Implementar suporte
                 return .none
                 
             case .privacySettingsTapped:
-                // TODO: Implementar configurações de privacidade
                 return .none
                 
             case .signOutTapped:
-                // Esta action será tratada pelo SocialAppFeature
                 return .none
                 
             case let .togglePushNotifications(enabled):
                 state.pushNotifications = enabled
-                // TODO: Salvar configuração
                 return .none
                 
-            // Sheet management
             case let .setShowingEditProfile(showing):
                 state.showingEditProfile = showing
                 return .none
@@ -144,32 +143,23 @@ public struct ProfileFeature {
                 state.showingMyTickets = showing
                 return .none
                 
-            // Profile update
-            case let .updateProfile(updatedUser):
-                state.isLoading = true
-                state.error = nil
+            case let .updateProfile(user):
+                state.user = user
+                return .none
                 
-                return .run { send in
-                    await send(.updateProfileResponse(.success(updatedUser)))
-                }
-                
-            case let .updateProfileResponse(.success(updatedUser)):
-                state.isLoading = false
-                state.user = updatedUser
-                state.showingEditProfile = false
+            case let .updateProfileResponse(.success(user)):
+                state.user = user
                 return .none
                 
             case let .updateProfileResponse(.failure(error)):
-                state.isLoading = false
                 state.error = error.userFriendlyMessage
-                return .none
-                
-            case .userProfileResponse:
-                // TODO: Implementar se necessário
                 return .none
                 
             case .dismissError:
                 state.error = nil
+                return .none
+                
+            case .userProfileResponse:
                 return .none
             }
         }

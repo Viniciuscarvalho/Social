@@ -7,6 +7,7 @@ public struct PopularEventsView: View {
     @Environment(\.dismiss) var dismiss
     
     @State private var selectedCategory: EventCategory? = nil
+    @State private var favoriteStores: [String: StoreOf<EventFavoriteFeature>] = [:]
     
     public init(events: [Event], onEventSelected: @escaping (String) -> Void) {
         self.events = events
@@ -17,10 +18,8 @@ public struct PopularEventsView: View {
     private var filteredEvents: [Event] {
         if let category = selectedCategory {
             let filtered = events.filter { $0.category == category }
-            print("🔍 Filtrados por \(category.displayName): \(filtered.count) eventos")
             return filtered
         }
-        print("🔍 Mostrando todos: \(events.count) eventos")
         return events
     }
     
@@ -44,6 +43,19 @@ public struct PopularEventsView: View {
         return categoryCounts[category] ?? 0
     }
     
+    
+    // Helper: Obter ou criar store para um evento
+    private func favoriteStore(for event: Event) -> StoreOf<EventFavoriteFeature> {
+        if let existingStore = favoriteStores[event.id] {
+            return existingStore
+        }
+        
+        let newStore = Store(initialState: EventFavoriteFeature.State(event: event)) {
+            EventFavoriteFeature()
+        }
+        favoriteStores[event.id] = newStore
+        return newStore
+    }
     public var body: some View {
         VStack(spacing: 0) {
             // Header
@@ -120,7 +132,7 @@ public struct PopularEventsView: View {
             ScrollView {
                 LazyVStack(spacing: 16) {
                     ForEach(filteredEvents, id: \.id) { event in
-                        PopularEventCard(event: event) {
+                        PopularEventCard(event: event, favoriteStore: favoriteStore(for: event)) {
                             onEventSelected(event.id)
                         }
                     }
@@ -146,6 +158,7 @@ public struct PopularEventsView: View {
 
 struct PopularEventCard: View {
     let event: Event
+    @Bindable var favoriteStore: StoreOf<EventFavoriteFeature>
     let onTap: () -> Void
     
     var body: some View {
@@ -220,11 +233,16 @@ struct PopularEventCard: View {
                 Spacer()
                 
                 // Favorite Button
-                EventFavoriteView(
-                    store: Store(initialState: EventFavoriteFeature.State(event: event)) {
-                        EventFavoriteFeature()
+                FavoriteButton(
+                    event: event,
+                    isFavorite: favoriteStore.isFavorite,
+                    onTap: {
+                        favoriteStore.send(.toggleFavorite)
                     }
                 )
+                .onAppear {
+                    favoriteStore.send(.onAppear)
+                }
             }
             .padding(12)
             .background(Color(.systemBackground))

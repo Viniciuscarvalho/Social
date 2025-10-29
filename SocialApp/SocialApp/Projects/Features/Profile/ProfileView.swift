@@ -63,11 +63,9 @@ public struct ProfileView: View {
             Text(store.error ?? "")
         }
         .sheet(isPresented: $store.showingMyTickets.sending(\.setShowingMyTickets)) {
-            MyTicketsView(
-                store: Store(
-                    initialState: MyTicketsFeature.State(currentUserId: store.user?.id),
-                    reducer: { MyTicketsFeature() }
-                )
+            MyTicketsViewWrapper(
+                profileStore: store,
+                currentUserId: UserDefaults.standard.string(forKey: "currentUserId") ?? store.user?.id
             )
         }
         .onChange(of: store.showingMyTickets) { oldValue, newValue in
@@ -575,5 +573,27 @@ struct EditProfileView: View {
             }
         )
         .environment(ThemeManager.shared)
+    }
+}
+
+// MARK: - MyTicketsViewWrapper
+
+private struct MyTicketsViewWrapper: View {
+    @Bindable var profileStore: StoreOf<ProfileFeature>
+    let currentUserId: String?
+    
+    var body: some View {
+        MyTicketsView(
+            store: Store(
+                initialState: MyTicketsFeature.State(currentUserId: currentUserId),
+                reducer: { MyTicketsFeature() }
+            )
+        )
+        .onReceive(
+            NotificationCenter.default.publisher(for: NSNotification.Name("TicketDeleted"))
+        ) { _ in
+            // Quando um ticket é deletado, notifica o ProfileFeature
+            profileStore.send(.ticketDeleted)
+        }
     }
 }
