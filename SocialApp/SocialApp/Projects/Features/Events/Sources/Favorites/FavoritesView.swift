@@ -16,7 +16,14 @@ public struct FavoritesView: View {
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else if store.favoriteEvents.isEmpty {
                     ContentUnavailableView {
-                        Label("Nenhum favorito", systemImage: "heart")
+                        Label {
+                            Text("Nenhum favorito")
+                        } icon: {
+                            Image("unfavorited", bundle: Bundle.main)
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                                .frame(width: 48, height: 48)
+                        }
                     } description: {
                         Text("Os eventos que você favoritar aparecerão aqui")
                     }
@@ -97,7 +104,10 @@ struct FavoriteEventCard: View {
                     .foregroundColor(AppColors.primary)
                 
                 Button(action: onRemove) {
-                    Image(systemName: "heart.fill")
+                    Image("favorited", bundle: Bundle.main)
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: 20, height: 20)
                         .foregroundColor(AppColors.favoriteRed)
                         .padding(8)
                         .background(AppColors.favoriteRed.opacity(0.1))

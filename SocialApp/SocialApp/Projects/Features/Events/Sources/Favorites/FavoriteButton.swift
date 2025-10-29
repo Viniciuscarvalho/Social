@@ -14,8 +14,10 @@ public struct FavoriteButton: View {
     
     public var body: some View {
         Button(action: onTap) {
-            Image(systemName: isFavorite ? "heart.fill" : "heart")
-                .foregroundColor(isFavorite ? .red : .gray)
+            Image(isFavorite ? "favorited" : "unfavorited", bundle: Bundle.main)
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+                .frame(width: 24, height: 24)
                 .padding(8)
                 .background(Color.white.opacity(0.9))
                 .clipShape(Circle())

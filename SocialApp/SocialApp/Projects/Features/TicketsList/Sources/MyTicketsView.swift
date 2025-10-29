@@ -82,7 +82,7 @@ struct MyTicketsView: View {
     
     private var ticketsList: some View {
         ScrollView {
-            LazyVStack(spacing: 12) {
+            LazyVStack(spacing: 16) {
                 ForEach(store.myTickets) { ticket in
                     MyTicketCard(
                         ticket: ticket,
@@ -104,8 +104,16 @@ struct MyTicketsView: View {
                             store.send(.ticketSelected(ticket.id))
                         }
                         
-                        // Só mostra o botão de excluir se o ticket pertencer ao usuário
+                        // Só mostra opções de edição/exclusão se o ticket pertencer ao usuário
                         if canDeleteTicket(ticket) {
+                            Divider()
+                            Button {
+                                // TODO: Implementar edição
+                                print("✏️ Editar ticket \(ticket.id)")
+                            } label: {
+                                Label("Editar Ingresso", systemImage: "pencil")
+                            }
+                            
                             Button("Excluir Ingresso", role: .destructive) {
                                 store.send(.deleteTicket(ticket.id))
                             }

@@ -349,8 +349,10 @@ public struct EventDetailView: View {
                 store.send(.toggleFavorite)
             } label: {
                 HStack(spacing: 8) {
-                    Image(systemName: store.isFavorited ? "heart.fill" : "heart")
-                        .font(.system(size: 16))
+                    Image(store.isFavorited ? "favorited" : "unfavorited", bundle: Bundle.main)
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: 20, height: 20)
                     Text(store.isFavorited ? "Salvo" : "Salvar para depois")
                         .font(.system(size: 16, weight: .medium))
                 }

@@ -47,26 +47,6 @@ public struct SellerProfileView: View {
             } else {
                 errorView
             }
-            
-            // Indicador de cache no topo
-            if store.loadState == .cached {
-                VStack {
-                    HStack {
-                        Image(systemName: "checkmark.circle.fill")
-                            .foregroundColor(.green)
-                        Text("Dados em cache")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 6)
-                    .background(Color(.systemGray6))
-                    .cornerRadius(8)
-                    .padding(.top, 8)
-                    
-                    Spacer()
-                }
-            }
         }
         .navigationTitle("Vendedor")
         .navigationBarTitleDisplayMode(.inline)
@@ -182,7 +162,9 @@ public struct SellerProfileView: View {
     
     private var actionButtonsSection: some View {
         let currentUserId = UserDefaults.standard.string(forKey: "currentUserId")
-        let isOwnProfile = currentUserId == store.seller?.id
+        // ✅ CRÍTICO: Verificar se sellerId está disponível e corresponde ao usuário atual
+        let sellerId = store.sellerId ?? store.seller?.id ?? ""
+        let isOwnProfile = ((currentUserId?.isEmpty) == nil) && !sellerId.isEmpty && currentUserId == sellerId
         
         return HStack(spacing: 12) {
             // Botão Seguir - só aparece se não for o próprio perfil
@@ -474,8 +456,10 @@ struct SellerTicketCard: View {
             Button {
                 // TODO: Implementar favoritar
             } label: {
-                Image(systemName: "heart")
-                    .font(.system(size: 18))
+                Image("unfavorited", bundle: Bundle.main)
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: 20, height: 20)
                     .foregroundColor(.blue)
             }
             .buttonStyle(PlainButtonStyle())

@@ -183,7 +183,7 @@ public struct ProfileView: View {
                     Text("\(store.user?.ticketsCount ?? store.ticketsCount)")
                         .font(.headline)
                         .foregroundColor(AppColors.primaryText)
-                    Text("Tickets")
+                    Text("Ingressos")
                         .font(.caption)
                         .foregroundColor(AppColors.tertiaryText)
                 }
@@ -581,19 +581,33 @@ struct EditProfileView: View {
 private struct MyTicketsViewWrapper: View {
     @Bindable var profileStore: StoreOf<ProfileFeature>
     let currentUserId: String?
+    @State private var myTicketsStore: StoreOf<MyTicketsFeature>?
     
     var body: some View {
-        MyTicketsView(
-            store: Store(
-                initialState: MyTicketsFeature.State(currentUserId: currentUserId),
-                reducer: { MyTicketsFeature() }
-            )
-        )
-        .onReceive(
-            NotificationCenter.default.publisher(for: NSNotification.Name("TicketDeleted"))
-        ) { _ in
-            // Quando um ticket é deletado, notifica o ProfileFeature
-            profileStore.send(.ticketDeleted)
+        Group {
+            if let store = myTicketsStore {
+                MyTicketsView(store: store)
+                    .onReceive(
+                        NotificationCenter.default.publisher(for: NSNotification.Name("TicketDeleted"))
+                    ) { notification in
+                        // Quando um ticket é deletado, sincronizar com MyTicketsFeature
+                        if let ticketId = notification.userInfo?["ticketId"] as? String {
+                            print("📢 MyTicketsViewWrapper: Recebeu notificação de ticket deletado: \(ticketId)")
+                            store.send(.syncTicketDeleted(ticketId))
+                        }
+                        // Também notifica o ProfileFeature para atualizar contador
+                        profileStore.send(.ticketDeleted)
+                    }
+            } else {
+                ProgressView()
+                    .onAppear {
+                        // Criar store uma vez e manter durante o ciclo de vida da view
+                        myTicketsStore = Store(
+                            initialState: MyTicketsFeature.State(currentUserId: currentUserId),
+                            reducer: { MyTicketsFeature() }
+                        )
+                    }
+            }
         }
     }
 }

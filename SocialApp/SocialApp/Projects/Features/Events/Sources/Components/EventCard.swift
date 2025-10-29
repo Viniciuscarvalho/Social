@@ -55,9 +55,10 @@ public struct EventCard: View {
                         Button(action: {
                             onFavorite?()
                         }) {
-                            Image(systemName: isFavorite ? "heart.fill" : "heart")
-                                .foregroundColor(isFavorite ? .red : .white)
-                                .font(.system(size: 16, weight: .medium))
+                            Image(isFavorite ? "favorited" : "unfavorited", bundle: Bundle.main)
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                                .frame(width: 20, height: 20)
                                 .padding(8)
                                 .background(
                                     Circle()

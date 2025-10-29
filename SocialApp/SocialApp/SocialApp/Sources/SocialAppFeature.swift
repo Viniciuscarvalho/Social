@@ -483,12 +483,19 @@ public struct SocialAppFeature {
             return .none
             
             // MARK: - Add Ticket Completion
-        case .addTicket(.publishTicketResponse(.success)):
+        case let .addTicket(.publishTicketResponse(.success(ticket))):
             // Fecha o modal após sucesso
             state.showingAddTicket = false
-            // Recarrega a lista de tickets
+            // SINCRONIZAÇÃO GLOBAL: Adiciona ticket em todas as listas
+            print("🔄 Sincronizando criação de ticket: \(ticket.id)")
             return .run { send in
-                await send(.ticketsListFeature(.loadTickets))
+                // Adiciona na lista completa
+                await send(.ticketsListFeature(.syncTicketCreated(ticket)))
+                // Se o ticket pertence ao usuário logado, também recarrega "Meus Ingressos"
+                if let userId = UserDefaults.standard.string(forKey: "currentUserId"),
+                   ticket.sellerId == userId {
+                    await send(.profileFeature(.refreshMyTickets))
+                }
             }
             
             // MARK: - Other Feature Actions

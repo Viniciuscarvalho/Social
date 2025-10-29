@@ -279,8 +279,10 @@ struct EventSearchResultCard: View {
                         
                         Spacer()
                         
-                        Image(systemName: "heart")
-                            .font(.system(size: 18))
+                        Image("unfavorited", bundle: Bundle.main)
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .frame(width: 20, height: 20)
                             .foregroundColor(.blue)
                     }
                     

@@ -10,6 +10,7 @@ public struct TicketsListFeature {
         public var selectedFilter = TicketsListFilter()
         public var isLoading: Bool = false
         public var errorMessage: String?
+        public var deletedTicketIds: Set<String> = [] // ✅ Track de tickets deletados localmente
         
         public init() {}
         
@@ -31,6 +32,9 @@ public struct TicketsListFeature {
         case deleteTicket(String) // Nova action para deletar ticket
         case deleteTicketSuccess // Sucesso na deletação
         case deleteTicketFailure(String) // Falha na deletação com mensagem
+        case syncTicketDeleted(String) // Sincronização: ticket foi deletado em outra feature
+        case syncTicketUpdated(Ticket) // Sincronização: ticket foi atualizado em outra feature
+        case syncTicketCreated(Ticket) // Sincronização: ticket foi criado em outra feature
     }
     
     @Dependency(\.ticketsClient) var ticketsClient
@@ -41,6 +45,13 @@ public struct TicketsListFeature {
         Reduce { state, action in
             switch action {
             case .onAppear:
+                // ✅ CRÍTICO: Carregar IDs deletados do UserDefaults para manter consistência
+                if let deletedIdsData = UserDefaults.standard.data(forKey: "deletedTicketIds"),
+                   let deletedIdsArray = try? JSONDecoder().decode([String].self, from: deletedIdsData) {
+                    state.deletedTicketIds = Set(deletedIdsArray)
+                    print("📦 TicketsList: Carregados \(state.deletedTicketIds.count) IDs deletados do UserDefaults")
+                }
+                
                 // Só carrega se não tiver dados ainda
                 guard state.tickets.isEmpty else {
                     return .none
@@ -64,8 +75,22 @@ public struct TicketsListFeature {
                 
             case let .ticketsResponse(.success(tickets)):
                 state.isLoading = false
-                state.tickets = tickets
-                state.filteredTickets = filterTickets(tickets, with: state.selectedFilter)
+                
+                // ✅ CRÍTICO: Recarregar IDs deletados do UserDefaults ANTES de filtrar
+                if let deletedIdsData = UserDefaults.standard.data(forKey: "deletedTicketIds"),
+                   let deletedIdsArray = try? JSONDecoder().decode([String].self, from: deletedIdsData) {
+                    state.deletedTicketIds = Set(deletedIdsArray)
+                }
+                
+                // ✅ CRÍTICO: Filtrar tickets cancelados/deletados e IDs deletados localmente
+                let activeTickets = tickets.filter { ticket in
+                    // Remover se status é cancelled OU se foi deletado localmente
+                    ticket.status != .cancelled && !state.deletedTicketIds.contains(ticket.id)
+                }
+                print("🔄 TicketsList: Recebidos \(tickets.count) tickets, \(activeTickets.count) após filtrar (deletados: \(state.deletedTicketIds.count))")
+                
+                state.tickets = activeTickets
+                state.filteredTickets = filterTickets(activeTickets, with: state.selectedFilter)
                 return .none
                 
             case let .ticketsResponse(.failure(error)):
@@ -111,26 +136,81 @@ public struct TicketsListFeature {
                 
             case let .deleteTicket(ticketId):
                 print("🗑️ Iniciando deletação do ticket: \(ticketId)")
+                
+                // ✅ CRÍTICO: Remover imediatamente (otimistic) e trackear
+                state.deletedTicketIds.insert(ticketId)
+                
+                // ✅ PERSISTIR: Salvar lista de deletados no UserDefaults
+                if let deletedIdsData = try? JSONEncoder().encode(Array(state.deletedTicketIds)) {
+                    UserDefaults.standard.set(deletedIdsData, forKey: "deletedTicketIds")
+                    print("💾 TicketsList: Salvos \(state.deletedTicketIds.count) IDs deletados no UserDefaults (delete)")
+                }
+                
+                state.tickets.removeAll { $0.id == ticketId }
+                state.filteredTickets.removeAll { $0.id == ticketId }
+                
                 return .run { send in
                     do {
                         try await ticketsClient.deleteTicket(ticketId)
                         await send(.deleteTicketSuccess)
                     } catch {
                         print("❌ Erro ao deletar ticket: \(error.localizedDescription)")
+                        // Reverter se falhar
                         await send(.deleteTicketFailure(error.localizedDescription))
                     }
                 }
                 
             case .deleteTicketSuccess:
-                print("✅ Ticket deletado com sucesso")
-                // Recarrega a lista após sucesso
+                print("✅ Ticket deletado com sucesso (já removido do estado)")
+                // Não precisa recarregar, já removemos otimisticamente
+                // Mas podemos recarregar para garantir sincronização com outros dados
                 return .run { send in
                     await send(.loadTickets)
                 }
                 
             case let .deleteTicketFailure(errorMessage):
+                // Se falhou, manter na lista de deletados mas mostrar erro
                 print("❌ Erro na resposta de delete: \(errorMessage)")
                 state.errorMessage = errorMessage
+                return .none
+                
+            case let .syncTicketDeleted(ticketId):
+                // SINCRONIZAÇÃO: Remove ticket quando deletado em outra feature (UPDATE OTIMISTA)
+                print("🔄 Sincronizando deleção de ticket: \(ticketId)")
+                
+                // Adicionar à lista de deletados para prevenir re-adição
+                state.deletedTicketIds.insert(ticketId)
+                
+                // ✅ PERSISTIR: Salvar lista de deletados no UserDefaults
+                if let deletedIdsData = try? JSONEncoder().encode(Array(state.deletedTicketIds)) {
+                    UserDefaults.standard.set(deletedIdsData, forKey: "deletedTicketIds")
+                    print("💾 TicketsList: Salvos \(state.deletedTicketIds.count) IDs deletados no UserDefaults (sync)")
+                }
+                
+                // Remover do estado atual
+                state.tickets.removeAll { $0.id == ticketId }
+                state.filteredTickets.removeAll { $0.id == ticketId }
+                
+                print("✅ Ticket \(ticketId) removido da lista completa (tracked: \(state.deletedTicketIds.count) deletados)")
+                return .none
+                
+            case let .syncTicketUpdated(updatedTicket):
+                // SINCRONIZAÇÃO: Atualiza ticket quando editado em outra feature
+                print("🔄 Sincronizando atualização de ticket: \(updatedTicket.id)")
+                if let index = state.tickets.firstIndex(where: { $0.id == updatedTicket.id }) {
+                    state.tickets[index] = updatedTicket
+                    // Reaplicar filtros
+                    state.filteredTickets = filterTickets(state.tickets, with: state.selectedFilter)
+                    print("✅ Ticket atualizado na lista completa")
+                }
+                return .none
+                
+            case let .syncTicketCreated(newTicket):
+                // SINCRONIZAÇÃO: Adiciona ticket quando criado em outra feature
+                print("🔄 Sincronizando criação de ticket: \(newTicket.id)")
+                state.tickets.insert(newTicket, at: 0)
+                state.filteredTickets = filterTickets(state.tickets, with: state.selectedFilter)
+                print("✅ Ticket adicionado à lista completa")
                 return .none
             }
         }

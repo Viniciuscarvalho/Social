@@ -193,6 +193,14 @@ public struct AddTicketFeature {
                 state.description = ""
                 state.quantity = 1
                 
+                // Notificar outras features via NotificationCenter
+                print("📢 Notificando criação de ticket: \(ticket.id)")
+                NotificationCenter.default.post(
+                    name: NSNotification.Name("TicketCreated"),
+                    object: nil,
+                    userInfo: ["ticket": ticket]
+                )
+                
                 return .none
                 
             case let .publishTicketResponse(.failure(error)):

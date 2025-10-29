@@ -10,6 +10,7 @@ public struct TicketsClient {
     public var purchaseTicket: (UUID) async throws -> Ticket
     public var toggleFavorite: (UUID) async throws -> Void
     public var createTicket: (CreateTicketRequest) async throws -> Ticket
+    public var updateTicket: (String, UpdateTicketRequest) async throws -> Ticket
     public var fetchMyTickets: () async throws -> [Ticket]
     public var fetchMyTicketsWithPagination: () async throws -> (tickets: [Ticket], total: Int)
     public var fetchMyTicketsCount: () async throws -> Int
@@ -25,10 +26,15 @@ extension TicketsClient: DependencyKey {
                         endpoint: "/tickets",
                         method: .GET
                     )
-                    let tickets = apiTickets.map { $0.toTicket() }
-                    return tickets
+                    let allTickets = apiTickets.map { $0.toTicket() }
+                    // ✅ CRÍTICO: Filtrar tickets deletados/cancelados da resposta da API
+                    let activeTickets = allTickets.filter { $0.status != .cancelled }
+                    print("🎫 Tickets da API: \(allTickets.count) total, \(activeTickets.count) ativos (após filtrar deletados)")
+                    return activeTickets
                 } catch {
-                    return try await loadTicketsFromJSON()
+                    let tickets = try await loadTicketsFromJSON()
+                    // Filtrar também do JSON fallback
+                    return tickets.filter { $0.status != .cancelled }
                 }
             },
             fetchAvailableTickets: {
@@ -181,6 +187,25 @@ extension TicketsClient: DependencyKey {
                     throw NetworkError.unknown("Erro ao criar ticket: \(error.localizedDescription)")
                 }
             },
+            updateTicket: { ticketId, request in
+                do {
+                    print("✏️ Atualizando ticket \(ticketId) via API")
+                    let updatedTicket: APITicketResponse = try await NetworkService.shared.requestSingle(
+                        endpoint: "/tickets/\(ticketId)",
+                        method: .PUT,
+                        body: request,
+                        requiresAuth: true
+                    )
+                    print("✅ Ticket atualizado com sucesso")
+                    return updatedTicket.toTicket()
+                } catch let networkError as NetworkError {
+                    print("❌ Erro ao atualizar ticket: \(networkError.userFriendlyMessage)")
+                    throw networkError
+                } catch {
+                    print("❌ Erro desconhecido ao atualizar ticket: \(error.localizedDescription)")
+                    throw NetworkError.unknown("Erro ao atualizar ticket: \(error.localizedDescription)")
+                }
+            },
             fetchMyTickets: {
                 do {
                     if let token = UserDefaults.standard.string(forKey: "authToken"),
@@ -238,14 +263,52 @@ extension TicketsClient: DependencyKey {
             },
             fetchMyTicketsCount: {
                 do {
+                    // ✅ CRÍTICO: Buscar tickets completos e contar localmente com os mesmos filtros do MyTickets
                     let result = try await TicketsClient.liveValue.fetchMyTicketsWithPagination()
-                    return result.total
+                    let tickets = result.tickets
+                    
+                    // Carregar IDs deletados do UserDefaults
+                    var deletedTicketIds: Set<String> = []
+                    if let deletedIdsData = UserDefaults.standard.data(forKey: "deletedTicketIds"),
+                       let deletedIdsArray = try? JSONDecoder().decode([String].self, from: deletedIdsData) {
+                        deletedTicketIds = Set(deletedIdsArray)
+                    }
+                    
+                    // ✅ APLICAR OS MESMOS FILTROS DO MyTicketsFeature:
+                    // 1. Filtrar por sellerId == currentUserId
+                    // 2. Remover cancelled
+                    // 3. Remover deletedTicketIds
+                    guard let currentUserId = UserDefaults.standard.string(forKey: "currentUserId") else {
+                        return 0
+                    }
+                    
+                    let filteredTickets = tickets.filter { ticket in
+                        ticket.sellerId == currentUserId &&
+                        ticket.status != .cancelled &&
+                        !deletedTicketIds.contains(ticket.id)
+                    }
+                    
+                    print("📊 fetchMyTicketsCount: \(tickets.count) tickets brutos → \(filteredTickets.count) após filtros (deletados locais: \(deletedTicketIds.count))")
+                    return filteredTickets.count
                 } catch {
                     guard let currentUserId = UserDefaults.standard.string(forKey: "currentUserId") else {
                         return 0
                     }
-                    let mockCount = min(3, SharedMockData.sampleTickets.count)
-                    return mockCount
+                    
+                    // Fallback: tentar contar do mock data com os mesmos filtros
+                    var deletedTicketIds: Set<String> = []
+                    if let deletedIdsData = UserDefaults.standard.data(forKey: "deletedTicketIds"),
+                       let deletedIdsArray = try? JSONDecoder().decode([String].self, from: deletedIdsData) {
+                        deletedTicketIds = Set(deletedIdsArray)
+                    }
+                    
+                    let mockTickets = SharedMockData.sampleTickets.filter { ticket in
+                        ticket.sellerId == currentUserId &&
+                        ticket.status != .cancelled &&
+                        !deletedTicketIds.contains(ticket.id)
+                    }
+                    
+                    return mockTickets.count
                 }
             },
             deleteTicket: { ticketId in
@@ -348,6 +411,13 @@ extension TicketsClient: DependencyKey {
                 ticketType: request.ticketType,
                 validUntil: request.validUntil
             )
+            return ticket
+        },
+        updateTicket: { ticketId, request in
+            var ticket = SharedMockData.sampleTickets.first { $0.id == ticketId } ?? SharedMockData.sampleTickets[0]
+            ticket.name = request.name
+            ticket.price = request.price
+            ticket.ticketType = request.ticketType
             return ticket
         },
         fetchMyTickets: { Array(SharedMockData.sampleTickets.prefix(2)).map { var ticket = $0; ticket.status = .available; return ticket } },

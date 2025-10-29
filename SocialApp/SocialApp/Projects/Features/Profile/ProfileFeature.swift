@@ -47,6 +47,8 @@ public struct ProfileFeature {
         
         // Ticket management notifications
         case ticketDeleted // Nova action para quando um ticket for deletado
+        case ticketCreated // Nova action para quando um ticket for criado
+        case refreshMyTickets // Action para recarregar "Meus Ingressos" após mudanças
         
         case dismissError
     }
@@ -114,6 +116,19 @@ public struct ProfileFeature {
                 }
                 
             case .ticketDeleted:
+                // Atualizar contador após deletar ticket
+                return .run { send in
+                    await send(.loadTicketsCount)
+                }
+                
+            case .ticketCreated:
+                // Atualizar contador após criar ticket
+                return .run { send in
+                    await send(.loadTicketsCount)
+                }
+                
+            case .refreshMyTickets:
+                // Recarrega contagem de tickets após mudanças
                 return .run { send in
                     await send(.loadTicketsCount)
                 }

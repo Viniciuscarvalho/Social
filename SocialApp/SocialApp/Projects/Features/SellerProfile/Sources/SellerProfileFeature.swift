@@ -49,6 +49,8 @@ public struct SellerProfileFeature {
         case refresh
         case loadFromCache
         case cacheLoaded(User, [TicketWithEvent])
+        case syncTicketDeleted(String) // Sincronização: ticket foi deletado
+        case syncTicketUpdated(Ticket) // Sincronização: ticket foi atualizado
     }
     
     @Dependency(\.userClient) var userClient
@@ -88,11 +90,14 @@ public struct SellerProfileFeature {
                 guard let sellerId = state.sellerId else { return .none }
                 
                 return .run { send in
+                    // Tentar buscar cache válido primeiro
                     if let cached = await SellerProfileCache.shared.getCachedProfile(for: sellerId) {
-                        print("📦 Carregando dados do cache (idade: \(Int(cached.age))s)")
+                        print("📦 Carregando dados do cache válido (idade: \(Int(cached.age))s)")
                         await send(.cacheLoaded(cached.seller, cached.tickets))
                     } else {
-                        print("⚠️ Cache expirou, fazendo novo request")
+                        // Se não há cache válido, tentar carregar da API
+                        // Mas ao invés de esperar, já mostra o que temos (se houver)
+                        print("⚠️ Cache não válido, fazendo novo request")
                         await send(.loadSeller(sellerId))
                     }
                 }
@@ -292,6 +297,52 @@ public struct SellerProfileFeature {
             case .negotiateTapped:
                 print("💬 Negociar tapped")
                 return .none
+                
+            case let .syncTicketDeleted(ticketId):
+                // SINCRONIZAÇÃO: Remove ticket quando deletado em outra feature
+                print("🔄 SellerProfile: Sincronizando deleção de ticket: \(ticketId)")
+                state.sellerTickets.removeAll { $0.ticket.id == ticketId }
+                
+                // Atualizar contador de tickets do vendedor
+                if var seller = state.seller {
+                    seller.ticketsCount = max(0, seller.ticketsCount - 1)
+                    state.seller = seller
+                }
+                
+                // Invalidar cache
+                if let sellerId = state.sellerId {
+                    Task {
+                        await SellerProfileCache.shared.invalidateCache(for: sellerId)
+                        print("🗑️ Cache invalidado após deleção de ticket")
+                    }
+                }
+                
+                print("✅ Ticket removido do perfil do vendedor")
+                return .none
+                
+            case let .syncTicketUpdated(updatedTicket):
+                // SINCRONIZAÇÃO: Atualiza ticket quando editado em outra feature
+                print("🔄 SellerProfile: Sincronizando atualização de ticket: \(updatedTicket.id)")
+                
+                // Atualizar ticket na lista se existir
+                if let index = state.sellerTickets.firstIndex(where: { $0.ticket.id == updatedTicket.id }) {
+                    // Precisa buscar o evento associado, por enquanto apenas atualiza o ticket
+                    // O ideal seria recarregar o TicketWithEvent completo
+                    print("⚠️ Atualização parcial - ticket existe mas precisa recarregar evento")
+                }
+                
+                // Invalidar cache para forçar recarga
+                if let sellerId = state.sellerId {
+                    Task {
+                        await SellerProfileCache.shared.invalidateCache(for: sellerId)
+                        print("🗑️ Cache invalidado após atualização de ticket")
+                    }
+                }
+                
+                return .run { send in
+                    // Recarregar tickets para garantir dados atualizados
+                    await send(.loadSellerTickets)
+                }
             }
         }
     }

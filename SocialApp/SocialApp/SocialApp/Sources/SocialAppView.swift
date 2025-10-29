@@ -19,8 +19,88 @@ public struct SocialAppView: View {
         }
         .onAppear {
             store.send(.onAppear)
+            // Configurar listeners de NotificationCenter para sincronização global
+            setupTicketSyncListeners(store: store)
         }
         .preferredColorScheme(themeManager.colorScheme)
+    }
+    
+    // MARK: - NotificationCenter Listeners para Sincronização Global
+    
+    private func setupTicketSyncListeners(store: StoreOf<SocialAppFeature>) {
+        // Listener para ticket deletado
+        NotificationCenter.default.addObserver(
+            forName: NSNotification.Name("TicketDeleted"),
+            object: nil,
+            queue: .main
+        ) { notification in
+            if let ticketId = notification.userInfo?["ticketId"] as? String,
+               let sellerId = notification.userInfo?["sellerId"] as? String {
+                print("📢 SocialAppView recebeu notificação: TicketDeleted(\(ticketId)) do vendedor \(sellerId)")
+                
+                // Sincronizar em todas as features (incluindo MyTicketsFeature)
+                store.send(.ticketsListFeature(.syncTicketDeleted(ticketId)))
+                store.send(.profileFeature(.ticketDeleted))
+                store.send(.sellerProfileFeature(.syncTicketDeleted(ticketId)))
+                
+                // ✅ CRÍTICO: Notificar MyTicketsFeature também (via ProfileFeature que gerencia o MyTicketsView)
+                // O ProfileFeature já gerencia a sheet do MyTickets, então não precisamos notificar diretamente
+                // Mas podemos criar uma action no ProfileFeature para notificar o MyTickets
+                
+                // Invalidar cache do perfil do vendedor específico
+                Task {
+                    await SellerProfileCache.shared.invalidateCache(for: sellerId)
+                    print("🗑️ Cache do vendedor \(sellerId) invalidado após deleção de ticket")
+                }
+            } else if let ticketId = notification.userInfo?["ticketId"] as? String {
+                // Fallback: sem sellerId, sincronizar e limpar todos os caches
+                print("📢 SocialAppView recebeu notificação: TicketDeleted(\(ticketId)) sem sellerId")
+                store.send(.ticketsListFeature(.syncTicketDeleted(ticketId)))
+                store.send(.profileFeature(.ticketDeleted))
+                
+                Task {
+                    await SellerProfileCache.shared.clearAll()
+                    print("🗑️ Cache de vendedores invalidado após deleção de ticket")
+                }
+            }
+        }
+        
+        // Listener para ticket atualizado
+        NotificationCenter.default.addObserver(
+            forName: NSNotification.Name("TicketUpdated"),
+            object: nil,
+            queue: .main
+        ) { notification in
+            if let ticket = notification.userInfo?["ticket"] as? Ticket {
+                print("📢 SocialAppView recebeu notificação: TicketUpdated(\(ticket.id)) do vendedor \(ticket.sellerId)")
+                
+                // Sincronizar em todas as features
+                store.send(.ticketsListFeature(.syncTicketUpdated(ticket)))
+                store.send(.sellerProfileFeature(.syncTicketUpdated(ticket)))
+                
+                // Invalidar cache do perfil do vendedor desse ticket
+                Task {
+                    await SellerProfileCache.shared.invalidateCache(for: ticket.sellerId)
+                    print("🗑️ Cache do vendedor \(ticket.sellerId) invalidado após atualização de ticket")
+                }
+            }
+        }
+        
+        // Listener para ticket criado
+        NotificationCenter.default.addObserver(
+            forName: NSNotification.Name("TicketCreated"),
+            object: nil,
+            queue: .main
+        ) { notification in
+            if let ticket = notification.userInfo?["ticket"] as? Ticket {
+                print("📢 SocialAppView recebeu notificação: TicketCreated(\(ticket.id))")
+                // A criação já é tratada no .addTicket(.publishTicketResponse(.success))
+                // Mas garantimos sincronização aqui também
+                store.send(.ticketsListFeature(.syncTicketCreated(ticket)))
+                // ✅ Atualizar contador no perfil após criar ticket
+                store.send(.profileFeature(.ticketCreated))
+            }
+        }
     }
 }
 
