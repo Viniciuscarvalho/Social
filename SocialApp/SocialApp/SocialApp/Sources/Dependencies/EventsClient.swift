@@ -7,6 +7,7 @@ public struct EventsClient {
     public var searchEvents: (String) async throws -> [Event]
     public var fetchEventsByCategory: (EventCategory) async throws -> [Event]
     public var fetchEventDetail: (UUID) async throws -> Event
+    public var fetchEventById: (UUID) async throws -> Event
 }
 
 extension EventsClient: DependencyKey {
@@ -90,6 +91,21 @@ extension EventsClient: DependencyKey {
                 }
                 return event
             }
+        },
+        fetchEventById: { id in
+            do {
+                let apiEvent: APIEventResponse = try await NetworkService.shared.requestSingle(
+                    endpoint: "/events/\(id.uuidString)",
+                    method: .GET
+                )
+                return apiEvent.toEvent()
+            } catch {
+                let events = try await loadEventsFromJSON()
+                guard let event = events.first(where: { $0.id == id.uuidString }) else {
+                    throw NetworkError.notFound
+                }
+                return event
+            }
         }
     )
     
@@ -98,6 +114,7 @@ extension EventsClient: DependencyKey {
         searchEvents: { _ in SharedMockData.sampleEvents },
         fetchEventsByCategory: { _ in SharedMockData.sampleEvents },
         fetchEventDetail: { _ in SharedMockData.sampleEvents[0] },
+        fetchEventById: { _ in SharedMockData.sampleEvents[0] }
     )
 }
 

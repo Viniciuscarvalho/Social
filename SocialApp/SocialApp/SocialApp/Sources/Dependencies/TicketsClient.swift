@@ -5,6 +5,7 @@ public struct TicketsClient {
     public var fetchTickets: () async throws -> [Ticket]
     public var fetchAvailableTickets: () async throws -> [Ticket]
     public var fetchTicketsByEvent: (UUID) async throws -> [Ticket]
+    public var fetchTicketsBySeller: (String) async throws -> [Ticket]
     public var fetchTicketDetail: (UUID) async throws -> TicketDetail
     public var purchaseTicket: (UUID) async throws -> Ticket
     public var toggleFavorite: (UUID) async throws -> Void
@@ -62,6 +63,70 @@ extension TicketsClient: DependencyKey {
                             return ticketEventId == eventId
                         }
                         return false
+                    }
+                }
+            },
+            fetchTicketsBySeller: { sellerId in
+                print("🎫 fetchTicketsBySeller - Iniciando busca para sellerId: \(sellerId)")
+                do {
+                    // Nível 1: Tentar com query parameter sellerId
+                    print("📡 Nível 1: Tentando GET /tickets?sellerId=\(sellerId)")
+                    let queryItems = [URLQueryItem(name: "sellerId", value: sellerId)]
+                    let apiTickets: [APITicketResponse] = try await NetworkService.shared.requestArray(
+                        endpoint: "/tickets",
+                        method: .GET,
+                        queryItems: queryItems
+                    )
+                    let allTickets = apiTickets.map { $0.toTicket() }
+                    print("📦 Nível 1: Recebidos \(allTickets.count) tickets da API")
+                    
+                    // CRÍTICO: Filtrar por sellerId E status disponível
+                    let sellerTickets = allTickets.filter { 
+                        $0.sellerId == sellerId && $0.status == .available 
+                    }
+                    print("✅ Nível 1: \(sellerTickets.count) tickets disponíveis do vendedor \(sellerId)")
+                    
+                    if !sellerTickets.isEmpty {
+                        return sellerTickets
+                    }
+                    
+                    print("⚠️ Nível 1: Nenhum ticket encontrado com filtro, tentando próximo nível...")
+                    throw NetworkError.notFound
+                    
+                } catch {
+                    print("❌ Nível 1 falhou: \(error)")
+                    // Nível 2: Se falhar, busca todos e filtra localmente
+                    do {
+                        print("📡 Nível 2: Tentando GET /tickets (todos) e filtrando localmente")
+                        let apiTickets: [APITicketResponse] = try await NetworkService.shared.requestArray(
+                            endpoint: "/tickets",
+                            method: .GET
+                        )
+                        let allTickets = apiTickets.map { $0.toTicket() }
+                        print("📦 Nível 2: Recebidos \(allTickets.count) tickets totais")
+                        
+                        let sellerTickets = allTickets.filter { 
+                            $0.sellerId == sellerId && $0.status == .available 
+                        }
+                        print("✅ Nível 2: \(sellerTickets.count) tickets disponíveis do vendedor \(sellerId)")
+                        
+                        if !sellerTickets.isEmpty {
+                            return sellerTickets
+                        }
+                        
+                        print("⚠️ Nível 2: Nenhum ticket encontrado, tentando fallback JSON...")
+                        throw NetworkError.notFound
+                        
+                    } catch {
+                        print("❌ Nível 2 falhou: \(error)")
+                        // Nível 3: Fallback final para JSON local
+                        print("📁 Nível 3: Carregando tickets.json e filtrando")
+                        let tickets = try await loadTicketsFromJSON()
+                        let sellerTickets = tickets.filter { 
+                            $0.sellerId == sellerId && $0.status == .available 
+                        }
+                        print("✅ Nível 3: \(sellerTickets.count) tickets disponíveis do vendedor no JSON local")
+                        return sellerTickets
                     }
                 }
             },
@@ -270,6 +335,7 @@ extension TicketsClient: DependencyKey {
         fetchTickets: { SharedMockData.sampleTickets },
         fetchAvailableTickets: { SharedMockData.sampleTickets },
         fetchTicketsByEvent: { _ in SharedMockData.sampleTickets },
+        fetchTicketsBySeller: { sellerId in SharedMockData.sampleTickets},
         fetchTicketDetail: { ticketId in SharedMockData.sampleTicketDetail(for: ticketId.uuidString) },
         purchaseTicket: { _ in SharedMockData.sampleTickets[0] },
         toggleFavorite: { _ in },

@@ -31,6 +31,8 @@ public struct TicketDetailFeature {
     }
     
     @Dependency(\.ticketsClient) var ticketsClient
+    @Dependency(\.eventsClient) var eventsClient
+    @Dependency(\.userClient) var userClient
     
     public init() {}
     
@@ -40,40 +42,43 @@ public struct TicketDetailFeature {
             case let .onAppear(ticketId, ticket):
                 state.currentTicketId = ticketId
                 
-                // ✅ Se já temos o ticket simples, usa os dados sem fazer chamada API
+                // Sempre armazena o ticket se tiver
                 if let existingTicket = ticket {
-                    print("✅ Usando ticket já carregado: \(existingTicket.name)")
                     state.ticket = existingTicket
-                    
-                    // ✅ Só carrega detalhes completos se realmente precisar de mais informações
-                    // Por exemplo, se não temos informações do vendedor
-                    if existingTicket.sellerId.isEmpty {
-                        print("🔄 Carregando detalhes completos pois faltam informações do vendedor")
-                        return .run { send in
-                            await send(.loadTicketDetail(ticketId))
-                        }
-                    } else {
-                        print("✅ Dados suficientes, não fazendo chamada API")
-                        return .none
-                    }
-                } else {
-                    print("🔄 Ticket não fornecido, fazendo chamada API para detalhes")
-                    return .run { send in
-                        await send(.loadTicketDetail(ticketId))
-                    }
+                    print("🎫 TicketDetailFeature: Ticket recebido com preço R$ \(existingTicket.price)")
                 }
                 
+                // Sempre carrega detalhes completos (evento + vendedor), mas usaremos o preço do ticket
+                return .run { send in
+                    await send(.loadTicketDetail(ticketId))
+                }
+            
             case let .loadTicketDetail(ticketId):
                 state.isLoading = true
                 state.errorMessage = nil
+                
+                // Se temos um ticket com preço, vamos usar esse preço após carregar
+                let ticketPrice = state.ticket?.price
+                let ticketStatus = state.ticket?.status
+                
                 return .run { send in
                     do {
-                        print("🎫 Carregando detalhes do ticket: \(ticketId)")
                         let ticketDetail = try await ticketsClient.fetchTicketDetail(ticketId)
-                        print("✅ Detalhes do ticket carregados: \(ticketDetail.event.name)")
-                        await send(.ticketDetailResponse(.success(ticketDetail)))
+                        
+                        // ✅ CRÍTICO: Se temos um ticket com preço, usar esse preço
+                        var finalDetail = ticketDetail
+                        if let price = ticketPrice {
+                            print("💰 Atualizando preço do TicketDetail: API=\(ticketDetail.price) → Ticket=\(price)")
+                            finalDetail.price = price
+                        }
+                        
+                        // Também atualizar status se disponível
+                        if let status = ticketStatus {
+                            finalDetail.status = status
+                        }
+                        
+                        await send(.ticketDetailResponse(.success(finalDetail)))
                     } catch {
-                        print("❌ Erro ao carregar detalhes do ticket: \(error.localizedDescription)")
                         let networkError = error as? NetworkError ?? NetworkError.unknown(error.localizedDescription)
                         await send(.ticketDetailResponse(.failure(networkError)))
                     }
@@ -82,6 +87,7 @@ public struct TicketDetailFeature {
             case let .ticketDetailResponse(.success(ticketDetail)):
                 state.isLoading = false
                 state.ticketDetail = ticketDetail
+                print("✅ TicketDetail carregado com preço final: R$ \(ticketDetail.price)")
                 return .none
                 
             case let .ticketDetailResponse(.failure(error)):
@@ -93,14 +99,11 @@ public struct TicketDetailFeature {
                 state.isPurchasing = true
                 return .run { send in
                     do {
-                        print("💰 Iniciando compra do ticket: \(ticketId)")
                         try await Task.sleep(for: .seconds(2))
                         var ticketDetail = try await ticketsClient.fetchTicketDetail(ticketId)
                         ticketDetail.status = .sold
-                        print("✅ Ticket comprado com sucesso")
                         await send(.purchaseResponse(.success(ticketDetail)))
                     } catch {
-                        print("❌ Erro ao comprar ticket: \(error.localizedDescription)")
                         await send(.purchaseResponse(.failure(NetworkError.unknown(error.localizedDescription))))
                     }
                 }
@@ -116,25 +119,16 @@ public struct TicketDetailFeature {
                 return .none
                 
             case .validateTicket:
-                print("✅ Validando ticket...")
                 return .run { send in
                     do {
-                        // Simula processo de validação
                         try await Task.sleep(for: .seconds(1))
-                        print("✅ Ticket válido!")
                         await send(.validationResponse(.success(true)))
                     } catch {
-                        print("❌ Erro na validação: \(error.localizedDescription)")
                         await send(.validationResponse(.failure(NetworkError.unknown(error.localizedDescription))))
                     }
                 }
                 
             case let .validationResponse(.success(isValid)):
-                if isValid {
-                    print("✅ Ticket validado com sucesso")
-                } else {
-                    print("❌ Ticket inválido")
-                }
                 return .none
                 
             case let .validationResponse(.failure(error)):
@@ -142,14 +136,20 @@ public struct TicketDetailFeature {
                 return .none
                 
             case let .loadSellerProfile(sellerId):
-                state.sellerProfile = SellerProfileFeature.State()
+                // Inicializa o state do SellerProfileFeature com o sellerId
+                state.sellerProfile = SellerProfileFeature.State(sellerId: sellerId.uuidString)
+                // Dispara a ação para carregar o vendedor
                 return .run { send in
-                    await send(.sellerProfile(.loadProfileById(sellerId.uuidString)))
+                    await send(.sellerProfile(.onAppear))
                 }
                 
             case .sellerProfile:
+                // As ações do SellerProfileFeature serão tratadas pelo Scope
                 return .none
             }
+        }
+        .ifLet(\.sellerProfile, action: \.sellerProfile) {
+            SellerProfileFeature()
         }
     }
 }

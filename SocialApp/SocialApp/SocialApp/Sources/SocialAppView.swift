@@ -100,59 +100,79 @@ struct MainTabView: View {
     @ViewBuilder
     private var homeTab: some View {
         NavigationStack {
-            ZStack {
-                AppColors.backgroundGradient
-                    .ignoresSafeArea()
-                
-                HomeView(
-                    store: store.scope(
-                        state: \.homeFeature,
-                        action: \.homeFeature
-                    ),
-                    searchStore: store.scope(
-                        state: \.searchFeature,
-                        action: \.searchFeature
-                    )
+            homeTabContent
+        }
+    }
+    
+    @ViewBuilder
+    private var homeTabContent: some View {
+        ZStack {
+            AppColors.backgroundGradient
+                .ignoresSafeArea()
+            
+            HomeView(
+                store: store.scope(
+                    state: \.homeFeature,
+                    action: \.homeFeature
+                ),
+                searchStore: store.scope(
+                    state: \.searchFeature,
+                    action: \.searchFeature
                 )
-                .padding(.bottom, 120) // Aumentar para acomodar TabBar maior
-            }
-            .navigationDestination(item: $store.selectedEventId.sending(\.dismissEventNavigation)) { eventId in
-                ZStack {
-                    AppColors.backgroundGradient
-                        .ignoresSafeArea()
-                    
-                    if let eventDetailStore = store.scope(state: \.eventDetailFeature, action: \.eventDetailFeature) {
-                        EventDetailView(store: eventDetailStore, eventId: eventId)
-                        .toolbar(.hidden, for: .tabBar)
-                    }
-                }
-            }
-            .navigationDestination(item: $store.selectedTicketId.sending(\.dismissTicketNavigation)) { ticketId in
-                ZStack {
-                    AppColors.backgroundGradient
-                        .ignoresSafeArea()
-                    
-                    TicketDetailView(
-                        store: store.scope(
-                            state: \.ticketDetailFeature,
-                            action: \.ticketDetailFeature
-                        ),
-                        ticketId: ticketId
-                    )
+            )
+            .padding(.bottom, 120)
+        }
+        .navigationDestination(item: $store.selectedEventId.sending(\.dismissEventNavigation)) { eventId in
+            eventDetailDestination(eventId: eventId)
+        }
+        .navigationDestination(item: $store.selectedTicketId.sending(\.dismissTicketNavigation)) { ticketId in
+            ticketDetailDestination(ticketId: ticketId)
+        }
+        .navigationDestination(item: $store.selectedSellerId.sending(\.dismissSellerNavigation)) { sellerId in
+            sellerProfileDestination(sellerId: sellerId)
+        }
+    }
+    
+    @ViewBuilder
+    private func eventDetailDestination(eventId: UUID) -> some View {
+        ZStack {
+            AppColors.backgroundGradient
+                .ignoresSafeArea()
+            
+            if let eventDetailStore = store.scope(state: \.eventDetailFeature, action: \.eventDetailFeature) {
+                EventDetailView(store: eventDetailStore, eventId: eventId)
                     .toolbar(.hidden, for: .tabBar)
-                }
             }
-            .navigationDestination(item: $store.selectedSellerId.sending(\.dismissSellerNavigation)) { sellerId in
-                SellerProfileView(
-                    store: store.scope(
-                        state: \.sellerProfileFeature,
-                        action: \.sellerProfileFeature
-                    )
-                )
-                .onAppear {
-                    store.send(.sellerProfileFeature(.loadProfileById(sellerId.uuidString)))
-                }
-            }
+        }
+    }
+    
+    @ViewBuilder
+    private func ticketDetailDestination(ticketId: UUID) -> some View {
+        ZStack {
+            AppColors.backgroundGradient
+                .ignoresSafeArea()
+            
+            TicketDetailView(
+                store: store.scope(
+                    state: \.ticketDetailFeature,
+                    action: \.ticketDetailFeature
+                ),
+                ticketId: ticketId
+            )
+            .toolbar(.hidden, for: .tabBar)
+        }
+    }
+    
+    @ViewBuilder
+    private func sellerProfileDestination(sellerId: UUID) -> some View {
+        SellerProfileView(
+            store: store.scope(
+                state: \.sellerProfileFeature,
+                action: \.sellerProfileFeature
+            )
+        )
+        .onAppear {
+            store.send(.sellerProfileFeature(.loadSeller(sellerId.uuidString)))
         }
     }
     
@@ -169,7 +189,7 @@ struct MainTabView: View {
                         action: \.ticketsListFeature
                     )
                 )
-                .padding(.bottom, 120) // Aumentar para acomodar TabBar maior
+                .padding(.bottom, 120)
             }
             .navigationDestination(item: $store.selectedTicketId.sending(\.dismissTicketNavigation)) { ticketId in
                 ZStack {
@@ -231,7 +251,7 @@ struct MainTabView: View {
                         action: \.profileFeature
                     )
                 )
-                .padding(.bottom, 120) // Aumentar para acomodar TabBar maior
+                .padding(.bottom, 120)
             }
         }
     }

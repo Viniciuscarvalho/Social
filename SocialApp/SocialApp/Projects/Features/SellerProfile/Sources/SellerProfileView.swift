@@ -11,45 +11,66 @@ public struct SellerProfileView: View {
     
     public var body: some View {
         ZStack {
-            // Background gradient
-            LinearGradient(
-                colors: [Color(hex: "1a1a2e"), Color(hex: "0f0f1e")],
-                startPoint: .top,
-                endPoint: .bottom
-            )
-            .ignoresSafeArea()
+            Color(.systemBackground)
+                .ignoresSafeArea()
             
-            if store.isLoading {
+            if store.isLoading && store.seller == nil {
+                // Loading inicial
                 loadingView
-            } else if let profile = store.profile {
+            } else if let seller = store.seller {
+                // Conteúdo principal com pull-to-refresh
                 ScrollView {
-                    VStack(spacing: 16) {
-                        profileHeaderView(profile)
-                        statsCardsView(profile)
+                    VStack(spacing: 0) {
+                        // Header com foto e nome
+                        profileHeaderSection(seller)
                         
-                        if !profile.tickets.isEmpty {
-                            ticketsSection(profile)
+                        // Estatísticas
+                        statsSection(seller)
+                        
+                        // Botões de ação
+                        actionButtonsSection
+                        
+                        // Abas
+                        tabsSection
+                        
+                        // Conteúdo da aba selecionada
+                        if store.selectedTab == .about {
+                            aboutSection(seller)
+                        } else {
+                            ticketsSection
                         }
                     }
-                    .padding()
-                    .padding(.bottom, 100)
+                }
+                .refreshable {
+                    store.send(.refresh)
                 }
             } else {
                 errorView
+            }
+            
+            // Indicador de cache no topo
+            if store.loadState == .cached {
+                VStack {
+                    HStack {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundColor(.green)
+                        Text("Dados em cache")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(Color(.systemGray6))
+                    .cornerRadius(8)
+                    .padding(.top, 8)
+                    
+                    Spacer()
+                }
             }
         }
         .navigationTitle("Vendedor")
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden(true)
-        .preferredColorScheme(.dark)
-        .gesture(
-            DragGesture(minimumDistance: 20, coordinateSpace: .local)
-                .onEnded { value in
-                    if value.translation.width > 100 {
-                        dismiss()
-                    }
-                }
-        )
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {
                 Button {
@@ -57,7 +78,7 @@ public struct SellerProfileView: View {
                 } label: {
                     Image(systemName: "chevron.left")
                         .font(.system(size: 16, weight: .semibold))
-                        .foregroundColor(.white)
+                        .foregroundColor(.primary)
                 }
             }
         }
@@ -66,263 +87,267 @@ public struct SellerProfileView: View {
         }
     }
     
-    private var loadingView: some View {
-        VStack(spacing: 20) {
-            ProgressView()
-                .scaleEffect(1.5)
-                .tint(.white)
-            Text("Carregando perfil...")
-                .font(.headline)
-                .foregroundColor(.white.opacity(0.7))
-        }
-    }
+    // MARK: - Profile Header
     
-    private func profileHeaderView(_ profile: User) -> some View {
-        HStack(spacing: 16) {
-            // Profile Image
-            AsyncImage(url: URL(string: profile.profileImageURL ?? "")) { image in
-                image
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-            } placeholder: {
-                Circle()
-                    .fill(
-                        LinearGradient(
-                            colors: [Color(hex: "4a90e2"), Color(hex: "357abd")],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
-                    .overlay(
-                        Image(systemName: "person.fill")
-                            .font(.system(size: 32))
-                            .foregroundColor(.white)
-                    )
-            }
-            .frame(width: 70, height: 70)
-            .clipShape(Circle())
-            .overlay(
-                Circle()
-                    .stroke(Color.white.opacity(0.2), lineWidth: 2)
-            )
-            
-            // Profile Info
-            VStack(alignment: .leading, spacing: 6) {
-                HStack(spacing: 8) {
-                    Text(profile.name)
-                        .font(.title3)
-                        .fontWeight(.bold)
-                        .foregroundColor(.white)
-                    
-                    if profile.isVerified {
-                        Image(systemName: "checkmark.seal.fill")
-                            .font(.system(size: 16))
-                            .foregroundColor(Color(hex: "4a90e2"))
-                    }
-                }
-                
-                if let title = profile.title {
-                    Text(title)
-                        .font(.subheadline)
-                        .foregroundColor(.white.opacity(0.6))
-                }
-                
-                Text("Seja bem-vindo")
-                    .font(.caption)
-                    .foregroundColor(Color(hex: "a0f064"))
-            }
-            
-            Spacer()
-            
-            // Trophy Icon
-            Image(systemName: "trophy.fill")
-                .font(.system(size: 24))
-                .foregroundColor(Color(hex: "a0f064"))
-        }
-        .padding()
-        .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(Color.white.opacity(0.05))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 16)
-                        .stroke(Color.white.opacity(0.1), lineWidth: 1)
-                )
-        )
-    }
-    
-    private func statsCardsView(_ profile: User) -> some View {
-        VStack(spacing: 12) {
-            statsCard(
-                title: "Seguidores",
-                value: "\(profile.followersCount)",
-                total: profile.followingCount + profile.followersCount,
-                progress: Double(profile.followersCount) / Double(max(profile.followersCount + profile.followingCount, 1)),
-                color: Color(hex: "a0f064"),
-                showSeeAll: false
-            )
-            
-            statsCard(
-                title: "Ingressos",
-                value: "\(profile.ticketsCount)",
-                total: profile.ticketsCount + 50,
-                progress: Double(profile.ticketsCount) / Double(max(profile.ticketsCount + 50, 1)),
-                color: Color(hex: "4a90e2"),
-                showSeeAll: true
-            )
-        }
-    }
-    
-    private func statsCard(title: String, value: String, total: Int, progress: Double, color: Color, showSeeAll: Bool) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                Text(title)
-                    .font(.subheadline)
-                    .foregroundColor(.white.opacity(0.7))
-                
-                Spacer()
-                
-                if showSeeAll {
-                    Text("Ver tudo")
-                        .font(.caption)
-                        .foregroundColor(color)
-                }
-            }
-            
-            HStack(alignment: .bottom, spacing: 4) {
-                Text(value)
-                    .font(.system(size: 32, weight: .bold))
-                    .foregroundColor(.white)
-                
-                Text("/ \(total)")
-                    .font(.subheadline)
-                    .foregroundColor(.white.opacity(0.5))
-                    .padding(.bottom, 4)
-                
-                Spacer()
-                
-                Text("\(Int(progress * 100))%")
-                    .font(.headline)
-                    .foregroundColor(color)
-                    .padding(.bottom, 4)
-            }
-            
-            // Progress Bar
-            GeometryReader { geometry in
-                ZStack(alignment: .leading) {
-                    RoundedRectangle(cornerRadius: 8)
-                        .fill(Color.white.opacity(0.1))
-                    
-                    RoundedRectangle(cornerRadius: 8)
+    private func profileHeaderSection(_ seller: User) -> some View {
+        VStack(spacing: 16) {
+            // Foto de perfil
+            ZStack(alignment: .bottomTrailing) {
+                AsyncImage(url: URL(string: seller.profileImageURL ?? "")) { image in
+                    image
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                } placeholder: {
+                    Circle()
                         .fill(
                             LinearGradient(
-                                colors: [color, color.opacity(0.6)],
+                                colors: [Color.blue.opacity(0.6), Color.purple.opacity(0.6)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .overlay(
+                            Image(systemName: "person.fill")
+                                .font(.system(size: 40))
+                                .foregroundColor(.white)
+                        )
+                }
+                .frame(width: 120, height: 120)
+                .clipShape(Circle())
+                .overlay(
+                    Circle()
+                        .stroke(Color.blue.opacity(0.3), lineWidth: 4)
+                )
+                
+                // Badge de certificação  
+                if seller.isCertified {
+                    Circle()
+                        .fill(Color.blue)
+                        .frame(width: 36, height: 36)
+                        .overlay(
+                            Image(systemName: "checkmark")
+                                .font(.system(size: 16, weight: .bold))
+                                .foregroundColor(.white)
+                        )
+                        .overlay(
+                            Circle()
+                                .stroke(Color(.systemBackground), lineWidth: 3)
+                        )
+                        .offset(x: 4, y: 4)
+                }
+            }
+            .padding(.top, 24)
+            
+            // Nome
+            HStack(spacing: 8) {
+                Text(seller.name)
+                    .font(.system(size: 24, weight: .bold))
+                    .foregroundColor(.primary)
+                
+                if seller.isVerified {
+                    Image(systemName: "checkmark.seal.fill")
+                        .font(.system(size: 20))
+                        .foregroundColor(.blue)
+                }
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.bottom, 24)
+    }
+    
+    // MARK: - Stats Section
+    
+    private func statsSection(_ seller: User) -> some View {
+        HStack(spacing: 40) {
+            statItem(value: "\(seller.ticketsCount)", label: "Ingressos")
+            statItem(value: "\(seller.followersCount)k", label: "Seguidores")
+            statItem(value: "\(seller.followingCount)", label: "Seguindo")
+        }
+        .padding(.vertical, 20)
+        .frame(maxWidth: .infinity)
+    }
+    
+    private func statItem(value: String, label: String) -> some View {
+        VStack(spacing: 4) {
+            Text(value)
+                .font(.system(size: 20, weight: .bold))
+                .foregroundColor(.primary)
+            Text(label)
+                .font(.system(size: 14))
+                .foregroundColor(.secondary)
+        }
+    }
+    
+    // MARK: - Action Buttons
+    
+    private var actionButtonsSection: some View {
+        let currentUserId = UserDefaults.standard.string(forKey: "currentUserId")
+        let isOwnProfile = currentUserId == store.seller?.id
+        
+        return HStack(spacing: 12) {
+            // Botão Seguir - só aparece se não for o próprio perfil
+            if !isOwnProfile {
+                Button {
+                    store.send(.toggleFollow)
+                } label: {
+                    Text(store.isFollowing ? "Seguindo" : "Seguir")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundColor(store.isFollowing ? .blue : .white)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 48)
+                        .background(store.isFollowing ? Color.blue.opacity(0.1) : Color.blue)
+                        .cornerRadius(12)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(Color.blue, lineWidth: store.isFollowing ? 1 : 0)
+                        )
+                }
+            }
+            
+            // Botão Negociar - não aparece no próprio perfil
+            if !isOwnProfile {
+                Button {
+                    store.send(.negotiateTapped)
+                } label: {
+                    Text("Negociar")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 48)
+                        .background(
+                            LinearGradient(
+                                colors: [Color.purple, Color.blue],
                                 startPoint: .leading,
                                 endPoint: .trailing
                             )
                         )
-                        .frame(width: geometry.size.width * progress)
+                        .cornerRadius(12)
                 }
             }
-            .frame(height: 12)
         }
-        .padding()
-        .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(Color.white.opacity(0.05))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 16)
-                        .stroke(Color.white.opacity(0.1), lineWidth: 1)
-                )
+        .padding(.horizontal, 24)
+        .padding(.bottom, isOwnProfile ? 0 : 24)
+    }
+    
+    // MARK: - Tabs Section
+    
+    private var tabsSection: some View {
+        HStack(spacing: 0) {
+            ForEach(SellerProfileFeature.State.Tab.allCases, id: \.self) { tab in
+                Button {
+                    store.send(.tabSelected(tab))
+                } label: {
+                    VStack(spacing: 8) {
+                        Text(tab.rawValue)
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundColor(store.selectedTab == tab ? .primary : .secondary)
+                        
+                        Rectangle()
+                            .fill(store.selectedTab == tab ? Color.blue : Color.clear)
+                            .frame(height: 2)
+                    }
+                    .frame(maxWidth: .infinity)
+                }
+            }
+        }
+        .background(Color(.systemBackground))
+        .overlay(
+            Rectangle()
+                .fill(Color(.systemGray5))
+                .frame(height: 1),
+            alignment: .bottom
         )
     }
     
-    private func ticketsSection(_ profile: User) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                Text("Ingressos Disponíveis")
-                    .font(.headline)
-                    .foregroundColor(.white)
-                
-                Spacer()
-                
-                Text("Ver tudo")
-                    .font(.caption)
-                    .foregroundColor(Color(hex: "4a90e2"))
-            }
-            .padding(.horizontal, 4)
-            
-            VStack(spacing: 12) {
-                ForEach(profile.tickets.prefix(3)) { ticket in
-                    ticketRowView(ticket)
-                }
+    // MARK: - About Section
+    
+    private func aboutSection(_ seller: User) -> some View {
+        VStack(alignment: .leading, spacing: 20) {
+            if let bio = seller.bio, !bio.isEmpty {
+                Text(bio)
+                    .font(.system(size: 15))
+                    .foregroundColor(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            } else {
+                Text("Este vendedor ainda não adicionou uma biografia.")
+                    .font(.system(size: 15))
+                    .foregroundColor(.secondary)
+                    .italic()
             }
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(24)
     }
     
-    private func ticketRowView(_ ticket: Ticket) -> some View {
-        HStack(spacing: 12) {
-            // Icon
-            Circle()
-                .fill(Color(hex: "4a90e2").opacity(0.2))
-                .frame(width: 44, height: 44)
-                .overlay(
-                    Image(systemName: "ticket.fill")
-                        .font(.system(size: 18))
-                        .foregroundColor(Color(hex: "4a90e2"))
-                )
-            
-            // Info
-            VStack(alignment: .leading, spacing: 4) {
-                Text(ticket.name)
-                    .font(.subheadline)
-                    .fontWeight(.semibold)
-                    .foregroundColor(.white)
-                    .lineLimit(1)
-                
-                HStack(spacing: 8) {
-                    Text(ticket.ticketType.displayName)
-                        .font(.caption2)
-                        .foregroundColor(.white.opacity(0.6))
-                    
-                    Circle()
-                        .fill(Color.white.opacity(0.3))
-                        .frame(width: 3, height: 3)
-                    
-                    HStack(spacing: 4) {
-                        Circle()
-                            .fill(ticket.status == .available ? Color(hex: "a0f064") : .orange)
-                            .frame(width: 6, height: 6)
-                        
-                        Text(ticket.status.displayName)
-                            .font(.caption2)
-                            .foregroundColor(.white.opacity(0.6))
+    // MARK: - Tickets Section
+    
+    private var ticketsSection: some View {
+        VStack(spacing: 16) {
+            if store.isLoadingTickets {
+                ProgressView()
+                    .padding(40)
+            } else if store.sellerTickets.isEmpty {
+                emptyTicketsView
+            } else {
+                LazyVStack(spacing: 16) {
+                    ForEach(store.sellerTickets) { ticketWithEvent in
+                        NavigationLink {
+                            TicketDetailView(
+                                store: Store(initialState: TicketDetailFeature.State()) {
+                                    TicketDetailFeature()
+                                },
+                                ticketId: UUID(uuidString: ticketWithEvent.ticket.id) ?? UUID(),
+                                ticket: ticketWithEvent.ticket
+                            )
+                        } label: {
+                            SellerTicketCard(ticketWithEvent: ticketWithEvent)
+                        }
+                        .buttonStyle(PlainButtonStyle())
                     }
                 }
-            }
-            
-            Spacer()
-            
-            // Price and Arrow
-            HStack(spacing: 8) {
-                Text("$\(Int(ticket.price))")
-                    .font(.headline)
-                    .foregroundColor(.white)
-                
-                Image(systemName: "chevron.right")
-                    .font(.caption)
-                    .foregroundColor(.white.opacity(0.4))
+                .padding(.horizontal, 16)
+                .padding(.vertical, 16)
             }
         }
-        .padding(12)
-        .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(Color.white.opacity(0.05))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 12)
-                        .stroke(Color.white.opacity(0.1), lineWidth: 1)
-                )
-        )
     }
+    
+    // MARK: - Empty State
+    
+    private var emptyTicketsView: some View {
+        VStack(spacing: 20) {
+            Image("empty_ticket")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 200, height: 200)
+                .foregroundColor(.gray.opacity(0.5))
+            
+            Text("Nenhum Ingresso Disponível")
+                .font(.system(size: 20, weight: .bold))
+                .foregroundColor(.primary)
+            
+            Text("Este vendedor não possui ingressos disponíveis no momento")
+                .font(.system(size: 15))
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 40)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 60)
+    }
+    
+    // MARK: - Loading View
+    
+    private var loadingView: some View {
+        VStack(spacing: 20) {
+            ProgressView()
+                .scaleEffect(1.5)
+            Text("Carregando perfil...")
+                .font(.headline)
+                .foregroundColor(.secondary)
+        }
+    }
+    
+    // MARK: - Error View
     
     private var errorView: some View {
         VStack(spacing: 20) {
@@ -333,23 +358,131 @@ public struct SellerProfileView: View {
             Text("Erro ao carregar perfil")
                 .font(.title2)
                 .fontWeight(.semibold)
-                .foregroundColor(.white)
+                .foregroundColor(.primary)
             
             if let errorMessage = store.errorMessage {
                 Text(errorMessage)
                     .font(.body)
-                    .foregroundColor(.white.opacity(0.7))
+                    .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
+                    .padding(.horizontal, 40)
             }
             
             Button("Tentar Novamente") {
                 store.send(.onAppear)
             }
             .buttonStyle(.borderedProminent)
-            .tint(Color(hex: "4a90e2"))
         }
         .padding()
     }
 }
 
+// MARK: - Seller Ticket Card
 
+struct SellerTicketCard: View {
+    let ticketWithEvent: TicketWithEvent
+    
+    var body: some View {
+        HStack(spacing: 12) {
+            // Imagem do evento
+            AsyncImage(url: URL(string: ticketWithEvent.event.imageURL ?? "")) { image in
+                image
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+            } placeholder: {
+                Rectangle()
+                    .fill(Color.gray.opacity(0.3))
+                    .overlay(
+                        Image(systemName: "photo")
+                            .foregroundColor(.gray)
+                    )
+            }
+            .frame(width: 80, height: 100)
+            .clipShape(RoundedRectangle(cornerRadius: 12))
+            .overlay(
+                // Badge "Free" ou preço
+                Group {
+                    if ticketWithEvent.ticket.price == 0 {
+                        Text("Grátis")
+                            .font(.system(size: 12, weight: .bold))
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(Color.green)
+                            .cornerRadius(8)
+                    } else {
+                        Text("$\(Int(ticketWithEvent.ticket.price))")
+                            .font(.system(size: 12, weight: .bold))
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(
+                                LinearGradient(
+                                    colors: [Color.blue, Color.purple],
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                )
+                            )
+                            .cornerRadius(8)
+                    }
+                }
+                .padding(6),
+                alignment: .topLeading
+            )
+            
+            // Informações do ingresso
+            VStack(alignment: .leading, spacing: 6) {
+                // Nome do evento
+                Text(ticketWithEvent.event.name)
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundColor(.primary)
+                    .lineLimit(2)
+                
+                // Data e hora
+                HStack(spacing: 4) {
+                    Image(systemName: "calendar")
+                        .font(.system(size: 12))
+                        .foregroundColor(.secondary)
+                    
+                    if let eventDate = ticketWithEvent.event.eventDate {
+                        Text(eventDate, style: .date)
+                            .font(.system(size: 12))
+                            .foregroundColor(.secondary)
+                    } else {
+                        Text("Data a definir")
+                            .font(.system(size: 12))
+                            .foregroundColor(.secondary)
+                    }
+                }
+                
+                // Local
+                HStack(spacing: 4) {
+                    Image(systemName: "location.fill")
+                        .font(.system(size: 12))
+                        .foregroundColor(.secondary)
+                    
+                    Text(ticketWithEvent.event.location.address ?? ticketWithEvent.event.location.name)
+                        .font(.system(size: 12))
+                        .foregroundColor(.secondary)
+                        .lineLimit(1)
+                }
+            }
+            
+            Spacer()
+            
+            // Botão de favorito
+            Button {
+                // TODO: Implementar favoritar
+            } label: {
+                Image(systemName: "heart")
+                    .font(.system(size: 18))
+                    .foregroundColor(.blue)
+            }
+            .buttonStyle(PlainButtonStyle())
+        }
+        .padding(12)
+        .background(Color(.systemBackground))
+        .cornerRadius(16)
+        .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 2)
+    }
+}
