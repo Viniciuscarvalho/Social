@@ -276,7 +276,7 @@ public struct TicketDetailView: View {
                             VStack(spacing: 12) {
                                 if ticketDetail.status == .available {
                                     Button(action: {
-                                        print("ℹ️ Botão Negociar clicado - funcionalidade em desenvolvimento")
+                                        store.send(.negotiateTapped)
                                     }) {
                                         HStack(spacing: 8) {
                                             Image(systemName: "bubble.left.and.bubble.right.fill")

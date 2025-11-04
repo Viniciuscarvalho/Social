@@ -1573,3 +1573,709 @@ extension APITicketDetailResponse {
         return ticketDetail
     }
 }
+
+// MARK: - Negotiation Models (Task5 - Phase 1)
+
+public enum VerificationLevel: String, Codable, Equatable {
+    case unverified = "unverified"
+    case emailVerified = "email_verified"
+    case phoneVerified = "phone_verified"
+    case documentVerified = "document_verified"
+    case fullyVerified = "fully_verified"
+    
+    public var displayName: String {
+        switch self {
+        case .unverified: return "Não Verificado"
+        case .emailVerified: return "E-mail Verificado"
+        case .phoneVerified: return "Telefone Verificado"
+        case .documentVerified: return "Documento Verificado"
+        case .fullyVerified: return "Totalmente Verificado"
+        }
+    }
+    
+    public var level: Int {
+        switch self {
+        case .unverified: return 0
+        case .emailVerified: return 1
+        case .phoneVerified: return 2
+        case .documentVerified: return 3
+        case .fullyVerified: return 4
+        }
+    }
+    
+    public var canNegotiate: Bool {
+        return level >= 1 // Precisa ter pelo menos e-mail verificado
+    }
+}
+
+public enum NegotiationStatus: String, Codable, Equatable {
+    case pending = "pending"
+    case approved = "approved"
+    case rejected = "rejected"
+    case cancelled = "cancelled"
+    case inProgress = "in_progress"
+    case completed = "completed"
+    case disputed = "disputed"
+    
+    public var displayName: String {
+        switch self {
+        case .pending: return "Aguardando Resposta"
+        case .approved: return "Aprovada"
+        case .rejected: return "Recusada"
+        case .cancelled: return "Cancelada"
+        case .inProgress: return "Em Andamento"
+        case .completed: return "Concluída"
+        case .disputed: return "Em Disputa"
+        }
+    }
+    
+    public var iconName: String {
+        switch self {
+        case .pending: return "clock.fill"
+        case .approved: return "checkmark.circle.fill"
+        case .rejected: return "xmark.circle.fill"
+        case .cancelled: return "slash.circle.fill"
+        case .inProgress: return "arrow.triangle.2.circlepath"
+        case .completed: return "checkmark.seal.fill"
+        case .disputed: return "exclamationmark.triangle.fill"
+        }
+    }
+}
+
+public struct Negotiation: Codable, Identifiable, Equatable {
+    public var id: String
+    public var ticketId: String
+    public var buyerId: String
+    public var sellerId: String
+    public var status: NegotiationStatus
+    public var proposedPrice: Double?
+    public var escrowCode: String?
+    public var accessToken: String?
+    public var validUntil: Date?
+    public var rejectionReason: String?
+    public var adminNotes: String?
+    public var createdAt: Date
+    public var approvedAt: Date?
+    public var completedAt: Date?
+    public var cancelledAt: Date?
+    
+    // Informações expandidas (podem vir da API)
+    public var ticket: Ticket?
+    public var buyer: User?
+    public var seller: User?
+    
+    public init(
+        id: String = UUID().uuidString,
+        ticketId: String,
+        buyerId: String,
+        sellerId: String,
+        status: NegotiationStatus = .pending,
+        proposedPrice: Double? = nil,
+        escrowCode: String? = nil,
+        accessToken: String? = nil,
+        validUntil: Date? = nil,
+        rejectionReason: String? = nil,
+        adminNotes: String? = nil,
+        createdAt: Date = Date(),
+        approvedAt: Date? = nil,
+        completedAt: Date? = nil,
+        cancelledAt: Date? = nil
+    ) {
+        self.id = id
+        self.ticketId = ticketId
+        self.buyerId = buyerId
+        self.sellerId = sellerId
+        self.status = status
+        self.proposedPrice = proposedPrice
+        self.escrowCode = escrowCode
+        self.accessToken = accessToken
+        self.validUntil = validUntil
+        self.rejectionReason = rejectionReason
+        self.adminNotes = adminNotes
+        self.createdAt = createdAt
+        self.approvedAt = approvedAt
+        self.completedAt = completedAt
+        self.cancelledAt = cancelledAt
+    }
+    
+    public var isExpired: Bool {
+        guard let validUntil = validUntil else { return false }
+        return Date() > validUntil
+    }
+    
+    public var canRevealContact: Bool {
+        return status == .approved && !isExpired
+    }
+    
+    enum CodingKeys: String, CodingKey {
+        case id, status, ticket, buyer, seller
+        case ticketId = "ticket_id"
+        case buyerId = "buyer_id"
+        case sellerId = "seller_id"
+        case proposedPrice = "proposed_price"
+        case escrowCode = "escrow_code"
+        case accessToken = "access_token"
+        case validUntil = "valid_until"
+        case rejectionReason = "rejection_reason"
+        case adminNotes = "admin_notes"
+        case createdAt = "created_at"
+        case approvedAt = "approved_at"
+        case completedAt = "completed_at"
+        case cancelledAt = "cancelled_at"
+    }
+}
+
+public struct UserVerification: Codable, Identifiable, Equatable {
+    public var id: String
+    public var emailVerified: Bool
+    public var emailVerifiedAt: Date?
+    public var phoneVerified: Bool
+    public var phoneVerifiedAt: Date?
+    public var documentType: String?
+    public var documentFileUrl: String?
+    public var documentVerified: Bool
+    public var documentVerifiedAt: Date?
+    public var documentVerifiedBy: String?
+    public var verificationLevel: VerificationLevel
+    public var trustScore: Int
+    public var createdAt: Date
+    public var updatedAt: Date
+    
+    public init(
+        id: String = UUID().uuidString,
+        emailVerified: Bool = false,
+        emailVerifiedAt: Date? = nil,
+        phoneVerified: Bool = false,
+        phoneVerifiedAt: Date? = nil,
+        documentType: String? = nil,
+        documentFileUrl: String? = nil,
+        documentVerified: Bool = false,
+        documentVerifiedAt: Date? = nil,
+        documentVerifiedBy: String? = nil,
+        verificationLevel: VerificationLevel = .unverified,
+        trustScore: Int = 0,
+        createdAt: Date = Date(),
+        updatedAt: Date = Date()
+    ) {
+        self.id = id
+        self.emailVerified = emailVerified
+        self.emailVerifiedAt = emailVerifiedAt
+        self.phoneVerified = phoneVerified
+        self.phoneVerifiedAt = phoneVerifiedAt
+        self.documentType = documentType
+        self.documentFileUrl = documentFileUrl
+        self.documentVerified = documentVerified
+        self.documentVerifiedAt = documentVerifiedAt
+        self.documentVerifiedBy = documentVerifiedBy
+        self.verificationLevel = verificationLevel
+        self.trustScore = trustScore
+        self.createdAt = createdAt
+        self.updatedAt = updatedAt
+    }
+    
+    public var canNegotiate: Bool {
+        return verificationLevel.canNegotiate
+    }
+    
+    enum CodingKeys: String, CodingKey {
+        case id
+        case emailVerified = "email_verified"
+        case emailVerifiedAt = "email_verified_at"
+        case phoneVerified = "phone_verified"
+        case phoneVerifiedAt = "phone_verified_at"
+        case documentType = "document_type"
+        case documentFileUrl = "document_file_url"
+        case documentVerified = "document_verified"
+        case documentVerifiedAt = "document_verified_at"
+        case documentVerifiedBy = "document_verified_by"
+        case verificationLevel = "verification_level"
+        case trustScore = "trust_score"
+        case createdAt = "created_at"
+        case updatedAt = "updated_at"
+    }
+}
+
+// MARK: - Ticket Validation Models (Task5 - Phase 4)
+
+public enum ValidationStatus: String, Codable, Equatable {
+    case pending = "pending"
+    case approved = "approved"
+    case rejected = "rejected"
+    case inReview = "in_review"
+    
+    public var displayName: String {
+        switch self {
+        case .pending: return "Aguardando Envio"
+        case .approved: return "Aprovado"
+        case .rejected: return "Rejeitado"
+        case .inReview: return "Em Análise"
+        }
+    }
+    
+    public var iconName: String {
+        switch self {
+        case .pending: return "clock.fill"
+        case .approved: return "checkmark.seal.fill"
+        case .rejected: return "xmark.seal.fill"
+        case .inReview: return "magnifyingglass"
+        }
+    }
+}
+
+public struct TicketValidation: Codable, Identifiable, Equatable {
+    public var id: String
+    public var ticketId: String
+    public var sellerId: String
+    public var status: ValidationStatus
+    public var submittedAt: Date?
+    public var validatedAt: Date?
+    public var validatedBy: String?
+    public var validationScore: Int?
+    public var rejectionReason: String?
+    public var adminNotes: String?
+    public var createdAt: Date
+    public var updatedAt: Date
+    
+    public var proofs: [ValidationProof]?
+    
+    public init(
+        id: String = UUID().uuidString,
+        ticketId: String,
+        sellerId: String,
+        status: ValidationStatus = .pending,
+        submittedAt: Date? = nil,
+        validatedAt: Date? = nil,
+        validatedBy: String? = nil,
+        validationScore: Int? = nil,
+        rejectionReason: String? = nil,
+        adminNotes: String? = nil,
+        createdAt: Date = Date(),
+        updatedAt: Date = Date()
+    ) {
+        self.id = id
+        self.ticketId = ticketId
+        self.sellerId = sellerId
+        self.status = status
+        self.submittedAt = submittedAt
+        self.validatedAt = validatedAt
+        self.validatedBy = validatedBy
+        self.validationScore = validationScore
+        self.rejectionReason = rejectionReason
+        self.adminNotes = adminNotes
+        self.createdAt = createdAt
+        self.updatedAt = updatedAt
+    }
+    
+    enum CodingKeys: String, CodingKey {
+        case id, status
+        case ticketId = "ticket_id"
+        case sellerId = "seller_id"
+        case submittedAt = "submitted_at"
+        case validatedAt = "validated_at"
+        case validatedBy = "validated_by"
+        case validationScore = "validation_score"
+        case rejectionReason = "rejection_reason"
+        case adminNotes = "admin_notes"
+        case createdAt = "created_at"
+        case updatedAt = "updated_at"
+        case proofs
+    }
+}
+
+public struct ValidationProof: Codable, Identifiable, Equatable {
+    public var id: String
+    public var validationId: String
+    public var proofType: String
+    public var fileUrl: String
+    public var uploadedAt: Date
+    public var isVerified: Bool
+    public var moderatedAt: Date?
+    public var moderatedBy: String?
+    
+    public init(
+        id: String = UUID().uuidString,
+        validationId: String,
+        proofType: String,
+        fileUrl: String,
+        uploadedAt: Date = Date(),
+        isVerified: Bool = false,
+        moderatedAt: Date? = nil,
+        moderatedBy: String? = nil
+    ) {
+        self.id = id
+        self.validationId = validationId
+        self.proofType = proofType
+        self.fileUrl = fileUrl
+        self.uploadedAt = uploadedAt
+        self.isVerified = isVerified
+        self.moderatedAt = moderatedAt
+        self.moderatedBy = moderatedBy
+    }
+    
+    enum CodingKeys: String, CodingKey {
+        case id
+        case validationId = "validation_id"
+        case proofType = "proof_type"
+        case fileUrl = "file_url"
+        case uploadedAt = "uploaded_at"
+        case isVerified = "is_verified"
+        case moderatedAt = "moderated_at"
+        case moderatedBy = "moderated_by"
+    }
+}
+
+// MARK: - Review Models (Task5 - Phase 5)
+
+public struct Review: Codable, Identifiable, Equatable {
+    public var id: String
+    public var negotiationId: String
+    public var reviewerId: String
+    public var reviewedId: String
+    public var rating: Int
+    public var comment: String?
+    public var status: String
+    public var moderatedAt: Date?
+    public var moderatedBy: String?
+    public var moderationNotes: String?
+    public var createdAt: Date
+    public var updatedAt: Date
+    
+    public var reviewer: User?
+    public var reviewed: User?
+    
+    public init(
+        id: String = UUID().uuidString,
+        negotiationId: String,
+        reviewerId: String,
+        reviewedId: String,
+        rating: Int,
+        comment: String? = nil,
+        status: String = "active",
+        moderatedAt: Date? = nil,
+        moderatedBy: String? = nil,
+        moderationNotes: String? = nil,
+        createdAt: Date = Date(),
+        updatedAt: Date = Date()
+    ) {
+        self.id = id
+        self.negotiationId = negotiationId
+        self.reviewerId = reviewerId
+        self.reviewedId = reviewedId
+        self.rating = rating
+        self.comment = comment
+        self.status = status
+        self.moderatedAt = moderatedAt
+        self.moderatedBy = moderatedBy
+        self.moderationNotes = moderationNotes
+        self.createdAt = createdAt
+        self.updatedAt = updatedAt
+    }
+    
+    enum CodingKeys: String, CodingKey {
+        case id, rating, comment, status, reviewer, reviewed
+        case negotiationId = "negotiation_id"
+        case reviewerId = "reviewer_id"
+        case reviewedId = "reviewed_id"
+        case moderatedAt = "moderated_at"
+        case moderatedBy = "moderated_by"
+        case moderationNotes = "moderation_notes"
+        case createdAt = "created_at"
+        case updatedAt = "updated_at"
+    }
+}
+
+// MARK: - API Response Models for Negotiations
+
+public struct APINegotiationResponse: Codable {
+    let id: String
+    let ticketId: String?
+    let ticket_id: String?
+    let buyerId: String?
+    let buyer_id: String?
+    let sellerId: String?
+    let seller_id: String?
+    let status: String
+    let proposedPrice: Double?
+    let proposed_price: Double?
+    let escrowCode: String?
+    let escrow_code: String?
+    let accessToken: String?
+    let access_token: String?
+    let validUntil: String?
+    let valid_until: String?
+    let rejectionReason: String?
+    let rejection_reason: String?
+    let adminNotes: String?
+    let admin_notes: String?
+    let createdAt: String?
+    let created_at: String?
+    let approvedAt: String?
+    let approved_at: String?
+    let completedAt: String?
+    let completed_at: String?
+    let cancelledAt: String?
+    let cancelled_at: String?
+    let ticket: APITicketResponse?
+    let buyer: APIUserResponse?
+    let seller: APIUserResponse?
+    
+    var finalTicketId: String {
+        return ticketId ?? ticket_id ?? ""
+    }
+    
+    var finalBuyerId: String {
+        return buyerId ?? buyer_id ?? ""
+    }
+    
+    var finalSellerId: String {
+        return sellerId ?? seller_id ?? ""
+    }
+    
+    var finalProposedPrice: Double? {
+        return proposedPrice ?? proposed_price
+    }
+    
+    var finalEscrowCode: String? {
+        return escrowCode ?? escrow_code
+    }
+    
+    var finalAccessToken: String? {
+        return accessToken ?? access_token
+    }
+    
+    var finalValidUntil: String? {
+        return validUntil ?? valid_until
+    }
+    
+    var finalRejectionReason: String? {
+        return rejectionReason ?? rejection_reason
+    }
+    
+    var finalAdminNotes: String? {
+        return adminNotes ?? admin_notes
+    }
+    
+    var finalCreatedAt: String? {
+        return createdAt ?? created_at
+    }
+    
+    var finalApprovedAt: String? {
+        return approvedAt ?? approved_at
+    }
+    
+    var finalCompletedAt: String? {
+        return completedAt ?? completed_at
+    }
+    
+    var finalCancelledAt: String? {
+        return cancelledAt ?? cancelled_at
+    }
+    
+    func toNegotiation() -> Negotiation {
+        let dateFormatter = DateFormatter()
+        dateFormatter.locale = Locale(identifier: "en_US_POSIX")
+        let dateFormats = [
+            "yyyy-MM-dd'T'HH:mm:ss.SSSZ",
+            "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
+            "yyyy-MM-dd'T'HH:mm:ssZ",
+            "yyyy-MM-dd'T'HH:mm:ss'Z'"
+        ]
+        
+        func parseDate(_ dateString: String?) -> Date? {
+            guard let dateString = dateString else { return nil }
+            for format in dateFormats {
+                dateFormatter.dateFormat = format
+                if let date = dateFormatter.date(from: dateString) {
+                    return date
+                }
+            }
+            return nil
+        }
+        
+        var negotiation = Negotiation(
+            id: id,
+            ticketId: finalTicketId,
+            buyerId: finalBuyerId,
+            sellerId: finalSellerId,
+            status: NegotiationStatus(rawValue: status) ?? .pending,
+            proposedPrice: finalProposedPrice,
+            escrowCode: finalEscrowCode,
+            accessToken: finalAccessToken,
+            validUntil: parseDate(finalValidUntil),
+            rejectionReason: finalRejectionReason,
+            adminNotes: finalAdminNotes,
+            createdAt: parseDate(finalCreatedAt) ?? Date(),
+            approvedAt: parseDate(finalApprovedAt),
+            completedAt: parseDate(finalCompletedAt),
+            cancelledAt: parseDate(finalCancelledAt)
+        )
+        
+        // Parse expanded objects
+        if let apiTicket = ticket {
+            negotiation.ticket = apiTicket.toTicket()
+        }
+        
+        if let apiBuyer = buyer {
+            negotiation.buyer = apiBuyer.toUser()
+        }
+        
+        if let apiSeller = seller {
+            negotiation.seller = apiSeller.toUser()
+        }
+        
+        return negotiation
+    }
+}
+
+public struct APIUserVerificationResponse: Codable {
+    let id: String
+    let emailVerified: Bool?
+    let email_verified: Bool?
+    let emailVerifiedAt: String?
+    let email_verified_at: String?
+    let phoneVerified: Bool?
+    let phone_verified: Bool?
+    let phoneVerifiedAt: String?
+    let phone_verified_at: String?
+    let documentType: String?
+    let document_type: String?
+    let documentFileUrl: String?
+    let document_file_url: String?
+    let documentVerified: Bool?
+    let document_verified: Bool?
+    let documentVerifiedAt: String?
+    let document_verified_at: String?
+    let documentVerifiedBy: String?
+    let document_verified_by: String?
+    let verificationLevel: String?
+    let verification_level: String?
+    let trustScore: Int?
+    let trust_score: Int?
+    let createdAt: String?
+    let created_at: String?
+    let updatedAt: String?
+    let updated_at: String?
+    
+    var finalEmailVerified: Bool {
+        return emailVerified ?? email_verified ?? false
+    }
+    
+    var finalPhoneVerified: Bool {
+        return phoneVerified ?? phone_verified ?? false
+    }
+    
+    var finalDocumentVerified: Bool {
+        return documentVerified ?? document_verified ?? false
+    }
+    
+    var finalDocumentType: String? {
+        return documentType ?? document_type
+    }
+    
+    var finalDocumentFileUrl: String? {
+        return documentFileUrl ?? document_file_url
+    }
+    
+    var finalDocumentVerifiedBy: String? {
+        return documentVerifiedBy ?? document_verified_by
+    }
+    
+    var finalVerificationLevel: String {
+        return verificationLevel ?? verification_level ?? "unverified"
+    }
+    
+    var finalTrustScore: Int {
+        return trustScore ?? trust_score ?? 0
+    }
+    
+    func toUserVerification() -> UserVerification {
+        let dateFormatter = DateFormatter()
+        dateFormatter.locale = Locale(identifier: "en_US_POSIX")
+        let dateFormats = [
+            "yyyy-MM-dd'T'HH:mm:ss.SSSZ",
+            "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
+            "yyyy-MM-dd'T'HH:mm:ssZ",
+            "yyyy-MM-dd'T'HH:mm:ss'Z'"
+        ]
+        
+        func parseDate(_ dateString: String?) -> Date? {
+            guard let dateString = dateString else { return nil }
+            for format in dateFormats {
+                dateFormatter.dateFormat = format
+                if let date = dateFormatter.date(from: dateString) {
+                    return date
+                }
+            }
+            return nil
+        }
+        
+        return UserVerification(
+            id: id,
+            emailVerified: finalEmailVerified,
+            emailVerifiedAt: parseDate(emailVerifiedAt ?? email_verified_at),
+            phoneVerified: finalPhoneVerified,
+            phoneVerifiedAt: parseDate(phoneVerifiedAt ?? phone_verified_at),
+            documentType: finalDocumentType,
+            documentFileUrl: finalDocumentFileUrl,
+            documentVerified: finalDocumentVerified,
+            documentVerifiedAt: parseDate(documentVerifiedAt ?? document_verified_at),
+            documentVerifiedBy: finalDocumentVerifiedBy,
+            verificationLevel: VerificationLevel(rawValue: finalVerificationLevel) ?? .unverified,
+            trustScore: finalTrustScore,
+            createdAt: parseDate(createdAt ?? created_at) ?? Date(),
+            updatedAt: parseDate(updatedAt ?? updated_at) ?? Date()
+        )
+    }
+}
+
+// MARK: - Request Models for Negotiations
+
+public struct CreateNegotiationRequest: Codable {
+    let ticketId: String
+    let proposedPrice: Double?
+    
+    public init(ticketId: String, proposedPrice: Double? = nil) {
+        self.ticketId = ticketId
+        self.proposedPrice = proposedPrice
+    }
+    
+    enum CodingKeys: String, CodingKey {
+        case ticketId = "ticket_id"
+        case proposedPrice = "proposed_price"
+    }
+}
+
+public struct UpdateNegotiationRequest: Codable {
+    let status: String
+    let rejectionReason: String?
+    
+    public init(status: NegotiationStatus, rejectionReason: String? = nil) {
+        self.status = status.rawValue
+        self.rejectionReason = rejectionReason
+    }
+    
+    enum CodingKeys: String, CodingKey {
+        case status
+        case rejectionReason = "rejection_reason"
+    }
+}
+
+public struct CreateReviewRequest: Codable {
+    let negotiationId: String
+    let reviewedId: String
+    let rating: Int
+    let comment: String?
+    
+    public init(negotiationId: String, reviewedId: String, rating: Int, comment: String? = nil) {
+        self.negotiationId = negotiationId
+        self.reviewedId = reviewedId
+        self.rating = rating
+        self.comment = comment
+    }
+    
+    enum CodingKeys: String, CodingKey {
+        case rating, comment
+        case negotiationId = "negotiation_id"
+        case reviewedId = "reviewed_id"
+    }
+}

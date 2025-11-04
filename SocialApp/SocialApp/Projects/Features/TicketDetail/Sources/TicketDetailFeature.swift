@@ -28,6 +28,7 @@ public struct TicketDetailFeature {
         case validationResponse(Result<Bool, NetworkError>)
         case loadSellerProfile(UUID)
         case sellerProfile(SellerProfileFeature.Action)
+        case negotiateTapped // Ação para iniciar negociação
     }
     
     @Dependency(\.ticketsClient) var ticketsClient
@@ -145,6 +146,11 @@ public struct TicketDetailFeature {
                 
             case .sellerProfile:
                 // As ações do SellerProfileFeature serão tratadas pelo Scope
+                return .none
+                
+            case .negotiateTapped:
+                // Ação delegada à View/Navigation
+                print("🤝 Negociar ingresso tapped")
                 return .none
             }
         }
