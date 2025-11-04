@@ -503,12 +503,51 @@ public struct NegotiationDetailsView: View {
             
             Spacer()
             
-            Button {
-                UIPasteboard.general.string = value
-            } label: {
-                Image(systemName: "doc.on.doc")
-                    .font(.system(size: 14))
-                    .foregroundColor(AppColors.primary)
+            // Action buttons based on contact type
+            HStack(spacing: 12) {
+                // Copy button
+                Button {
+                    DeepLinkService.shared.copyToClipboard(value)
+                } label: {
+                    Image(systemName: "doc.on.doc")
+                        .font(.system(size: 14))
+                        .foregroundColor(AppColors.primary)
+                }
+                
+                // Deep link buttons
+                if title == "Telefone" || title == "Phone" {
+                    Menu {
+                        Button {
+                            DeepLinkService.shared.openWhatsApp(phoneNumber: value)
+                        } label: {
+                            Label("WhatsApp", systemImage: "message.fill")
+                        }
+                        
+                        Button {
+                            DeepLinkService.shared.makePhoneCall(phoneNumber: value)
+                        } label: {
+                            Label("Ligar", systemImage: "phone.fill")
+                        }
+                        
+                        Button {
+                            DeepLinkService.shared.sendSMS(phoneNumber: value)
+                        } label: {
+                            Label("SMS", systemImage: "message.badge.fill")
+                        }
+                    } label: {
+                        Image(systemName: "ellipsis.circle")
+                            .font(.system(size: 14))
+                            .foregroundColor(AppColors.primary)
+                    }
+                } else if title == "E-mail" || title == "Email" {
+                    Button {
+                        DeepLinkService.shared.openEmail(email: value)
+                    } label: {
+                        Image(systemName: "envelope.fill")
+                            .font(.system(size: 14))
+                            .foregroundColor(AppColors.primary)
+                    }
+                }
             }
         }
         .padding(.vertical, 8)

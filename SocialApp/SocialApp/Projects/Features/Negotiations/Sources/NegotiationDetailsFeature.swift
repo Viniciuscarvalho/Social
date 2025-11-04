@@ -232,12 +232,26 @@ public struct NegotiationDetailsFeature {
                 state.isRevealingContact = true
                 state.errorMessage = nil
                 
-                // TODO: Implementar autenticação biométrica aqui
-                
                 return .run { [negotiationId = state.negotiationId] send in
                     do {
+                        // ✅ Autenticação biométrica antes de revelar contato
+                        print("🔐 Solicitando autenticação biométrica...")
+                        let authenticated = try await BiometricAuthService.shared.authenticate(
+                            reason: "Autentique-se para revelar os dados de contato do vendedor",
+                            fallbackTitle: "Usar Senha"
+                        )
+                        
+                        guard authenticated else {
+                            throw BiometricAuthService.BiometricError.authenticationFailed
+                        }
+                        
+                        print("✅ Autenticação bem-sucedida, revelando contato...")
                         let seller = try await negotiationClient.revealContact(negotiationId)
                         await send(.revealContactResponse(.success(seller)))
+                    } catch let error as BiometricAuthService.BiometricError {
+                        print("❌ Erro na autenticação biométrica: \(error.localizedDescription ?? "Desconhecido")")
+                        let networkError = NetworkError.unknown(error.localizedDescription ?? "Falha na autenticação")
+                        await send(.revealContactResponse(.failure(networkError)))
                     } catch {
                         let networkError = error as? NetworkError ?? NetworkError.unknown(error.localizedDescription)
                         await send(.revealContactResponse(.failure(networkError)))
