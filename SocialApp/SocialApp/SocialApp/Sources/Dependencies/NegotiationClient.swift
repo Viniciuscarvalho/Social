@@ -55,10 +55,38 @@ public struct NegotiationClient {
     // MARK: - Reviews
     
     /// Busca avaliações de um usuário
-    public var fetchUserReviews: (String) async throws -> [Review] = { [] }
+    public var fetchUserReviews: @Sendable (String) async throws -> [Review]
     
     /// Cria uma avaliação
-    public var createReview: (CreateReviewRequest) async throws -> Review
+    public var createReview: @Sendable (CreateReviewRequest) async throws -> Review
+    
+    // MARK: - Validation Methods
+    
+    /// Faz upload de provas de validação de ingresso
+    /// - Parameters:
+    ///   - negotiationId: ID da negociação
+    ///   - ticketId: ID do ingresso
+    ///   - images: Array de imagens comprimidas em Data
+    ///   - description: Descrição das provas
+    /// - Returns: TicketValidation com status pending
+    public var uploadValidationProof: @Sendable (String, String, [Data], String) async throws -> TicketValidation
+    
+    /// Busca o status de validação de um ingresso
+    /// - Parameter ticketId: ID do ingresso
+    /// - Returns: TicketValidation ou nil se não houver validação
+    public var fetchValidationStatus: @Sendable (String) async throws -> TicketValidation?
+    
+    // MARK: - Review Methods
+    
+    /// Envia avaliação de uma negociação
+    /// - Parameters:
+    ///   - negotiationId: ID da negociação
+    ///   - revieweeId: ID do usuário sendo avaliado
+    ///   - rating: Nota de 1 a 5
+    ///   - comment: Comentário da avaliação
+    ///   - role: Papel do avaliador (buyer/seller)
+    /// - Returns: Review criada
+    public var submitReview: @Sendable (String, String, Int, String, String) async throws -> Review
 }
 
 extension NegotiationClient: DependencyKey {
@@ -451,6 +479,88 @@ extension NegotiationClient: DependencyKey {
                 reviewedId: "test-reviewed",
                 rating: 5
             )
+        },
+        
+        // MARK: - Validation Implementation
+        
+        uploadValidationProof: { negotiationId, ticketId, images, description in
+            print("📤 Uploading validation proof...")
+            print("   - Negotiation: \(negotiationId)")
+            print("   - Ticket: \(ticketId)")
+            print("   - Images: \(images.count)")
+            print("   - Description: \(description.prefix(50))...")
+            
+            // Preparar request multipart/form-data
+            let boundary = UUID().uuidString
+            var body = Data()
+            
+            // Adicionar imagens
+            for (index, imageData) in images.enumerated() {
+                body.append("--\(boundary)\r\n".data(using: .utf8)!)
+                body.append("Content-Disposition: form-data; name=\"images[\(index)]\"; filename=\"proof\(index).jpg\"\r\n".data(using: .utf8)!)
+                body.append("Content-Type: image/jpeg\r\n\r\n".data(using: .utf8)!)
+                body.append(imageData)
+                body.append("\r\n".data(using: .utf8)!)
+            }
+            
+            // Adicionar description
+            body.append("--\(boundary)\r\n".data(using: .utf8)!)
+            body.append("Content-Disposition: form-data; name=\"description\"\r\n\r\n".data(using: .utf8)!)
+            body.append(description.data(using: .utf8)!)
+            body.append("\r\n".data(using: .utf8)!)
+            body.append("--\(boundary)--\r\n".data(using: .utf8)!)
+            
+            let validation = try await NetworkService.shared.request(
+                endpoint: "/negotiations/\(negotiationId)/tickets/\(ticketId)/validate",
+                method: .POST,
+                body: body,
+                contentType: "multipart/form-data; boundary=\(boundary)",
+                requiresAuth: true
+            )
+            
+            print("✅ Validation proof uploaded successfully")
+            return validation
+        },
+        
+        fetchValidationStatus: { ticketId in
+            do {
+                let validation: TicketValidation = try await NetworkService.shared.request(
+                    endpoint: "/tickets/\(ticketId)/validation",
+                    method: .GET,
+                    requiresAuth: true
+                )
+                return validation
+            } catch {
+                print("⚠️ No validation found for ticket: \(ticketId)")
+                return nil
+            }
+        },
+        
+        // MARK: - Review Implementation
+        
+        submitReview: { negotiationId, revieweeId, rating, comment, role in
+            print("⭐ Submitting review...")
+            print("   - Negotiation: \(negotiationId)")
+            print("   - Reviewee: \(revieweeId)")
+            print("   - Rating: \(rating)")
+            print("   - Role: \(role)")
+            
+            let request = CreateReviewRequest(
+                negotiationId: negotiationId,
+                revieweeId: revieweeId,
+                rating: rating,
+                comment: comment
+            )
+            
+            let review: Review = try await NetworkService.shared.request(
+                endpoint: "/negotiations/\(negotiationId)/reviews",
+                method: .POST,
+                body: request,
+                requiresAuth: true
+            )
+            
+            print("✅ Review submitted successfully")
+            return review
         }
     )
 }
