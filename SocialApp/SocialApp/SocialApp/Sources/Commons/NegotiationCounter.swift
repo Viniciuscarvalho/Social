@@ -85,3 +85,4 @@ public struct NegotiationCounter: View {
     .padding()
 }
 
+

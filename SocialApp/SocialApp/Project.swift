@@ -10,6 +10,10 @@ let project = Project(
         .remote(
             url: "https://github.com/supabase/supabase-swift",
             requirement: .upToNextMajor(from: "2.0.0")
+        ),
+        .remote(
+            url: "https://github.com/firebase/firebase-ios-sdk",
+            requirement: .upToNextMajor(from: "11.0.0")
         )
     ],
     settings: .settings(

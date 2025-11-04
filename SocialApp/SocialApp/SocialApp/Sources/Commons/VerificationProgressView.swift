@@ -280,3 +280,4 @@ public struct VerificationProgressView: View {
     .background(AppColors.background)
 }
 
+
