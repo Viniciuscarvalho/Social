@@ -547,7 +547,7 @@ extension NegotiationClient: DependencyKey {
             
             let request = CreateReviewRequest(
                 negotiationId: negotiationId,
-                revieweeId: revieweeId,
+                reviewedId: revieweeId,
                 rating: rating,
                 comment: comment
             )

@@ -20,14 +20,16 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/pointfreeco/swift-composable-architecture", exact: "1.22.3"),
-        .package(url: "https://github.com/supabase/supabase-swift", from: "2.0.0")
+        .package(url: "https://github.com/supabase/supabase-swift", from: "2.0.0"),
         .package(url: "https://github.com/firebase/firebase-ios-sdk", from: "11.0.0")
     ],
     targets: [
         .target(
             name: "SocialApp",
             dependencies: [
-                .product(name: "ComposableArchitecture", package: "swift-composable-architecture")
+                .product(name: "ComposableArchitecture", package: "swift-composable-architecture"),
+                .product(name: "FirebaseCore", package: "firebase-ios-sdk"),
+                .product(name: "FirebaseMessaging", package: "firebase-ios-sdk")
             ],
             resources: [
                 .process("Resources/events.json"),

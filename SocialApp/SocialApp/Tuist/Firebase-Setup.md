@@ -229,3 +229,4 @@ Execute o app e verifique os logs:
 3. Adicione logs em `handleDeepLink` para debug
 
 
+

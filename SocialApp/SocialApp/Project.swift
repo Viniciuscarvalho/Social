@@ -43,7 +43,9 @@ let project = Project(
             resources: ["SocialApp/Resources/**"],
             dependencies: [
                 .package(product: "ComposableArchitecture"),
-                .package(product: "Supabase")
+                .package(product: "Supabase"),
+                .package(product: "FirebaseCore"),
+                .package(product: "FirebaseMessaging")
             ],
             settings: .settings(
                 configurations: [
