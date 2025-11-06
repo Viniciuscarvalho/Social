@@ -21,22 +21,21 @@ public struct AuthFeature {
         }
         
         public mutating func checkAuthStatus() {
-            if let userData = UserDefaults.standard.data(forKey: "currentUser"),
-               var user = try? JSONDecoder().decode(User.self, from: userData) {
-                
-                // Load interests if saved
-                if let interestsData = UserDefaults.standard.data(forKey: "userInterests"),
-                   let interests = try? JSONDecoder().decode([String].self, from: interestsData) {
-                    user.interests = interests
-                }
-                
-                currentUser = user
-                isAuthenticated = true
-                authToken = UserDefaults.standard.string(forKey: "authToken")
-                currentUserId = UserDefaults.standard.string(forKey: "currentUserId")
+          if let userData = UserDefaults.standard.data(forKey: "currentUser"),
+             var user = try? JSONDecoder().decode(User.self, from: userData) {
+            if let interestsData = UserDefaults.standard.data(forKey: "userInterests"),
+               let interests = try? JSONDecoder().decode([String].self, from: interestsData) {
+              user.interests = interests
             }
-            
-            isFirstLaunch = UserDefaults.standard.bool(forKey: "hasLaunchedBefore") == false
+
+            currentUser = user
+            isAuthenticated = true
+            authToken = UserDefaults.standard.string(forKey: "authToken")
+            currentUserId = UserDefaults.standard.string(forKey: "currentUserId")
+          }
+
+          let hasLaunchedBefore = UserDefaults.standard.bool(forKey: "hasLaunchedBefore")
+          isFirstLaunch = !hasLaunchedBefore
         }
     }
     
@@ -69,128 +68,113 @@ public struct AuthFeature {
         Reduce { state, action in
             switch action {
             case .onAppear:
-                state.checkAuthStatus()
-                return .none
-                
+              state.checkAuthStatus()
+              return .none
+
             case let .signIn(email, password):
-                state.isLoading = true
-                state.errorMessage = nil
-                return .run { send in
-                    do {
-                        print("🔐 Tentando fazer login: \(email)")
-                        let response = try await authClient.signIn(email, password)
-                        print("✅ Login realizado com sucesso: \(response.user.name)")
-                        await send(.authResponse(.success(response)))
-                    } catch let error as NetworkError {
-                        print("❌ Erro no login (NetworkError): \(error)")
-                        await send(.authResponse(.failure(error)))
-                    } catch {
-                        print("❌ Erro no login (Desconhecido): \(error)")
-                        await send(.authResponse(.failure(.unknown(error.localizedDescription))))
-                    }
+              state.isLoading = true
+              state.errorMessage = nil
+              return .run { send in
+                do {
+                  let response = try await authClient.signIn(email, password)
+                  await send(.authResponse(.success(response)))
+                } catch let error as NetworkError {
+                  await send(.authResponse(.failure(error)))
+                } catch {
+                  await send(.authResponse(.failure(.unknown(error.localizedDescription))))
                 }
-                
+              }
+
             case let .signUp(name, email, password):
-                state.isLoading = true
-                state.errorMessage = nil
-                return .run { send in
-                    do {
-                        print("📝 Tentando cadastrar usuário: \(email)")
-                        let response = try await authClient.signUp(name, email, password)
-                        print("✅ Cadastro realizado com sucesso: \(response.user.name)")
-                        await send(.authResponse(.success(response)))
-                    } catch let error as NetworkError {
-                        print("❌ Erro no cadastro (NetworkError): \(error)")
-                        await send(.authResponse(.failure(error)))
-                    } catch {
-                        print("❌ Erro no cadastro (Desconhecido): \(error)")
-                        await send(.authResponse(.failure(.unknown(error.localizedDescription))))
-                    }
+              state.isLoading = true
+              state.errorMessage = nil
+              return .run { send in
+                do {
+                  let response = try await authClient.signUp(name, email, password)
+                  await send(.authResponse(.success(response)))
+                } catch let error as NetworkError {
+                  await send(.authResponse(.failure(error)))
+                } catch {
+                  await send(.authResponse(.failure(.unknown(error.localizedDescription))))
                 }
+              }
                 
             case .signOut:
-                // Limpa estado local e chama o logout do cliente de auth
-                state.currentUser = nil
-                state.isAuthenticated = false
-                state.authToken = nil
-                state.currentUserId = nil
-                state.errorMessage = nil
-                
-                return .run { _ in
-                    try? await authClient.signOut()
-                }
-                
+              state.currentUser = nil
+              state.isAuthenticated = false
+              state.authToken = nil
+              state.currentUserId = nil
+              state.errorMessage = nil
+
+              return .run { _ in
+                try? await authClient.signOut()
+              }
+
             case let .updateCurrentUser(user):
-                // Atualiza o usuário atual no estado
-                state.currentUser = user
-                if let encoded = try? JSONEncoder().encode(user) {
-                    UserDefaults.standard.set(encoded, forKey: "currentUser")
-                }
-                return .none
-                
+              state.currentUser = user
+              if let encoded = try? JSONEncoder().encode(user) {
+                UserDefaults.standard.set(encoded, forKey: "currentUser")
+              }
+              return .none
+
             case .refreshUserProfile:
-                guard let userId = state.currentUserId else { return .none }
-                return .run { send in
-                    do {
-                        let user = try await userClient.getUserProfile(userId)
-                        await send(.userProfileResponse(.success(user)))
-                    } catch let error as NetworkError {
-                        await send(.userProfileResponse(.failure(error)))
-                    } catch {
-                        await send(.userProfileResponse(.failure(.unknown(error.localizedDescription))))
-                    }
+              guard let userId = state.currentUserId else { return .none }
+              return .run { send in
+                do {
+                  let user = try await userClient.getUserProfile(userId)
+                  await send(.userProfileResponse(.success(user)))
+                } catch let error as NetworkError {
+                  await send(.userProfileResponse(.failure(error)))
+                } catch {
+                  await send(.userProfileResponse(.failure(.unknown(error.localizedDescription))))
                 }
-                
+              }
+
             case let .authResponse(.success(response)):
-                state.isLoading = false
-                state.errorMessage = nil
-                
-                let user = response.user
-                
-                // Salva os dados localmente
-                saveUserData(user: user, token: response.token, userId: user.id)
-                
-                // Atualiza o estado
-                state.currentUser = user
-                state.isAuthenticated = true
-                state.isFirstLaunch = false
-                state.authToken = response.token
-                state.currentUserId = user.id
-                return .none
-                
+              state.isLoading = false
+              state.errorMessage = nil
+
+              let user = response.user
+              saveUserData(user: user, token: response.token, userId: user.id)
+
+              state.currentUser = user
+              state.isAuthenticated = true
+              state.isFirstLaunch = false
+              state.authToken = response.token
+              state.currentUserId = user.id
+              return .none
+
             case let .authResponse(.failure(error)):
-                state.isLoading = false
-                state.errorMessage = error.errorDescription
-                return .none
-                
+              state.isLoading = false
+              state.errorMessage = error.errorDescription
+              return .none
+
             case let .userProfileResponse(.success(user)):
-                // Atualiza o usuário local
-                if let encoded = try? JSONEncoder().encode(user) {
-                    UserDefaults.standard.set(encoded, forKey: "currentUser")
-                }
-                state.currentUser = user
-                return .none
-                
-            case let .userProfileResponse(.failure(error)):
-                print("Erro ao atualizar perfil do usuário: \(error)")
-                return .none
+              if let encoded = try? JSONEncoder().encode(user) {
+                UserDefaults.standard.set(encoded, forKey: "currentUser")
+              }
+              state.currentUser = user
+              return .none
+
+            case .userProfileResponse(.failure):
+              return .none
                 
             case .clearError:
-                state.errorMessage = nil
-                return .none
-                
+              state.errorMessage = nil
+              return .none
+
             case .signInForm(.signInTapped(let email, let password)):
-                return .run { send in
-                    await send(.signIn(email: email, password: password))
-                }
-                
+              return .run { send in
+                await send(.signIn(email: email, password: password))
+              }
+
             case .signUpForm(.signUpTapped(let name, let email, let password)):
-                return .run { send in
-                    await send(.signUp(name: name, email: email, password: password))
-                }
-                
+              return .run { send in
+                await send(.signUp(name: name, email: email, password: password))
+              }
+
             case .signInForm, .signUpForm:
-                return .none
+              return .none
             }
         }
     }
@@ -353,18 +337,12 @@ public struct SignUpForm {
 // MARK: - Helper Functions
 
 private func saveUserData(user: User, token: String, userId: String) {
-    // Salva o usuário
-    if let encoded = try? JSONEncoder().encode(user) {
-        UserDefaults.standard.set(encoded, forKey: "currentUser")
-    }
-    
-    // Salva o token de autenticação
-    UserDefaults.standard.set(token, forKey: "authToken")
-    
-    // Salva o ID do usuário
-    UserDefaults.standard.set(userId, forKey: "currentUserId")
-    
-    // Marca que o app já foi aberto
-    UserDefaults.standard.set(true, forKey: "hasLaunchedBefore")
+  if let encoded = try? JSONEncoder().encode(user) {
+    UserDefaults.standard.set(encoded, forKey: "currentUser")
+  }
+
+  UserDefaults.standard.set(token, forKey: "authToken")
+  UserDefaults.standard.set(userId, forKey: "currentUserId")
+  UserDefaults.standard.set(true, forKey: "hasLaunchedBefore")
 }
 

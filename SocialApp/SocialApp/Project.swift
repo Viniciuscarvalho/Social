@@ -28,7 +28,10 @@ let project = Project(
             destinations: .iOS,
             product: .app,
             bundleId: "dev.tuist.SocialApp",
-            infoPlist: .default,
+            infoPlist: .extendingDefault(with: [
+                "FirebaseAppDelegateProxyEnabled": false,
+                "NSUserNotificationAlertSoundEnabled": false
+            ]),
             sources: [
                 "./SocialApp/Sources/**",
                 "./Domain/Sources/**",

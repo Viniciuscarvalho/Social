@@ -4,18 +4,30 @@ import FirebaseMessaging
 import SwiftUI
 
 class AppDelegate: NSObject, UIApplicationDelegate {
+    // Flag para controlar se Push Notifications estão habilitadas
+    // TODO: Remover este flag quando Push Notifications forem configuradas no Apple Developer Panel
+    private static let isPushNotificationsEnabled = false
+    
     func application(
         _ application: UIApplication,
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
     ) -> Bool {
         // Configurar Firebase
         FirebaseApp.configure()
+        print("🔥 Firebase configurado com sucesso")
         
-        // Configurar Messaging delegate
-        Messaging.messaging().delegate = self
+        // Configurar Messaging delegate apenas se Push Notifications estiverem habilitadas
+        if Self.isPushNotificationsEnabled {
+            Messaging.messaging().delegate = self
+            print("📱 Messaging delegate configurado")
+        } else {
+            print("⏭️  Push Notifications desabilitadas por enquanto (desenvolvimento)")
+        }
         
-        // Solicitar autorização de notificações
-        UNUserNotificationCenter.current().delegate = PushNotificationService.shared
+        // Configurar delegate de notificações apenas se habilitadas
+        if Self.isPushNotificationsEnabled {
+            UNUserNotificationCenter.current().delegate = PushNotificationService.shared
+        }
         
         return true
     }
@@ -24,17 +36,21 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         _ application: UIApplication,
         didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data
     ) {
-        // Passar token para Firebase
-        Messaging.messaging().apnsToken = deviceToken
-        
-        PushNotificationService.shared.setDeviceToken(deviceToken)
+        if Self.isPushNotificationsEnabled {
+            // Passar token para Firebase
+            Messaging.messaging().apnsToken = deviceToken
+            PushNotificationService.shared.setDeviceToken(deviceToken)
+            print("📱 Device token registrado: \(deviceToken.map { String(format: "%02.2hhx", $0) }.joined())")
+        }
     }
     
     func application(
         _ application: UIApplication,
         didFailToRegisterForRemoteNotificationsWithError error: Error
     ) {
-        print("❌ Failed to register for remote notifications: \(error.localizedDescription)")
+        if Self.isPushNotificationsEnabled {
+            print("❌ Failed to register for remote notifications: \(error.localizedDescription)")
+        }
     }
 }
 
@@ -44,12 +60,15 @@ extension AppDelegate: MessagingDelegate {
         didReceiveRegistrationToken fcmToken: String?
     ) {
         guard let token = fcmToken else { return }
-        print("🔥 FCM Token: \(token)")
         
-        // Enviar para backend
-        PushNotificationService.shared.setFCMToken(token)
+        if Self.isPushNotificationsEnabled {
+            print("🔥 FCM Token: \(token)")
+            // Enviar para backend
+            PushNotificationService.shared.setFCMToken(token)
+        }
     }
 }
+
 @main
 struct SocialApp: App {
 
@@ -64,9 +83,11 @@ struct SocialApp: App {
             SocialAppView(store: store)
                 .backgroundProtection()
                 .onAppear {
-                    Task {
-                        try? await PushNotificationService.shared.requestAuthorization()
-                    }
+                    // TODO: Habilitar solicitar autorização de Push Notifications quando configuradas
+                    // Task {
+                    //     try? await PushNotificationService.shared.requestAuthorization()
+                    // }
+                    print("⏭️  Solicitação de Push Notifications desabilitada (desenvolvimento)")
                 }
             .environment(ThemeManager.shared)
         }

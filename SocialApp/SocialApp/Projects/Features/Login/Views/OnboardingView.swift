@@ -1,105 +1,130 @@
 import ComposableArchitecture
-import SwiftData
 import SwiftUI
 
 struct OnboardingView: View {
-    let onSignUpTapped: () -> Void
-    let onSignInTapped: () -> Void
-    
-    @State private var currentPage = 0
-    @State private var showSignUp = false
-    
-    init(onSignUpTapped: @escaping () -> Void = {}, onSignInTapped: @escaping () -> Void = {}) {
-        self.onSignUpTapped = onSignUpTapped
-        self.onSignInTapped = onSignInTapped
-    }
-    
-    var body: some View {
-        ZStack {
-            Color(.systemBackground)
-                .ignoresSafeArea()
-            
-            VStack(spacing: 0) {
-                // Header
-                VStack(spacing: 4) {
-                    Text("SocialClub")
-                        .font(.system(size: 28, weight: .bold))
-                        .foregroundColor(.primary)
-                    
-                    Text("Trade your tickets easily")
-                        .font(.system(size: 14))
-                        .foregroundColor(.secondary)
-                }
-                .padding(.top, 32)
-                .padding(.bottom, 16)
-                
-                Spacer()
-                
-                // Main Image Placeholder
-                VStack(spacing: 20) {
-                    Image(systemName: "ticket.fill")
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                        .frame(height: 200)
-                        .foregroundColor(.blue.opacity(0.2))
-                    
-                    VStack(spacing: 12) {
-                        Text("Where you find someone to share your ticket")
-                            .font(.system(size: 28, weight: .bold))
-                            .foregroundColor(.primary)
-                            .multilineTextAlignment(.center)
-                        
-                        Text("Connect with others and trade your event tickets securely and easily.")
-                            .font(.system(size: 16))
-                            .foregroundColor(.secondary)
-                            .multilineTextAlignment(.center)
-                    }
-                }
-                .padding(.horizontal, 20)
-                
-                Spacer()
-                
-                // Action Buttons
-                VStack(spacing: 12) {
-                    Button(action: {
-                        showSignUp = true
-                    }) {
-                        Text("Create Account")
-                            .font(.system(size: 16, weight: .semibold))
-                            .foregroundColor(.white)
-                            .frame(maxWidth: .infinity)
-                            .frame(height: 50)
-                            .background(AppColors.primary)
-                            .cornerRadius(12)
-                    }
-                    
-                    Button(action: onSignInTapped) {
-                        Text("Already have an account?")
-                            .font(.system(size: 14))
-                            .foregroundColor(.secondary)
-                        +
-                        Text(" Sign In")
-                            .font(.system(size: 14, weight: .semibold))
-                            .foregroundColor(.blue)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 50)
-                }
-                .padding(.horizontal, 20)
-                .padding(.bottom, 32)
+  let onComplete: () -> Void
+
+  @State private var currentPage = 0
+
+  private let pages: [OnboardingPage] = [
+    OnboardingPage(
+      icon: "ticket.fill",
+      title: "Welcome to SocialClub",
+      subtitle: "Your smart assistant and discover unforgettable events around you and trade tickets.",
+      primaryColor: .blue
+    ),
+    OnboardingPage(
+      icon: "calendar.badge.plus",
+      title: "Create Tickets in Seconds",
+      subtitle: "Tell us what you need, our AI builds the schedule, and suggests venues.",
+      primaryColor: .purple
+    ),
+    OnboardingPage(
+      icon: "person.3.fill",
+      title: "Join Smarter Events",
+      subtitle: "Join and connect with the right crowd. Trade your tickets easily.",
+      primaryColor: .green
+    )
+  ]
+
+  var body: some View {
+    ZStack {
+      Color(.systemBackground)
+        .ignoresSafeArea()
+
+      VStack(spacing: 0) {
+        HStack {
+          Spacer()
+          Button(action: {
+            onComplete()
+          }) {
+            Text("Skip")
+              .font(.system(size: 16, weight: .medium))
+              .foregroundColor(AppColors.primary)
+              .padding(.horizontal, 20)
+              .padding(.vertical, 12)
+          }
+        }
+        .padding(.top, 16)
+
+        TabView(selection: $currentPage) {
+          ForEach(0..<pages.count, id: \.self) { index in
+            OnboardingPageView(page: pages[index])
+              .tag(index)
+          }
+        }
+        .tabViewStyle(.page(indexDisplayMode: .always))
+        .indexViewStyle(.page(backgroundDisplayMode: .always))
+
+        VStack(spacing: 12) {
+          Button(action: {
+            if currentPage < pages.count - 1 {
+              withAnimation {
+                currentPage += 1
+              }
+            } else {
+              onComplete()
             }
+          }) {
+            Text(currentPage == pages.count - 1 ? "Get Started" : "Next")
+              .font(.system(size: 16, weight: .semibold))
+              .foregroundColor(.white)
+              .frame(maxWidth: .infinity)
+              .frame(height: 50)
+              .background(AppColors.primary)
+              .cornerRadius(12)
+          }
         }
-        .fullScreenCover(isPresented: $showSignUp) {
-            SignUpView(store: Store(initialState: SignUpForm.State()) {
-                SignUpForm()
-            })
-        }
+        .padding(.horizontal, 20)
+        .padding(.bottom, 32)
+      }
     }
+  }
+}
+
+// MARK: - Onboarding Page Model
+
+struct OnboardingPage {
+  let icon: String
+  let title: String
+  let subtitle: String
+  let primaryColor: Color
+}
+
+// MARK: - Onboarding Page View
+
+struct OnboardingPageView: View {
+  let page: OnboardingPage
+
+  var body: some View {
+    VStack(spacing: 30) {
+      Spacer()
+
+      Image(systemName: page.icon)
+        .resizable()
+        .aspectRatio(contentMode: .fit)
+        .frame(height: 200)
+        .foregroundColor(page.primaryColor)
+
+      VStack(spacing: 16) {
+        Text(page.title)
+          .font(.system(size: 28, weight: .bold))
+          .foregroundColor(.primary)
+          .multilineTextAlignment(.center)
+
+        Text(page.subtitle)
+          .font(.system(size: 16))
+          .foregroundColor(.secondary)
+          .multilineTextAlignment(.center)
+          .padding(.horizontal, 32)
+      }
+
+      Spacer()
+    }
+    .padding(.horizontal, 20)
+  }
 }
 
 #Preview {
-    OnboardingView(
-        onSignUpTapped: { print("Sign up tapped") },
-        onSignInTapped: { print("Sign in tapped") }
-    )
+  OnboardingView(onComplete: {})
 }

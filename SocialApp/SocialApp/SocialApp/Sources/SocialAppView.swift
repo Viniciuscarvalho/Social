@@ -13,11 +13,20 @@ public struct SocialAppView: View {
         Group {
             if store.isAuthenticated && store.currentUser != nil {
                 MainTabView(store: store)
+                    .onAppear {
+                        print("🏠 SocialAppView: MainTabView apareceu (usuário autenticado)")
+                    }
             } else {
                 AuthenticationView(store: store)
+                    .onAppear {
+                        print("🔐 SocialAppView: AuthenticationView apareceu (usuário não autenticado)")
+                        print("   • store.isAuthenticated: \(store.isAuthenticated)")
+                        print("   • store.currentUser: \(store.currentUser?.name ?? "nil")")
+                    }
             }
         }
         .onAppear {
+            print("🚀 SocialAppView: onAppear chamado")
             store.send(.onAppear)
             // Configurar listeners de NotificationCenter para sincronização global
             setupTicketSyncListeners(store: store)
