@@ -11,6 +11,9 @@ public struct SocialAppFeature {
         // Auth state
         public var auth = AuthFeature.State()
         
+        // Verification state (opcional - mostrado apenas durante signup)
+        public var verification: VerificationFeature.State?
+        
         // App state
         public var selectedTab: AppTab = .home
         public var homeFeature = HomeFeature.State()
@@ -58,6 +61,9 @@ public struct SocialAppFeature {
         // Auth actions
         case auth(AuthFeature.Action)
         
+        // Verification actions (delegated to child feature)
+        case verification(VerificationFeature.Action)
+        
         // Tab navigation actions
         case tabSelected(AppTab)
         
@@ -104,6 +110,10 @@ public struct SocialAppFeature {
         // Depois, os Scopes das features filhas
         Scope(state: \.auth, action: \.auth) {
             AuthFeature()
+        }
+        
+        .ifLet(\.verification, action: \.verification) {
+            VerificationFeature()
         }
         
         Scope(state: \.homeFeature, action: \.homeFeature) {
@@ -219,14 +229,29 @@ public struct SocialAppFeature {
             print("🚪 Logout completo - voltando para SignInView")
             return .none
             
+            // MARK: - Verification Actions
+        case let .verification(.delegate(.verificationCompleted(_))):
+            print("✅ Verificação completada com sucesso!")
+            state.verification = nil
+            return .none
+            
+        case .verification(.delegate(.verificationCancelled)):
+            print("❌ Verificação cancelada pelo usuário")
+            state.verification = nil
+            return .none
+            
+        case .verification:
+            // Delegar todas as outras ações para VerificationFeature
+            return .none
+            
             // MARK: - Auth Actions
         case .auth(.authResponse(.success)):
-            // Quando o usuário se autentica, carrega os dados iniciais e sincroniza o perfil
+            // Quando o usuário se autentica, sincroniza dados
             if let currentUser = state.auth.currentUser {
                 state.profileFeature.user = currentUser
                 
                 // Sincroniza dados de auth no UserDefaults para garantir consistência
-                print("🔐 Sincronizando dados de auth após login bem-sucedido...")
+                print("🔐 Sincronizando dados de auth após autenticação bem-sucedida...")
                 
                 if let authToken = state.auth.authToken {
                     UserDefaults.standard.set(authToken, forKey: "authToken")
@@ -247,10 +272,21 @@ public struct SocialAppFeature {
                     UserDefaults.standard.set(userData, forKey: "currentUser")
                     print("✅ User data salvo no UserDefaults")
                 }
+                
+                // Se é primeira vez (signup), inicia verificação
+                // SignIn simples não dispara verificação
+                if !UserDefaults.standard.bool(forKey: "hasLaunchedBefore") {
+                    print("📋 Iniciando fluxo de verificação para novo usuário (signup)")
+                    state.verification = VerificationFeature.State(
+                        userEmail: currentUser.email,
+                        verificationType: .signup
+                    )
+                }
             }
-            // Carrega apenas HomeContent após login
+            
+            // Carrega apenas HomeContent após autenticação
             // Tickets serão carregados quando usuário acessar a aba de Tickets
-            print("🎯 Carregando apenas HomeContent após login (otimização)")
+            print("🎯 Carregando apenas HomeContent após autenticação (otimização)")
             return .run { send in
                 await send(.homeFeature(.loadHomeContent))
             }

@@ -372,15 +372,5 @@ public struct PhoneVerificationView: View {
     }
 }
 
-#Preview {
-    PhoneVerificationView(
-        store: Store(
-            initialState: PhoneVerificationFeature.State()
-        ) {
-            PhoneVerificationFeature()
-        }
-    )
-}
-
 
 

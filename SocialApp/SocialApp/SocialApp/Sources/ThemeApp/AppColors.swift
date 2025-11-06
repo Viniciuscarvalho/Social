@@ -20,6 +20,28 @@ public struct AppColors {
     public static let separator = Color(.separator)
     public static let opaqueSeparator = Color(.opaqueSeparator)
     
+    // MARK: - Cores de borda adaptativas
+    public static var border: Color {
+        Color(
+            light: Color.black.opacity(0.1),
+            dark: Color.white.opacity(0.15)
+        )
+    }
+    
+    public static var borderLight: Color {
+        Color(
+            light: Color.black.opacity(0.05),
+            dark: Color.white.opacity(0.08)
+        )
+    }
+    
+    public static var borderStrong: Color {
+        Color(
+            light: Color.black.opacity(0.2),
+            dark: Color.white.opacity(0.25)
+        )
+    }
+    
     // MARK: - Cores de Cards e Containers
     public static let cardBackground = Color(.secondarySystemBackground)
     public static let groupedBackground = Color(.systemGroupedBackground)

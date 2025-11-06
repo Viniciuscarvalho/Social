@@ -507,6 +507,8 @@ public struct ProfileView: View {
             return "moon.fill"
         case .none:
             return "circle.lefthalf.striped.horizontal"
+        default:
+            return "gear"
         }
     }
 }

@@ -319,15 +319,5 @@ public struct EmailVerificationView: View {
     }
 }
 
-#Preview {
-    EmailVerificationView(
-        store: Store(
-            initialState: EmailVerificationFeature.State(email: "user@example.com")
-        ) {
-            EmailVerificationFeature()
-        }
-    )
-}
-
 
 

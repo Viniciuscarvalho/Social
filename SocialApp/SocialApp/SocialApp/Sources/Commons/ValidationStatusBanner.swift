@@ -123,7 +123,7 @@ public struct ValidationStatusBanner: View {
     
     // MARK: - Status Components
     
-    private func statusIcon(for status: TicketValidation.ValidationStatus) -> some View {
+    private func statusIcon(for status: ValidationStatus) -> some View {
         ZStack {
             Circle()
                 .fill(iconBackgroundColor(for: status))
@@ -135,7 +135,7 @@ public struct ValidationStatusBanner: View {
         }
     }
     
-    private func actionButton(for status: TicketValidation.ValidationStatus) -> some View? {
+    private func actionButton(for status: ValidationStatus) -> AnyView? {
         switch status {
         case .pending:
             return AnyView(
@@ -180,20 +180,24 @@ public struct ValidationStatusBanner: View {
                 )
             }
             return nil
+        default:
+            // Exaustivo para futures cases
+            return nil
         }
     }
     
     // MARK: - Status Text
     
-    private func statusTitle(for status: TicketValidation.ValidationStatus) -> String {
+    private func statusTitle(for status: ValidationStatus) -> String {
         switch status {
         case .pending: return "Em Análise"
         case .approved: return "Validado"
         case .rejected: return "Rejeitado"
+        default: return "Status Desconhecido"
         }
     }
     
-    private func statusDescription(for status: TicketValidation.ValidationStatus) -> String {
+    private func statusDescription(for status: ValidationStatus) -> String {
         switch status {
         case .pending:
             return "Suas provas estão sendo analisadas pela nossa equipe"
@@ -201,48 +205,55 @@ public struct ValidationStatusBanner: View {
             return "Ingresso verificado e aprovado"
         case .rejected:
             return "As provas enviadas foram rejeitadas"
+        default:
+            return "Status desconhecido"
         }
     }
     
     // MARK: - Colors
     
-    private func backgroundColor(for status: TicketValidation.ValidationStatus) -> Color {
+    private func backgroundColor(for status: ValidationStatus) -> Color {
         switch status {
         case .pending: return Color.blue.opacity(0.05)
         case .approved: return Color.green.opacity(0.05)
         case .rejected: return Color.red.opacity(0.05)
+        default: return Color.gray.opacity(0.05)
         }
     }
     
-    private func borderColor(for status: TicketValidation.ValidationStatus) -> Color {
+    private func borderColor(for status: ValidationStatus) -> Color {
         switch status {
         case .pending: return Color.blue.opacity(0.3)
         case .approved: return Color.green.opacity(0.3)
         case .rejected: return Color.red.opacity(0.3)
+        default: return AppColors.border
         }
     }
     
-    private func iconBackgroundColor(for status: TicketValidation.ValidationStatus) -> Color {
+    private func iconBackgroundColor(for status: ValidationStatus) -> Color {
         switch status {
         case .pending: return Color.blue.opacity(0.2)
         case .approved: return Color.green.opacity(0.2)
         case .rejected: return Color.red.opacity(0.2)
+        default: return Color.gray.opacity(0.2)
         }
     }
     
-    private func iconColor(for status: TicketValidation.ValidationStatus) -> Color {
+    private func iconColor(for status: ValidationStatus) -> Color {
         switch status {
         case .pending: return .blue
         case .approved: return .green
         case .rejected: return .red
+        default: return .gray
         }
     }
     
-    private func iconName(for status: TicketValidation.ValidationStatus) -> String {
+    private func iconName(for status: ValidationStatus) -> String {
         switch status {
         case .pending: return "clock.fill"
         case .approved: return "checkmark.circle.fill"
         case .rejected: return "xmark.circle.fill"
+        default: return "questionmark.circle.fill"
         }
     }
 }
@@ -260,11 +271,8 @@ public struct ValidationStatusBanner: View {
             validation: TicketValidation(
                 id: "1",
                 ticketId: "ticket-1",
-                proofs: [],
-                status: .pending,
-                submittedAt: Date(),
-                reviewedAt: nil,
-                rejectionReason: nil
+                sellerId: "sellerId-1",
+                status: .pending
             ),
             onViewDetailsTapped: {}
         )
@@ -274,11 +282,8 @@ public struct ValidationStatusBanner: View {
             validation: TicketValidation(
                 id: "2",
                 ticketId: "ticket-2",
-                proofs: [],
-                status: .approved,
-                submittedAt: Date(),
-                reviewedAt: Date(),
-                rejectionReason: nil
+                sellerId: "sellerId-2",
+                status: .approved
             )
         )
         
@@ -287,11 +292,8 @@ public struct ValidationStatusBanner: View {
             validation: TicketValidation(
                 id: "3",
                 ticketId: "ticket-3",
-                proofs: [],
-                status: .rejected,
-                submittedAt: Date(),
-                reviewedAt: Date(),
-                rejectionReason: "Imagem ilegível"
+                sellerId: "sellerId-3",
+                status: .rejected
             ),
             onUploadTapped: {}
         )
@@ -299,6 +301,7 @@ public struct ValidationStatusBanner: View {
     .padding()
     .background(AppColors.background)
 }
+
 
 
 

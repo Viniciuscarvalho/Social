@@ -378,15 +378,6 @@ public struct DocumentVerificationView: View {
     }
 }
 
-#Preview {
-    DocumentVerificationView(
-        store: Store(
-            initialState: DocumentVerificationFeature.State()
-        ) {
-            DocumentVerificationFeature()
-        }
-    )
-}
 
 
 

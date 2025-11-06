@@ -19,9 +19,11 @@ struct AuthenticationView: View {
                     OnboardingView(
                         onSignUpTapped: {
                             markFirstLaunchDone()
+                            // SocialAppFeature gerencia quando mostrar verificação
                         },
                         onSignInTapped: {
                             markFirstLaunchDone()
+                            // SignIn simples - não dispara verificação
                         }
                     )
                 } else {
@@ -30,6 +32,17 @@ struct AuthenticationView: View {
                         store: store.scope(state: \.auth.signInForm, action: \.auth.signInForm)
                     )
                 }
+            }
+            
+            // Verification overlay - gerenciado por SocialAppFeature
+            if let verification = store.verification {
+                VerificationView(
+                    store: Store(
+                        initialState: verification,
+                        reducer: { VerificationFeature() }
+                    )
+                )
+                .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         }
         .alert("Erro", isPresented: .constant(store.auth.errorMessage != nil)) {

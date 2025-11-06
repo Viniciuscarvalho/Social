@@ -38,7 +38,8 @@ let project = Project(
                 "./Projects/Features/Events/Sources/**",
                 "./Projects/Features/TicketsList/Sources/**", 
                 "./Projects/Features/SellerProfile/Sources/**",
-                "./Projects/Features/TicketDetail/Sources/**"
+                "./Projects/Features/TicketDetail/Sources/**",
+                "./Projects/Features/Verification/Sources/**"
             ],
             resources: ["SocialApp/Resources/**"],
             dependencies: [

@@ -178,7 +178,7 @@ public struct EmptyStateView: View {
 
 #Preview("Error View") {
     ErrorView(
-        error: NetworkError.serverError(500, "Erro interno do servidor"),
+        error: NetworkError.serverError(500),
         retryAction: {},
         dismissAction: {}
     )
@@ -208,6 +208,7 @@ public struct EmptyStateView: View {
         action: {}
     )
 }
+
 
 
 

@@ -90,6 +90,111 @@ public struct NegotiationClient {
 }
 
 extension NegotiationClient: DependencyKey {
+    public static let testValue = NegotiationClient(
+        fetchMyNegotiations: { [] },
+        fetchSellerNegotiations: { [] },
+        fetchBuyerNegotiations: { [] },
+        fetchNegotiation: { _ in
+            Negotiation(
+                ticketId: "test-ticket",
+                buyerId: "test-buyer",
+                sellerId: "test-seller"
+            )
+        },
+        createNegotiation: { _ in
+            Negotiation(
+                ticketId: "test-ticket",
+                buyerId: "test-buyer",
+                sellerId: "test-seller"
+            )
+        },
+        updateNegotiation: { _, _ in
+            Negotiation(
+                ticketId: "test-ticket",
+                buyerId: "test-buyer",
+                sellerId: "test-seller",
+                status: .approved
+            )
+        },
+        revealContact: { _ in
+            User(name: "Test Seller", email: "seller@test.com")
+        },
+        canStartNegotiation: { true },
+        fetchVerificationStatus: {
+            UserVerification(
+                emailVerified: true,
+                verificationLevel: .emailVerified,
+                trustScore: 50
+            )
+        },
+        fetchUserVerification: { _ in
+            UserVerification(
+                emailVerified: true,
+                verificationLevel: .emailVerified,
+                trustScore: 50
+            )
+        },
+        sendEmailVerification: {},
+        verifyEmail: { _ in
+            UserVerification(
+                emailVerified: true,
+                verificationLevel: .emailVerified,
+                trustScore: 50
+            )
+        },
+        sendPhoneVerification: { _ in },
+        verifyPhone: { _, _ in
+            UserVerification(
+                emailVerified: true,
+                phoneVerified: true,
+                verificationLevel: .phoneVerified,
+                trustScore: 70
+            )
+        },
+        submitDocument: { _, _ in
+            UserVerification(
+                emailVerified: true,
+                phoneVerified: true,
+                documentVerified: false,
+                verificationLevel: .phoneVerified,
+                trustScore: 70
+            )
+        },
+        fetchUserReviews: { _ in [] },
+        createReview: { _ in
+            Review(
+                negotiationId: "test-negotiation",
+                reviewerId: "test-reviewer",
+                reviewedId: "test-reviewed",
+                rating: 5
+            )
+        },
+        uploadValidationProof: { _, _, _, _ in
+            TicketValidation(
+                id: "test-validation",
+                ticketId: "test-ticket",
+                sellerId: "test-sellerId",
+                status: .pending
+            )
+        },
+        fetchValidationStatus: { _ in
+            TicketValidation(
+                id: "test-validation",
+                ticketId: "test-ticket",
+                sellerId: "test-sellerId",
+                status: .pending
+            )
+        },
+        submitReview: { _, _, _, _, _ in
+            Review(
+                negotiationId: "test-negotiation",
+                reviewerId: "test-reviewer",
+                reviewedId: "test-reviewed",
+                rating: 5
+            )
+        }
+    )
+    
     public static let liveValue = NegotiationClient(
         fetchMyNegotiations: {
             do {
@@ -101,7 +206,7 @@ extension NegotiationClient: DependencyKey {
                 return negotiations.map { $0.toNegotiation() }
             } catch {
                 print("❌ Erro ao buscar negociações: \(error.localizedDescription)")
-                return [] // Fallback vazio
+                return []
             }
         },
         
@@ -186,7 +291,6 @@ extension NegotiationClient: DependencyKey {
                 )
                 let userVerification = verification.toUserVerification()
                 
-                // Verifica se tem nível mínimo e menos de 3 negociações ativas
                 let activeNegotiations: [APINegotiationResponse] = try await NetworkService.shared.requestArray(
                     endpoint: "/negotiations/my?status=pending,approved,in_progress",
                     method: .GET,
@@ -275,20 +379,15 @@ extension NegotiationClient: DependencyKey {
         },
         
         submitDocument: { documentType, documentData in
-            // TODO: Implementar upload de imagem para documento
-            // Por enquanto, simular sucesso
             print("📄 Enviando documento do tipo: \(documentType)")
-            
-            // Simular resposta de sucesso
             let mockVerification = UserVerification(
                 emailVerified: true,
                 phoneVerified: true,
                 documentType: documentType,
-                documentVerified: false, // Aguardando moderação
+                documentVerified: false,
                 verificationLevel: .phoneVerified,
                 trustScore: 60
             )
-            
             return mockVerification
         },
         
@@ -398,90 +497,7 @@ extension NegotiationClient: DependencyKey {
             )
             print("✅ Avaliação criada")
             return review.toReview()
-        }
-    )
-    
-    public static let testValue = NegotiationClient(
-        fetchMyNegotiations: { [] },
-        fetchSellerNegotiations: { [] },
-        fetchBuyerNegotiations: { [] },
-        fetchNegotiation: { _ in
-            Negotiation(
-                ticketId: "test-ticket",
-                buyerId: "test-buyer",
-                sellerId: "test-seller"
-            )
         },
-        createNegotiation: { _ in
-            Negotiation(
-                ticketId: "test-ticket",
-                buyerId: "test-buyer",
-                sellerId: "test-seller"
-            )
-        },
-        updateNegotiation: { _, _ in
-            Negotiation(
-                ticketId: "test-ticket",
-                buyerId: "test-buyer",
-                sellerId: "test-seller",
-                status: .approved
-            )
-        },
-        revealContact: { _ in
-            User(name: "Test Seller", email: "seller@test.com")
-        },
-        canStartNegotiation: { true },
-        fetchVerificationStatus: {
-            UserVerification(
-                emailVerified: true,
-                verificationLevel: .emailVerified,
-                trustScore: 50
-            )
-        },
-        fetchUserVerification: { _ in
-            UserVerification(
-                emailVerified: true,
-                verificationLevel: .emailVerified,
-                trustScore: 50
-            )
-        },
-        sendEmailVerification: {},
-        verifyEmail: { _ in
-            UserVerification(
-                emailVerified: true,
-                verificationLevel: .emailVerified,
-                trustScore: 50
-            )
-        },
-        sendPhoneVerification: { _ in },
-        verifyPhone: { _, _ in
-            UserVerification(
-                emailVerified: true,
-                phoneVerified: true,
-                verificationLevel: .phoneVerified,
-                trustScore: 70
-            )
-        },
-        submitDocument: { _, _ in
-            UserVerification(
-                emailVerified: true,
-                phoneVerified: true,
-                documentVerified: false,
-                verificationLevel: .phoneVerified,
-                trustScore: 70
-            )
-        },
-        fetchUserReviews: { _ in [] },
-        createReview: { _ in
-            Review(
-                negotiationId: "test-negotiation",
-                reviewerId: "test-reviewer",
-                reviewedId: "test-reviewed",
-                rating: 5
-            )
-        },
-        
-        // MARK: - Validation Implementation
         
         uploadValidationProof: { negotiationId, ticketId, images, description in
             print("📤 Uploading validation proof...")
@@ -490,11 +506,9 @@ extension NegotiationClient: DependencyKey {
             print("   - Images: \(images.count)")
             print("   - Description: \(description.prefix(50))...")
             
-            // Preparar request multipart/form-data
             let boundary = UUID().uuidString
             var body = Data()
             
-            // Adicionar imagens
             for (index, imageData) in images.enumerated() {
                 body.append("--\(boundary)\r\n".data(using: .utf8)!)
                 body.append("Content-Disposition: form-data; name=\"images[\(index)]\"; filename=\"proof\(index).jpg\"\r\n".data(using: .utf8)!)
@@ -503,18 +517,16 @@ extension NegotiationClient: DependencyKey {
                 body.append("\r\n".data(using: .utf8)!)
             }
             
-            // Adicionar description
             body.append("--\(boundary)\r\n".data(using: .utf8)!)
             body.append("Content-Disposition: form-data; name=\"description\"\r\n\r\n".data(using: .utf8)!)
             body.append(description.data(using: .utf8)!)
             body.append("\r\n".data(using: .utf8)!)
             body.append("--\(boundary)--\r\n".data(using: .utf8)!)
             
-            let validation = try await NetworkService.shared.request(
+            let validation: TicketValidation = try await NetworkService.shared.requestSingle(
                 endpoint: "/negotiations/\(negotiationId)/tickets/\(ticketId)/validate",
                 method: .POST,
                 body: body,
-                contentType: "multipart/form-data; boundary=\(boundary)",
                 requiresAuth: true
             )
             
@@ -524,7 +536,7 @@ extension NegotiationClient: DependencyKey {
         
         fetchValidationStatus: { ticketId in
             do {
-                let validation: TicketValidation = try await NetworkService.shared.request(
+                let validation: TicketValidation = try await NetworkService.shared.requestSingle(
                     endpoint: "/tickets/\(ticketId)/validation",
                     method: .GET,
                     requiresAuth: true
@@ -535,8 +547,6 @@ extension NegotiationClient: DependencyKey {
                 return nil
             }
         },
-        
-        // MARK: - Review Implementation
         
         submitReview: { negotiationId, revieweeId, rating, comment, role in
             print("⭐ Submitting review...")
@@ -552,7 +562,7 @@ extension NegotiationClient: DependencyKey {
                 comment: comment
             )
             
-            let review: Review = try await NetworkService.shared.request(
+            let review: Review = try await NetworkService.shared.requestSingle(
                 endpoint: "/negotiations/\(negotiationId)/reviews",
                 method: .POST,
                 body: request,
