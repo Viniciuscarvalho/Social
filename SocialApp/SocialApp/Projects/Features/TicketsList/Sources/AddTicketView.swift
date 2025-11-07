@@ -1,46 +1,113 @@
 import ComposableArchitecture
 import SwiftUI
 
+// MARK: - Add Ticket View (Multi-Step Flow)
+
 struct AddTicketView: View {
     @Bindable var store: StoreOf<AddTicketFeature>
     @Environment(\.dismiss) var dismiss
-    @Dependency(\.ticketsClient) var ticketsClient
+    @Environment(\.colorScheme) var colorScheme
     
     var body: some View {
         NavigationStack {
-            mainContent
-                .background(AppColors.background)
-                .navigationBarTitleDisplayMode(.inline)
-                .toolbar {
-                    ToolbarItem(placement: .navigationBarLeading) {
-                        cancelButton
-                    }
+            VStack(spacing: 0) {
+                // Progress Indicator
+                StepProgressView(currentStep: store.currentStep)
+                    .padding()
+                
+                // Step Content
+                TabView(selection: $store.currentStep) {
+                    TicketDetailsStepView(store: store)
+                        .tag(TicketCreationStep.details)
+                    
+                    TicketPricingStepView(store: store)
+                        .tag(TicketCreationStep.pricing)
+                    
+                    TicketValidityStepView(store: store)
+                        .tag(TicketCreationStep.validity)
+                    
+                    TicketMediaStepView(store: store)
+                        .tag(TicketCreationStep.media)
+                    
+                    TicketReviewPublishView(store: store)
+                        .tag(TicketCreationStep.review)
                 }
-                .onAppear {
-                    store.send(.onAppear)
+                .tabViewStyle(.page(indexDisplayMode: .never))
+                .animation(.easeInOut, value: store.currentStep)
+                
+                // Navigation Buttons
+                navigationButtons
+            }
+            .background(AppColors.background)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    cancelButton
                 }
-                .onChange(of: store.publishSuccess) { _, success in
-                    if success {
-                        dismiss()
-                    }
+                
+                ToolbarItem(placement: .principal) {
+                    Text("Criar Ingresso")
+                        .font(.headline)
                 }
-                .alert("Erro", isPresented: errorBinding) {
-                    Button("OK") { }
-                } message: {
-                    Text(store.errorMessage ?? "")
+            }
+            .onAppear {
+                store.send(.onAppear)
+            }
+            .onChange(of: store.publishSuccess) { _, success in
+                if success {
+                    dismiss()
                 }
+            }
+            .alert("Erro", isPresented: errorBinding) {
+                Button("OK") {
+                    store.send(.clearError)
+                }
+            } message: {
+                Text(store.errorMessage ?? "")
+            }
         }
     }
     
-    private var mainContent: some View {
-        ScrollView {
-            VStack(spacing: 20) {
-                headerView
-                formView
-                publishButtonView
+    private var navigationButtons: some View {
+        HStack(spacing: 12) {
+            // Back Button
+            if store.canGoBack {
+                Button {
+                    store.send(.previousStep)
+                } label: {
+                    HStack {
+                        Image(systemName: "chevron.left")
+                        Text("Voltar")
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(Color(.secondarySystemBackground))
+                    .foregroundColor(.primary)
+                    .cornerRadius(12)
+                }
             }
-            .padding(.bottom, 40)
+            
+            // Next/Publish Button
+            if store.currentStep != .review {
+                Button {
+                    store.send(.nextStep)
+                } label: {
+                    HStack {
+                        Text("Próximo")
+                        Image(systemName: "chevron.right")
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(store.isCurrentStepValid ? AppColors.primary : Color.gray)
+                    .foregroundColor(.white)
+                    .cornerRadius(12)
+                }
+                .disabled(!store.isCurrentStepValid)
+            }
         }
+        .padding()
+        .background(Color(.systemBackground))
+        .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: -2)
     }
     
     private var cancelButton: some View {
@@ -56,201 +123,44 @@ struct AddTicketView: View {
             set: { _ in store.send(.clearError) }
         )
     }
-    
-    private var headerView: some View {
-        VStack(spacing: 8) {
-            Image(systemName: "ticket.fill")
-                .font(.system(size: 60))
-                .foregroundColor(AppColors.accentGreen)
-            
-            Text("Vender Ingresso")
-                .font(.title2)
-                .fontWeight(.bold)
-                .foregroundColor(AppColors.primaryText)
-            
-            Text("Preencha os dados do ingresso que deseja vender")
-                .font(.subheadline)
-                .foregroundColor(AppColors.secondaryText)
-                .multilineTextAlignment(.center)
-        }
-        .padding(.top, 20)
-    }
-    
-    private var formView: some View {
-        VStack(spacing: 16) {
-            eventSelectorView
-            FormField(
-                title: "Nome do Ingresso",
-                text: $store.ticketName,
-                placeholder: "Ex: VIP, Pista, Camarote"
-            )
-            FormField(
-                title: "Preço",
-                text: $store.price,
-                placeholder: "Ex: 120,00"
-            )
-            FormField(
-                title: "Tipo",
-                text: Binding(
-                    get: { store.ticketType.displayName },
-                    set: { _ in }
-                ),
-                placeholder: "Selecione o tipo"
-            )
-            FormField(
-                title: "Descrição",
-                text: $store.description,
-                placeholder: "Descrição",
-                isTextEditor: true
-            )
-        }
-        .padding(.horizontal)
-    }
-    
-    private var eventSelectorView: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("Evento")
-                .font(.subheadline)
-                .fontWeight(.semibold)
-                .foregroundColor(AppColors.primaryText)
-            
-            eventSelectorContent
-        }
-    }
-    
-    @ViewBuilder
-    private var eventSelectorContent: some View {
-        if let eventId = store.selectedEventId {
-            selectedEventView(eventId: eventId)
-        } else {
-            eventSelectionView
-        }
-    }
-    
-    private func selectedEventView(eventId: UUID) -> some View {
-        let selectedEvent = store.availableEvents.first { UUID(uuidString: $0.id) == eventId }
-        
-        return VStack(alignment: .leading, spacing: 4) {
-            Text(selectedEvent?.name ?? "Evento Selecionado")
-                .font(.body)
-                .foregroundColor(AppColors.accentGreen)
-            Text("ID: \(eventId.uuidString)")
-                .font(.caption2)
-                .foregroundColor(AppColors.secondaryText)
-        }
-        .padding(12)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(AppColors.accentGreen.opacity(0.1))
-        .cornerRadius(8)
-    }
-    
-    @ViewBuilder
-    private var eventSelectionView: some View {
-        if store.isLoadingEvents {
-            loadingEventsView
-        } else {
-            eventMenuView
-        }
-    }
-    
-    private var loadingEventsView: some View {
-        HStack {
-            ProgressView()
-                .scaleEffect(0.8)
-            Text("Carregando eventos...")
-                .font(.body)
-                .foregroundColor(AppColors.secondaryText)
-        }
-        .padding(12)
-        .frame(maxWidth: .infinity)
-        .background(AppColors.cardBackground)
-        .cornerRadius(8)
-    }
-    
-    private var eventMenuView: some View {
-        Menu {
-            ForEach(store.availableEvents, id: \.id) { event in
-                Button(event.name) {
-                    if let eventId = UUID(uuidString: event.id) {
-                        store.send(.setSelectedEventId(eventId))
-                    }
-                }
-            }
-        } label: {
-            HStack {
-                Text("Selecionar Evento")
-                    .foregroundColor(AppColors.secondaryText)
-                Spacer()
-                Image(systemName: "chevron.down")
-                    .foregroundColor(AppColors.secondaryText)
-            }
-            .padding(12)
-            .background(AppColors.cardBackground)
-            .cornerRadius(8)
-        }
-    }
-    
-    private var publishButtonView: some View {
-        Button(action: {
-            store.send(.publishTicket)
-        }) {
-            HStack {
-                if store.isPublishing {
-                    ProgressView()
-                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                        .scaleEffect(0.8)
-                }
-                Text(store.isPublishing ? "Publicando..." : "Publicar Ingresso")
-            }
-            .font(.headline)
-            .foregroundColor(.white)
-            .frame(maxWidth: .infinity)
-            .padding()
-            .background(AppColors.accentGreen.gradient)
-            .cornerRadius(12)
-        }
-        .disabled(store.isPublishing)
-        .padding(.horizontal)
-        .padding(.top, 20)
-    }
 }
 
-// MARK: - Form Field Component
+// MARK: - Step Progress View
 
-struct FormField: View {
-    let title: String
-    @Binding var text: String
-    let placeholder: String
-    var isTextEditor: Bool = false
+struct StepProgressView: View {
+    let currentStep: TicketCreationStep
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(title)
-                .font(.subheadline)
-                .fontWeight(.semibold)
-                .foregroundColor(AppColors.primaryText)
-            
-            if isTextEditor {
-                TextEditor(text: $text)
-                    .frame(minHeight: 80)
-                    .padding(8)
-                    .background(AppColors.cardBackground)
-                    .cornerRadius(8)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 8)
-                            .stroke(AppColors.separator.opacity(0.5), lineWidth: 1)
-                    )
-            } else {
-                TextField(placeholder, text: $text)
-                    .textFieldStyle(PlainTextFieldStyle())
-                    .padding(12)
-                    .background(AppColors.cardBackground)
-                    .cornerRadius(8)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 8)
-                            .stroke(AppColors.separator.opacity(0.5), lineWidth: 1)
-                    )
+        HStack(spacing: 8) {
+            ForEach(TicketCreationStep.allCases, id: \.self) { step in
+                VStack(spacing: 4) {
+                    Circle()
+                        .fill(stepColor(for: step))
+                        .frame(width: 10, height: 10)
+                    
+                    if step == currentStep {
+                        Text(step.title)
+                            .font(.caption2)
+                            .foregroundColor(AppColors.primary)
+                    }
+                }
+                
+                if step != TicketCreationStep.allCases.last {
+                    Rectangle()
+                        .fill(step.rawValue < currentStep.rawValue ? AppColors.primary : Color.gray.opacity(0.3))
+                        .frame(height: 2)
+                }
             }
+        }
+    }
+    
+    private func stepColor(for step: TicketCreationStep) -> Color {
+        if step.rawValue < currentStep.rawValue {
+            return AppColors.primary // Completed
+        } else if step == currentStep {
+            return AppColors.primary // Current
+        } else {
+            return Color.gray.opacity(0.3) // Not reached
         }
     }
 }

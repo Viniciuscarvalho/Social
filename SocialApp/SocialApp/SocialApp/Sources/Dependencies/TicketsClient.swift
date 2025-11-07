@@ -407,9 +407,12 @@ extension TicketsClient: DependencyKey {
                 eventId: request.eventId,
                 sellerId: "TEST_SELLER_ID",
                 name: request.name,
+                description: request.description,
                 price: request.price,
                 ticketType: request.ticketType,
-                validUntil: request.validUntil
+                validUntil: request.validUntil,
+                quantity: request.quantity,
+                currencyCode: request.currencyCode
             )
             return ticket
         },

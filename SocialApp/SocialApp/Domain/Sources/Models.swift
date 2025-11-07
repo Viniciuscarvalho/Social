@@ -301,6 +301,7 @@ public struct Ticket: Codable, Identifiable, Equatable {
     public var eventId: String
     public var sellerId: String
     public var name: String
+    public var description: String?
     public var price: Double
     public var originalPrice: Double?
     public var ticketType: TicketType
@@ -308,13 +309,18 @@ public struct Ticket: Codable, Identifiable, Equatable {
     public var validUntil: Date
     public var createdAt: Date
     public var isFavorited: Bool
+    public var quantity: Int
+    public var currencyCode: String
+    public var imageUrls: [String]?
     
-    public init(eventId: String, sellerId: String, name: String, price: Double,
-         ticketType: TicketType, validUntil: Date) {
+    public init(eventId: String, sellerId: String, name: String, description: String? = nil,
+                price: Double, ticketType: TicketType, validUntil: Date, quantity: Int = 1,
+                currencyCode: String = "BRL", imageUrls: [String]? = nil) {
         self.id = UUID().uuidString
         self.eventId = eventId
         self.sellerId = sellerId
         self.name = name
+        self.description = description
         self.price = price
         self.originalPrice = nil
         self.ticketType = ticketType
@@ -322,6 +328,9 @@ public struct Ticket: Codable, Identifiable, Equatable {
         self.validUntil = validUntil
         self.createdAt = Date()
         self.isFavorited = false
+        self.quantity = quantity
+        self.currencyCode = currencyCode
+        self.imageUrls = imageUrls
     }
     
     // Custom init para decodificação flexível
@@ -332,11 +341,15 @@ public struct Ticket: Codable, Identifiable, Equatable {
         eventId = (try? container.decode(String.self, forKey: .eventId)) ?? ""
         sellerId = (try? container.decode(String.self, forKey: .sellerId)) ?? ""
         name = (try? container.decode(String.self, forKey: .name)) ?? ""
+        description = try? container.decode(String.self, forKey: .description)
         price = (try? container.decode(Double.self, forKey: .price)) ?? 0.0
         originalPrice = try? container.decode(Double.self, forKey: .originalPrice)
         ticketType = TicketType(rawValue: (try? container.decode(String.self, forKey: .ticketType)) ?? "general") ?? .general
         status = TicketStatus(rawValue: (try? container.decode(String.self, forKey: .status)) ?? "available") ?? .available
         isFavorited = (try? container.decode(Bool.self, forKey: .isFavorited)) ?? false
+        quantity = (try? container.decode(Int.self, forKey: .quantity)) ?? 1
+        currencyCode = (try? container.decode(String.self, forKey: .currencyCode)) ?? "BRL"
+        imageUrls = try? container.decode([String].self, forKey: .imageUrls)
         
         // Parse validUntil
         validUntil = Date()
@@ -375,7 +388,7 @@ public struct Ticket: Codable, Identifiable, Equatable {
     }
     
     enum CodingKeys: String, CodingKey {
-        case id, name, price, status
+        case id, name, description, price, status, quantity
         case eventId = "event_id"
         case sellerId = "seller_id"
         case originalPrice = "original_price"
@@ -383,6 +396,8 @@ public struct Ticket: Codable, Identifiable, Equatable {
         case validUntil = "valid_until"
         case createdAt = "created_at"
         case isFavorited = "is_favorited"
+        case currencyCode = "currency_code"
+        case imageUrls = "image_urls"
     }
 }
 
@@ -441,28 +456,37 @@ public struct TicketDetail: Codable, Identifiable, Equatable {
     public var ticketId: String
     public var event: Event
     public var seller: User
+    public var name: String?
+    public var description: String?
     public var price: Double
     public var quantity: Int
+    public var currencyCode: String
     public var ticketType: TicketType
     public var validUntil: Date
     public var isTransferable: Bool
     public var qrCode: String?
     public var purchaseDate: Date?
+    public var imageUrls: [String]?
     public var status: TicketStatus
     
-    public init(ticketId: String, event: Event, seller: User, price: Double,
-         quantity: Int, ticketType: TicketType, validUntil: Date) {
+    public init(ticketId: String, event: Event, seller: User, name: String? = nil,
+                description: String? = nil, price: Double, quantity: Int, currencyCode: String = "BRL",
+                ticketType: TicketType, validUntil: Date, imageUrls: [String]? = nil) {
         self.id = UUID().uuidString
         self.ticketId = ticketId
         self.event = event
         self.seller = seller
+        self.name = name
+        self.description = description
         self.price = price
         self.quantity = quantity
+        self.currencyCode = currencyCode
         self.ticketType = ticketType
         self.validUntil = validUntil
         self.isTransferable = true
         self.qrCode = nil
         self.purchaseDate = nil
+        self.imageUrls = imageUrls
         self.status = .available
     }
 }
@@ -773,34 +797,46 @@ public struct FollowResponse: Codable, Equatable {
 public struct CreateTicketRequest: Codable {
     public let eventId: String
     public let name: String
+    public let description: String?
     public let price: Double
     public let originalPrice: Double?
     public let ticketType: TicketType
     public let validUntil: Date
+    public let quantity: Int
+    public let currencyCode: String
     
     public init(
         eventId: String,
         name: String,
+        description: String? = nil,
         price: Double,
         originalPrice: Double? = nil,
         ticketType: TicketType,
-        validUntil: Date
+        validUntil: Date,
+        quantity: Int,
+        currencyCode: String
     ) {
         self.eventId = eventId
         self.name = name
+        self.description = description
         self.price = price
         self.originalPrice = originalPrice
         self.ticketType = ticketType
         self.validUntil = validUntil
+        self.quantity = quantity
+        self.currencyCode = currencyCode
     }
     
     enum CodingKeys: String, CodingKey {
-        case eventId = "eventId"  // Mudou para camelCase conforme exemplo
+        case eventId = "eventId"
         case name
+        case description
         case price
         case originalPrice = "originalPrice"
-        case ticketType = "ticketType" 
+        case ticketType = "ticketType"
         case validUntil = "validUntil"
+        case quantity = "quantity"
+        case currencyCode = "currencyCode"
     }
 }
 
@@ -836,6 +872,7 @@ public struct CreateTicketResponse: Codable {
     public let sellerId: String?  // OPCIONAL - não é mais retornado pela API por segurança
                                   // O sellerId é injetado automaticamente no backend via JWT
     public let name: String
+    public let description: String?
     public let price: Double
     public let originalPrice: Double?
     public let ticketType: String?
@@ -843,6 +880,9 @@ public struct CreateTicketResponse: Codable {
     public let validUntil: String?
     public let createdAt: String?
     public let isFavorited: Bool?
+    public let quantity: Int?
+    public let currencyCode: String?
+    public let imageUrls: [String]?
     public let message: String?
     public let success: Bool?
     
@@ -858,6 +898,7 @@ public struct CreateTicketResponse: Codable {
         sellerId = try? container.decodeIfPresent(String.self, forKey: .sellerId)
                   
         name = (try? container.decode(String.self, forKey: .name)) ?? ""
+        description = try? container.decodeIfPresent(String.self, forKey: .description)
         price = (try? container.decode(Double.self, forKey: .price)) ?? 0.0
         originalPrice = try? container.decodeIfPresent(Double.self, forKey: .originalPrice)
         ticketType = try? container.decodeIfPresent(String.self, forKey: .ticketType)
@@ -865,6 +906,9 @@ public struct CreateTicketResponse: Codable {
         validUntil = try? container.decodeIfPresent(String.self, forKey: .validUntil)
         createdAt = try? container.decodeIfPresent(String.self, forKey: .createdAt)
         isFavorited = try? container.decodeIfPresent(Bool.self, forKey: .isFavorited)
+        quantity = try? container.decodeIfPresent(Int.self, forKey: .quantity)
+        currencyCode = try? container.decodeIfPresent(String.self, forKey: .currencyCode)
+        imageUrls = try? container.decodeIfPresent([String].self, forKey: .imageUrls)
         message = try? container.decodeIfPresent(String.self, forKey: .message)
         success = try? container.decodeIfPresent(Bool.self, forKey: .success)
     }
@@ -874,6 +918,7 @@ public struct CreateTicketResponse: Codable {
         case eventId = "event_id"
         case sellerId = "seller_id"
         case name
+        case description
         case price
         case originalPrice = "original_price"
         case ticketType = "ticket_type"
@@ -881,6 +926,9 @@ public struct CreateTicketResponse: Codable {
         case validUntil = "valid_until"
         case createdAt = "created_at"
         case isFavorited = "is_favorited"
+        case quantity
+        case currencyCode = "currency_code"
+        case imageUrls = "image_urls"
         case message
         case success
     }
@@ -893,9 +941,13 @@ public struct CreateTicketResponse: Codable {
             // Usar um ID padrão ou vazio quando não fornecido
             sellerId: sellerId ?? "", // String vazia quando não fornecido pelo backend
             name: name,
+            description: description,
             price: price,
             ticketType: TicketType(rawValue: ticketType ?? "general") ?? .general,
-            validUntil: Date() // Será parseado abaixo
+            validUntil: Date(), // Será parseado abaixo
+            quantity: quantity ?? 1,
+            currencyCode: currencyCode ?? "BRL",
+            imageUrls: imageUrls
         )
         
         ticket.id = id
@@ -1116,6 +1168,7 @@ public struct APITicketResponse: Codable {
     let sellerId: String?
     let seller_id: String? // Para compatibilidade com snake_case
     let name: String
+    let description: String?
     let price: Double
     let originalPrice: Double?
     let original_price: Double? // Para compatibilidade com snake_case
@@ -1128,6 +1181,11 @@ public struct APITicketResponse: Codable {
     let created_at: String? // Para compatibilidade com snake_case
     let isFavorited: Bool?
     let is_favorited: Bool? // Para compatibilidade com snake_case
+    let quantity: Int?
+    let currencyCode: String?
+    let currency_code: String? // Para compatibilidade com snake_case
+    let imageUrls: [String]?
+    let image_urls: [String]? // Para compatibilidade com snake_case
     
     // Custom init para decodificação flexível
     public init(from decoder: Decoder) throws {
@@ -1139,6 +1197,7 @@ public struct APITicketResponse: Codable {
         sellerId = try? container.decode(String.self, forKey: .sellerId)
         seller_id = try? container.decode(String.self, forKey: .seller_id)
         name = try container.decode(String.self, forKey: .name)
+        description = try? container.decode(String.self, forKey: .description)
         price = try container.decode(Double.self, forKey: .price)
         originalPrice = try? container.decode(Double.self, forKey: .originalPrice)
         original_price = try? container.decode(Double.self, forKey: .original_price)
@@ -1151,13 +1210,19 @@ public struct APITicketResponse: Codable {
         created_at = try? container.decode(String.self, forKey: .created_at)
         isFavorited = try? container.decode(Bool.self, forKey: .isFavorited)
         is_favorited = try? container.decode(Bool.self, forKey: .is_favorited)
+        quantity = try? container.decode(Int.self, forKey: .quantity)
+        currencyCode = try? container.decode(String.self, forKey: .currencyCode)
+        currency_code = try? container.decode(String.self, forKey: .currency_code)
+        imageUrls = try? container.decode([String].self, forKey: .imageUrls)
+        image_urls = try? container.decode([String].self, forKey: .image_urls)
     }
     
     enum CodingKeys: String, CodingKey {
-        case id, eventId, event_id, sellerId, seller_id, name, price
+        case id, eventId, event_id, sellerId, seller_id, name, description, price
         case originalPrice, original_price, ticketType, ticket_type, status
         case validUntil, valid_until, createdAt, created_at
-        case isFavorited, is_favorited
+        case isFavorited, is_favorited, quantity
+        case currencyCode, currency_code, imageUrls, image_urls
     }
     
     // Computed properties para conversão
@@ -1190,6 +1255,18 @@ public struct APITicketResponse: Codable {
     var finalIsFavorited: Bool {
         return isFavorited ?? is_favorited ?? false
     }
+    
+    var finalQuantity: Int {
+        return quantity ?? 1
+    }
+    
+    var finalCurrencyCode: String {
+        return currencyCode ?? currency_code ?? "BRL"
+    }
+    
+    var finalImageUrls: [String]? {
+        return imageUrls ?? image_urls
+    }
 }
 
 // MARK: - TicketDetail API Response Model
@@ -1200,8 +1277,12 @@ public struct APITicketDetailResponse: Codable {
     let ticket_id: String? // Para compatibilidade com snake_case
     let event: APIEventResponse
     let seller: APIUserResponse
+    let name: String?
+    let description: String?
     let price: Double
     let quantity: Int
+    let currencyCode: String?
+    let currency_code: String? // Para compatibilidade com snake_case
     let ticketType: String?
     let ticket_type: String? // Para compatibilidade com snake_case
     let validUntil: String?
@@ -1212,6 +1293,8 @@ public struct APITicketDetailResponse: Codable {
     let qr_code: String? // Para compatibilidade com snake_case
     let purchaseDate: String?
     let purchase_date: String? // Para compatibilidade com snake_case
+    let imageUrls: [String]?
+    let image_urls: [String]? // Para compatibilidade com snake_case
     let status: String
     
     // Custom init para decodificação flexível
@@ -1223,8 +1306,12 @@ public struct APITicketDetailResponse: Codable {
         ticket_id = try? container.decode(String.self, forKey: .ticket_id)
         event = try container.decode(APIEventResponse.self, forKey: .event)
         seller = try container.decode(APIUserResponse.self, forKey: .seller)
+        name = try? container.decode(String.self, forKey: .name)
+        description = try? container.decode(String.self, forKey: .description)
         price = try container.decode(Double.self, forKey: .price)
         quantity = (try? container.decode(Int.self, forKey: .quantity)) ?? 1
+        currencyCode = try? container.decode(String.self, forKey: .currencyCode)
+        currency_code = try? container.decode(String.self, forKey: .currency_code)
         ticketType = try? container.decode(String.self, forKey: .ticketType)
         ticket_type = try? container.decode(String.self, forKey: .ticket_type)
         validUntil = try? container.decode(String.self, forKey: .validUntil)
@@ -1235,14 +1322,16 @@ public struct APITicketDetailResponse: Codable {
         qr_code = try? container.decode(String.self, forKey: .qr_code)
         purchaseDate = try? container.decode(String.self, forKey: .purchaseDate)
         purchase_date = try? container.decode(String.self, forKey: .purchase_date)
+        imageUrls = try? container.decode([String].self, forKey: .imageUrls)
+        image_urls = try? container.decode([String].self, forKey: .image_urls)
         status = (try? container.decode(String.self, forKey: .status)) ?? "available"
     }
     
     enum CodingKeys: String, CodingKey {
-        case id, ticketId, ticket_id, event, seller, price, quantity
-        case ticketType, ticket_type, validUntil, valid_until
+        case id, ticketId, ticket_id, event, seller, name, description, price, quantity
+        case currencyCode, currency_code, ticketType, ticket_type, validUntil, valid_until
         case isTransferable, is_transferable, qrCode, qr_code
-        case purchaseDate, purchase_date, status
+        case purchaseDate, purchase_date, imageUrls, image_urls, status
     }
     
     // Computed properties para conversão
@@ -1269,6 +1358,14 @@ public struct APITicketDetailResponse: Codable {
     
     var finalPurchaseDate: String? {
         return purchaseDate ?? purchase_date
+    }
+    
+    var finalCurrencyCode: String {
+        return currencyCode ?? currency_code ?? "BRL"
+    }
+    
+    var finalImageUrls: [String]? {
+        return imageUrls ?? image_urls
     }
 }
 
@@ -1424,9 +1521,13 @@ extension APITicketResponse {
             eventId: self.finalEventId,
             sellerId: self.finalSellerId,
             name: self.name,
+            description: self.description,
             price: self.price,
             ticketType: TicketType(rawValue: self.finalTicketType) ?? .general,
-            validUntil: Date() // Placeholder, será substituído abaixo
+            validUntil: Date(), // Placeholder, será substituído abaixo
+            quantity: self.finalQuantity,
+            currencyCode: self.finalCurrencyCode,
+            imageUrls: self.finalImageUrls
         )
         
         ticket.id = self.id
@@ -1526,10 +1627,14 @@ extension APITicketDetailResponse {
             ticketId: self.finalTicketId,
             event: self.event.toEvent(),
             seller: self.seller.toUser(),
+            name: self.name,
+            description: self.description,
             price: self.price,
             quantity: self.quantity,
+            currencyCode: self.finalCurrencyCode,
             ticketType: TicketType(rawValue: self.finalTicketType) ?? .general,
-            validUntil: Date() // Placeholder, será substituído abaixo
+            validUntil: Date(), // Placeholder, será substituído abaixo
+            imageUrls: self.finalImageUrls
         )
         
         ticketDetail.id = self.id
