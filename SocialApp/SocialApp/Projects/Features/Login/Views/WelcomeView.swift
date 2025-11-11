@@ -15,11 +15,11 @@ struct WelcomeView: View {
         Spacer()
 
         VStack(spacing: 4) {
-          Text("SocialClub")
+          Text(String(localized: "brand.name"))
             .font(.system(size: 36, weight: .bold))
             .foregroundColor(.primary)
 
-          Text("Trade your tickets easily")
+          Text(String(localized: "welcome.subtitle"))
             .font(.system(size: 16))
             .foregroundColor(.secondary)
         }
@@ -38,7 +38,7 @@ struct WelcomeView: View {
           Button(action: {
             showSignUp = true
           }) {
-            Text("Create Account")
+            Text(String(localized: "welcome.createAccount"))
               .font(.system(size: 16, weight: .semibold))
               .foregroundColor(.white)
               .frame(maxWidth: .infinity)
@@ -51,10 +51,10 @@ struct WelcomeView: View {
             showSignIn = true
           }) {
             HStack(spacing: 0) {
-              Text("Already have an account? ")
+              Text(String(localized: "welcome.alreadyHaveAccount"))
                 .font(.system(size: 14))
                 .foregroundColor(.secondary)
-              Text("Sign In")
+              Text(String(localized: "welcome.signIn"))
                 .font(.system(size: 14, weight: .semibold))
                 .foregroundColor(.blue)
             }

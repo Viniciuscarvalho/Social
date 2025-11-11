@@ -1,0 +1,764 @@
+{
+  "sourceLanguage" : "pt-BR",
+  "strings" : {
+    "events.search.title" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "value" : "Buscar"
+          }
+        }
+      }
+    },
+    "tickets.units.single" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "value" : "ingresso"
+          }
+        }
+      }
+    },
+    "tickets.units.plural" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "value" : "ingressos"
+          }
+        }
+      }
+    },
+    "commons.priceRange.title" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "value" : "PREÇO DO INGRESSO"
+          }
+        }
+      }
+    },
+    "commons.categories.all" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "value" : "Todos"
+          }
+        }
+      }
+    },
+    "commons.filter.title" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "value" : "Filtrar eventos"
+          }
+        }
+      }
+    },
+    "commons.filter.section.location" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "value" : "LOCALIZAÇÃO"
+          }
+        }
+      }
+    },
+    "commons.filter.location.placeholder" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "value" : "Cidade, Estado"
+          }
+        }
+      }
+    },
+    "commons.filter.useMyLocation" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "value" : "Usar minha localização"
+          }
+        }
+      }
+    },
+    "commons.filter.section.categories" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "value" : "CATEGORIAS DE EVENTO"
+          }
+        }
+      }
+    },
+    "commons.filter.apply" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "value" : "Aplicar filtros"
+          }
+        }
+      }
+    },
+    "commons.filter.categories.concerts" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "value" : "Shows"
+          }
+        }
+      }
+    },
+    "commons.filter.categories.movies" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "value" : "Filmes"
+          }
+        }
+      }
+    },
+    "commons.filter.categories.exhibitions" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "value" : "Exposições"
+          }
+        }
+      }
+    },
+    "commons.filter.categories.tours" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "value" : "Passeios"
+          }
+        }
+      }
+    },
+    "tickets.pricing.preview" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "value" : "Resumo"
+          }
+        }
+      }
+    },
+    "tickets.pricing.total" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "value" : "Preço Total"
+          }
+        }
+      }
+    },
+    "tickets.pricing.perTicket" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "value" : "Por ingresso"
+          }
+        }
+      }
+    },
+    "events.search.placeholder" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "value" : "Buscar..."
+          }
+        }
+      }
+    },
+    "events.search.recentTitle" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "value" : "Buscas recentes"
+          }
+        }
+      }
+    },
+    "events.search.empty.title" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "value" : "Busque por eventos"
+          }
+        }
+      }
+    },
+    "events.search.empty.subtitle" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "value" : "Encontre shows, festivais, esportes e mais"
+          }
+        }
+      }
+    },
+    "events.search.loading" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "value" : "Buscando..."
+          }
+        }
+      }
+    },
+    "events.search.noResults" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "value" : "Nenhum resultado encontrado"
+          }
+        }
+      }
+    },
+    "events.search.noResults.subtitle" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "value" : "Tente buscar com palavras-chave diferentes"
+          }
+        }
+      }
+    },
+    "events.price.free" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "value" : "Gratuito"
+          }
+        }
+      }
+    },
+    "events.recommended.title" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "value" : "Eventos recomendados"
+          }
+        }
+      }
+    }
+    "brand.name" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "value" : "SocialClub"
+          }
+        }
+      }
+    },
+    "welcome.subtitle" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "value" : "Troque seus ingressos facilmente"
+          }
+        }
+      }
+    },
+    "welcome.createAccount" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "value" : "Criar conta"
+          }
+        }
+      }
+    },
+    "welcome.alreadyHaveAccount" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "value" : "Já tem uma conta? "
+          }
+        }
+      }
+    },
+    "welcome.signIn" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "value" : "Entrar"
+          }
+        }
+      }
+    },
+    "onboarding.page1.title" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "value" : "Bem-vindo ao SocialClub"
+          }
+        }
+      }
+    },
+    "onboarding.page1.subtitle" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "value" : "Seu assistente inteligente para descobrir eventos inesquecíveis perto de você e negociar ingressos."
+          }
+        }
+      }
+    },
+    "onboarding.page2.title" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "value" : "Crie ingressos em segundos"
+          }
+        }
+      }
+    },
+    "onboarding.page2.subtitle" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "value" : "Conte o que precisa: nossa IA monta o cronograma e sugere locais."
+          }
+        }
+      }
+    },
+    "onboarding.page3.title" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "value" : "Participe de eventos com mais inteligência"
+          }
+        }
+      }
+    },
+    "onboarding.page3.subtitle" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "value" : "Conecte-se com o público certo. Troque seus ingressos com facilidade."
+          }
+        }
+      }
+    },
+    "onboarding.skip" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "value" : "Pular"
+          }
+        }
+      }
+    },
+    "onboarding.next" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "value" : "Avançar"
+          }
+        }
+      }
+    },
+    "onboarding.getStarted" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "value" : "Começar"
+          }
+        }
+      }
+    },
+    "common.back" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "value" : "Voltar"
+          }
+        }
+      }
+    },
+    "signup.title" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "value" : "Criar conta"
+          }
+        }
+      }
+    },
+    "signup.subtitle" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "value" : "Olá! Bem-vindo, preencha seus dados"
+          }
+        }
+      }
+    },
+    "signup.firstName.placeholder" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "value" : "Digite seu nome"
+          }
+        }
+      }
+    },
+    "signup.lastName.placeholder" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "value" : "Digite seu sobrenome"
+          }
+        }
+      }
+    },
+    "signup.phone.placeholder" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "value" : "Digite seu telefone"
+          }
+        }
+      }
+    },
+    "signup.email.placeholder" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "value" : "Digite seu e-mail"
+          }
+        }
+      }
+    },
+    "signup.email.invalid" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "value" : "Digite um e-mail válido"
+          }
+        }
+      }
+    },
+    "signup.password.placeholder" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "value" : "Digite a senha"
+          }
+        }
+      }
+    },
+    "signup.password.invalid" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "value" : "Digite uma senha válida"
+          }
+        }
+      }
+    },
+    "signup.confirm.placeholder" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "value" : "Confirme a senha"
+          }
+        }
+      }
+    },
+    "signup.confirm.mismatch" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "value" : "As senhas não coincidem"
+          }
+        }
+      }
+    },
+    "signup.cta" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "value" : "Criar conta"
+          }
+        }
+      }
+    },
+    "signup.link.haveAccount" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "value" : "Já tem uma conta?"
+          }
+        }
+      }
+    },
+    "signup.link.signIn" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "value" : "Entrar"
+          }
+        }
+      }
+    },
+    "signin.title" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "value" : "Entrar"
+          }
+        }
+      }
+    },
+    "signin.subtitle" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "value" : "Vamos te colocar de volta."
+          }
+        }
+      }
+    },
+    "signin.email.placeholder" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "value" : "Digite seu e-mail"
+          }
+        }
+      }
+    },
+    "signin.email.invalid" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "value" : "Digite um e-mail válido"
+          }
+        }
+      }
+    },
+    "signin.password.placeholder" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "value" : "Digite a senha"
+          }
+        }
+      }
+    },
+    "signin.forgotPassword" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "value" : "Esqueceu a senha"
+          }
+        }
+      }
+    },
+    "signin.cta" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "value" : "Entrar"
+          }
+        }
+      }
+    },
+    "signin.orWith" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "value" : "Ou entre com"
+          }
+        }
+      }
+    },
+    "signin.google" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "value" : "Google"
+          }
+        }
+      }
+    },
+    "signin.apple" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "value" : "Apple"
+          }
+        }
+      }
+    },
+    "signin.link.noAccount" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "value" : "Não tem uma conta?"
+          }
+        }
+      }
+    },
+    "signin.link.signUp" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "value" : "Criar conta"
+          }
+        }
+      }
+    },
+    "signin.reset.title" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "value" : "Redefinir senha"
+          }
+        }
+      }
+    },
+    "signin.reset.subtitle" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "value" : "Digite seu e-mail para receber um link de redefinição."
+          }
+        }
+      }
+    },
+    "signin.reset.continue" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "value" : "Continuar"
+          }
+        }
+      }
+    },
+    "signin.create.title" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "value" : "Criar nova senha"
+          }
+        }
+      }
+    },
+    "signin.create.subtitle" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "value" : "Defina uma senha forte para proteger sua conta."
+          }
+        }
+      }
+    },
+    "signin.newPassword.placeholder" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "value" : "Digite a nova senha"
+          }
+        }
+      }
+    },
+    "signin.confirmNewPassword.placeholder" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "value" : "Confirme a nova senha"
+          }
+        }
+      }
+    },
+    "signin.reset.cta" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "value" : "Redefinir senha"
+          }
+        }
+      }
+    },
+    "signin.success.title" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "value" : "Sucesso"
+          }
+        }
+      }
+    },
+    "signin.success.subtitle" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "value" : "Sua nova senha foi definida com sucesso!"
+          }
+        }
+      }
+    },
+    "signin.success.done" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "value" : "Concluir"
+          }
+        }
+      }
+    },
+    "emailverify.title" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "value" : "Verifique seu endereço de e-mail"
+          }
+        }
+      }
+    },
+    "emailverify.subtitle" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "value" : "Digite o código que enviamos por SMS para\\n%@"
+          }
+        }
+      }
+    },
+    "emailverify.resend.prompt" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "value" : "Não recebeu o código?"
+          }
+        }
+      }
+    },
+    "emailverify.resend.cta" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "value" : "Reenviar código"
+          }
+        }
+      }
+    },
+    "emailverify.cta" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "value" : "Verificar"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0",
+  "author" : "Xcode"
+}
+

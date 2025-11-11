@@ -15,11 +15,11 @@ struct SignInView: View {
             VStack(spacing: 0) {
                 // Header
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("Sign In")
+                    Text(String(localized: "signin.title"))
                         .font(.system(size: 32, weight: .bold))
                         .foregroundColor(.primary)
                     
-                    Text("Let's get you back in.")
+                    Text(String(localized: "signin.subtitle"))
                         .font(.system(size: 16))
                         .foregroundColor(.secondary)
                 }
@@ -33,7 +33,7 @@ struct SignInView: View {
                     VStack(spacing: 16) {
                         // Email Field
                         VStack(alignment: .leading, spacing: 8) {
-                            TextField("Enter your email", text: .init(
+                            TextField(String(localized: "signin.email.placeholder"), text: .init(
                                 get: { store.email },
                                 set: { store.send(.emailChanged($0)) }
                             ))
@@ -50,7 +50,7 @@ struct SignInView: View {
                             )
                             
                             if !store.email.isEmpty && !isValidEmail(store.email) {
-                                Text("Enter valid email")
+                                Text(String(localized: "signin.email.invalid"))
                                     .font(.caption)
                                     .foregroundColor(.red)
                                     .padding(.horizontal, 16)
@@ -61,12 +61,12 @@ struct SignInView: View {
                         VStack(alignment: .leading, spacing: 8) {
                             HStack {
                                 if isPasswordVisible {
-                                    TextField("Enter password", text: .init(
+                                    TextField(String(localized: "signin.password.placeholder"), text: .init(
                                         get: { store.password },
                                         set: { store.send(.passwordChanged($0)) }
                                     ))
                                 } else {
-                                    SecureField("Enter password", text: .init(
+                                    SecureField(String(localized: "signin.password.placeholder"), text: .init(
                                         get: { store.password },
                                         set: { store.send(.passwordChanged($0)) }
                                     ))
@@ -88,7 +88,7 @@ struct SignInView: View {
                             )
                             
                             if !store.password.isEmpty && store.password.count < 6 {
-                                Text("Enter valid password")
+                                Text(String(localized: "signin.password.invalid"))
                                     .font(.caption)
                                     .foregroundColor(.red)
                                     .padding(.horizontal, 16)
@@ -99,7 +99,7 @@ struct SignInView: View {
                         HStack {
                             Spacer()
                             Button(action: { showForgotPassword = true }) {
-                                Text("Forgot Password")
+                                Text(String(localized: "signin.forgotPassword"))
                                     .font(.system(size: 14, weight: .semibold))
                                     .foregroundColor(.blue)
                             }
@@ -110,7 +110,7 @@ struct SignInView: View {
                         Button(action: {
                             store.send(.signInTapped(email: store.email, password: store.password))
                         }) {
-                            Text("Sign In")
+                            Text(String(localized: "signin.cta"))
                                 .font(.system(size: 16, weight: .semibold))
                                 .foregroundColor(.white)
                                 .frame(maxWidth: .infinity)
@@ -126,7 +126,7 @@ struct SignInView: View {
                         VStack(spacing: 16) {
                             HStack {
                                 VStack(spacing: 0) { Color(.systemGray3).frame(height: 1) }
-                                Text("Or sign in with")
+                                Text(String(localized: "signin.orWith"))
                                     .font(.system(size: 14))
                                     .foregroundColor(.secondary)
                                 VStack(spacing: 0) { Color(.systemGray3).frame(height: 1) }
@@ -138,7 +138,7 @@ struct SignInView: View {
                                 Button(action: {}) {
                                     HStack(spacing: 8) {
                                         Image(systemName: "globe")
-                                        Text("Google")
+                                        Text(String(localized: "signin.google"))
                                     }
                                     .font(.system(size: 14, weight: .semibold))
                                     .foregroundColor(.primary)
@@ -151,7 +151,7 @@ struct SignInView: View {
                                 Button(action: {}) {
                                     HStack(spacing: 8) {
                                         Image(systemName: "apple.logo")
-                                        Text("Apple")
+                                        Text(String(localized: "signin.apple"))
                                     }
                                     .font(.system(size: 14, weight: .semibold))
                                     .foregroundColor(.primary)
@@ -172,12 +172,12 @@ struct SignInView: View {
                 
                 // Sign Up Link
                 HStack(spacing: 4) {
-                    Text("Don't have an account?")
+                    Text(String(localized: "signin.link.noAccount"))
                         .font(.system(size: 14))
                         .foregroundColor(.secondary)
                     
                     Button(action: { showSignUp = true }) {
-                        Text("Sign Up")
+                        Text(String(localized: "signin.link.signUp"))
                             .font(.system(size: 14, weight: .semibold))
                             .foregroundColor(.blue)
                     }
@@ -249,7 +249,7 @@ struct ForgotPasswordView: View {
                         HStack(spacing: 4) {
                             Image(systemName: "chevron.left")
                                 .font(.system(size: 16, weight: .semibold))
-                            Text(step == .success ? "" : "Back")
+                            Text(step == .success ? "" : String(localized: "common.back"))
                         }
                         .foregroundColor(.blue)
                     }
@@ -283,17 +283,17 @@ struct ForgotPasswordView: View {
     private var emailStepContent: some View {
         VStack(spacing: 24) {
             VStack(alignment: .leading, spacing: 8) {
-                Text("Reset Password")
+                Text(String(localized: "signin.reset.title"))
                     .font(.system(size: 28, weight: .bold))
                     .foregroundColor(.primary)
                 
-                Text("Enter your email to receive a password reset link.")
+                Text(String(localized: "signin.reset.subtitle"))
                     .font(.system(size: 16))
                     .foregroundColor(.secondary)
             }
             
             VStack(alignment: .leading, spacing: 8) {
-                TextField("Enter your email", text: $email)
+                TextField(String(localized: "signin.email.placeholder"), text: $email)
                     .textContentType(.emailAddress)
                     .keyboardType(.emailAddress)
                     .autocapitalization(.none)
@@ -312,7 +312,7 @@ struct ForgotPasswordView: View {
                     step = .createPassword
                 }
             }) {
-                Text("Continue")
+                Text(String(localized: "signin.reset.continue"))
                     .font(.system(size: 16, weight: .semibold))
                     .foregroundColor(.white)
                     .frame(maxWidth: .infinity)
@@ -329,11 +329,11 @@ struct ForgotPasswordView: View {
     private var createPasswordStepContent: some View {
         VStack(spacing: 24) {
             VStack(alignment: .leading, spacing: 8) {
-                Text("Create New Password")
+                Text(String(localized: "signin.create.title"))
                     .font(.system(size: 28, weight: .bold))
                     .foregroundColor(.primary)
                 
-                Text("Set a strong password to secure your account.")
+                Text(String(localized: "signin.create.subtitle"))
                     .font(.system(size: 16))
                     .foregroundColor(.secondary)
             }
@@ -342,9 +342,9 @@ struct ForgotPasswordView: View {
             VStack(alignment: .leading, spacing: 8) {
                 HStack {
                     if isPasswordVisible {
-                        TextField("Enter new password", text: $newPassword)
+                        TextField(String(localized: "signin.newPassword.placeholder"), text: $newPassword)
                     } else {
-                        SecureField("Enter new password", text: $newPassword)
+                        SecureField(String(localized: "signin.newPassword.placeholder"), text: $newPassword)
                     }
                     
                     Button(action: { isPasswordVisible.toggle() }) {
@@ -367,9 +367,9 @@ struct ForgotPasswordView: View {
             VStack(alignment: .leading, spacing: 8) {
                 HStack {
                     if isConfirmPasswordVisible {
-                        TextField("Enter confirm password", text: $confirmPassword)
+                        TextField(String(localized: "signin.confirmNewPassword.placeholder"), text: $confirmPassword)
                     } else {
-                        SecureField("Enter confirm password", text: $confirmPassword)
+                        SecureField(String(localized: "signin.confirmNewPassword.placeholder"), text: $confirmPassword)
                     }
                     
                     Button(action: { isConfirmPasswordVisible.toggle() }) {
@@ -393,7 +393,7 @@ struct ForgotPasswordView: View {
                     step = .success
                 }
             }) {
-                Text("Reset Password")
+                Text(String(localized: "signin.reset.cta"))
                     .font(.system(size: 16, weight: .semibold))
                     .foregroundColor(.white)
                     .frame(maxWidth: .infinity)
@@ -422,11 +422,11 @@ struct ForgotPasswordView: View {
                     )
                 
                 VStack(alignment: .center, spacing: 8) {
-                    Text("Successful")
+                    Text(String(localized: "signin.success.title"))
                         .font(.system(size: 28, weight: .bold))
                         .foregroundColor(.primary)
                     
-                    Text("Your new password has been set successfully!")
+                    Text(String(localized: "signin.success.subtitle"))
                         .font(.system(size: 16))
                         .foregroundColor(.secondary)
                         .multilineTextAlignment(.center)
@@ -436,7 +436,7 @@ struct ForgotPasswordView: View {
             Spacer()
             
             Button(action: { dismiss() }) {
-                Text("Done")
+                Text(String(localized: "signin.success.done"))
                     .font(.system(size: 16, weight: .semibold))
                     .foregroundColor(.white)
                     .frame(maxWidth: .infinity)

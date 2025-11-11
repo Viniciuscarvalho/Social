@@ -36,7 +36,7 @@ public struct FilterSheetView: View {
                 .padding(.vertical, 24)
             }
             .background(Color(.systemGroupedBackground))
-            .navigationTitle("Filter events")
+            .navigationTitle(String(localized: "commons.filter.title"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
@@ -67,7 +67,7 @@ public struct FilterSheetView: View {
     
     private var locationSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("LOCATION")
+            Text(String(localized: "commons.filter.section.location"))
                 .font(.system(size: 12, weight: .semibold))
                 .foregroundColor(.secondary)
             
@@ -78,7 +78,7 @@ public struct FilterSheetView: View {
                         .font(.system(size: 14))
                         .foregroundColor(.secondary)
                     
-                    TextField("Los Angeles, California", text: $filterState.location)
+                    TextField(String(localized: "commons.filter.location.placeholder"), text: $filterState.location)
                         .font(.system(size: 15))
                         .foregroundColor(.primary)
                 }
@@ -101,7 +101,7 @@ public struct FilterSheetView: View {
                     HStack(spacing: 6) {
                         Image(systemName: filterState.useCurrentLocation ? "location.fill" : "location")
                             .font(.system(size: 14, weight: .semibold))
-                        Text("Localize me")
+                        Text(String(localized: "commons.filter.useMyLocation"))
                             .font(.system(size: 13, weight: .medium))
                     }
                     .foregroundColor(filterState.useCurrentLocation ? .white : .blue)
@@ -118,7 +118,7 @@ public struct FilterSheetView: View {
     
     private var categoriesSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("EVENT CATEGORIES")
+            Text(String(localized: "commons.filter.section.categories"))
                 .font(.system(size: 12, weight: .semibold))
                 .foregroundColor(.secondary)
             
@@ -186,7 +186,7 @@ public struct FilterSheetView: View {
             onApply(filterState)
             dismiss()
         } label: {
-            Text("Apply filter")
+            Text(String(localized: "commons.filter.apply"))
                 .font(.system(size: 16, weight: .semibold))
                 .foregroundColor(.white)
                 .frame(maxWidth: .infinity)
@@ -227,13 +227,13 @@ public struct FilterSheetView: View {
     private func displayNameForCategory(_ category: EventCategory) -> String {
         switch category {
         case .music:
-            return "Concerts"
+            return String(localized: "commons.filter.categories.concerts")
         case .culture:
-            return "Movies"
+            return String(localized: "commons.filter.categories.movies")
         case .food:
-            return "Exhibitions"
+            return String(localized: "commons.filter.categories.exhibitions")
         case .sports:
-            return "Tours"
+            return String(localized: "commons.filter.categories.tours")
         default:
             return category.displayName
         }

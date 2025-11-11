@@ -105,7 +105,7 @@ struct TicketReviewPublishView: View {
                         ReviewRow(
                             icon: "number",
                             label: "Quantidade",
-                            value: "\(store.quantity) \(store.quantity == 1 ? "ingresso" : "ingressos")",
+                            value: "\(store.quantity) \(store.quantity == 1 ? String(localized: "tickets.units.single") : String(localized: "tickets.units.plural"))",
                             action: { store.send(.goToStep(.pricing)) }
                         )
                     }

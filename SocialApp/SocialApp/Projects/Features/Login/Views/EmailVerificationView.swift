@@ -124,12 +124,12 @@ public struct EmailVerificationView: View {
     
     private var textSection: some View {
         VStack(spacing: 12) {
-            Text("Verify Your Email Address")
+            Text(String(localized: "emailverify.title"))
                 .font(.system(size: 28, weight: .bold))
                 .foregroundColor(.white)
                 .multilineTextAlignment(.center)
             
-            Text("Enter the code we sent by text to\n\(store.email)")
+            Text(String(format: String(localized: "emailverify.subtitle"), store.email))
                 .font(.system(size: 15))
                 .foregroundColor(.white.opacity(0.7))
                 .multilineTextAlignment(.center)
@@ -237,11 +237,11 @@ public struct EmailVerificationView: View {
                 Button {
                     store.send(.sendVerificationCode)
                 } label: {
-                    Text("Didn't receive OTP?")
+                    Text(String(localized: "emailverify.resend.prompt"))
                         .font(.system(size: 14))
                         .foregroundColor(.white.opacity(0.6))
                     + Text(" ")
-                    + Text("Resend Code")
+                    + Text(String(localized: "emailverify.resend.cta"))
                         .font(.system(size: 14, weight: .semibold))
                         .foregroundColor(.blue)
                 }
@@ -263,7 +263,7 @@ public struct EmailVerificationView: View {
                         .scaleEffect(0.9)
                     Text("Verificando...")
                 } else {
-                    Text("Verify")
+                    Text(String(localized: "emailverify.cta"))
                 }
             }
             .font(.system(size: 17, weight: .semibold))

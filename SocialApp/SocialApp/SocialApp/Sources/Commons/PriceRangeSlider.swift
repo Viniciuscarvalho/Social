@@ -19,7 +19,7 @@ public struct PriceRangeSlider: View {
     public var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack {
-                Text("TICKET PRICE")
+                Text(String(localized: "commons.priceRange.title"))
                     .font(.system(size: 12, weight: .semibold))
                     .foregroundColor(.secondary)
                 

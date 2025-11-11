@@ -33,7 +33,7 @@ public struct CategoryPill: View {
                 }
                 
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(category?.displayName ?? "All")
+                    Text(category?.displayName ?? String(localized: "commons.categories.all"))
                         .font(.system(size: 14, weight: .semibold))
                         .foregroundColor(isSelected ? .primary : .secondary)
                     

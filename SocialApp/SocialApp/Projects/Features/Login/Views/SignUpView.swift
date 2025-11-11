@@ -24,7 +24,7 @@ struct SignUpView: View {
                         HStack(spacing: 4) {
                             Image(systemName: "chevron.left")
                                 .font(.system(size: 16, weight: .semibold))
-                            Text("Back")
+                            Text(String(localized: "common.back"))
                         }
                         .foregroundColor(.blue)
                     }
@@ -36,11 +36,11 @@ struct SignUpView: View {
                 
                 // Title
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("Sign Up")
+                    Text(String(localized: "signup.title"))
                         .font(.system(size: 32, weight: .bold))
                         .foregroundColor(.primary)
                     
-                    Text("Hello! Welcome, fill your details")
+                    Text(String(localized: "signup.subtitle"))
                         .font(.system(size: 16))
                         .foregroundColor(.secondary)
                 }
@@ -53,7 +53,7 @@ struct SignUpView: View {
                     VStack(spacing: 16) {
                         // First Name
                         VStack(alignment: .leading, spacing: 8) {
-                            TextField("Enter your first name", text: $firstName)
+                            TextField(String(localized: "signup.firstName.placeholder"), text: $firstName)
                                 .padding(.horizontal, 16)
                                 .padding(.vertical, 12)
                                 .background(Color(.systemGray6))
@@ -62,7 +62,7 @@ struct SignUpView: View {
                         
                         // Last Name
                         VStack(alignment: .leading, spacing: 8) {
-                            TextField("Enter your last name", text: $lastName)
+                            TextField(String(localized: "signup.lastName.placeholder"), text: $lastName)
                                 .padding(.horizontal, 16)
                                 .padding(.vertical, 12)
                                 .background(Color(.systemGray6))
@@ -71,7 +71,7 @@ struct SignUpView: View {
                         
                         // Phone Number
                         VStack(alignment: .leading, spacing: 8) {
-                            TextField("Enter phone number", text: $phoneNumber)
+                            TextField(String(localized: "signup.phone.placeholder"), text: $phoneNumber)
                                 .keyboardType(.phonePad)
                                 .padding(.horizontal, 16)
                                 .padding(.vertical, 12)
@@ -81,7 +81,7 @@ struct SignUpView: View {
                         
                         // Email
                         VStack(alignment: .leading, spacing: 8) {
-                            TextField("Enter your email", text: .init(
+                            TextField(String(localized: "signup.email.placeholder"), text: .init(
                                 get: { store.email },
                                 set: { store.send(.emailChanged($0)) }
                             ))
@@ -98,7 +98,7 @@ struct SignUpView: View {
                             )
                             
                             if !store.email.isEmpty && !isValidEmail(store.email) {
-                                Text("Enter valid email")
+                                Text(String(localized: "signup.email.invalid"))
                                     .font(.caption)
                                     .foregroundColor(.red)
                                     .padding(.horizontal, 16)
@@ -109,12 +109,12 @@ struct SignUpView: View {
                         VStack(alignment: .leading, spacing: 8) {
                             HStack {
                                 if isPasswordVisible {
-                                    TextField("Enter password", text: .init(
+                                    TextField(String(localized: "signup.password.placeholder"), text: .init(
                                         get: { store.password },
                                         set: { store.send(.passwordChanged($0)) }
                                     ))
                                 } else {
-                                    SecureField("Enter password", text: .init(
+                                    SecureField(String(localized: "signup.password.placeholder"), text: .init(
                                         get: { store.password },
                                         set: { store.send(.passwordChanged($0)) }
                                     ))
@@ -136,7 +136,7 @@ struct SignUpView: View {
                             )
                             
                             if !store.password.isEmpty && store.password.count < 6 {
-                                Text("Enter valid password")
+                                Text(String(localized: "signup.password.invalid"))
                                     .font(.caption)
                                     .foregroundColor(.red)
                                     .padding(.horizontal, 16)
@@ -147,12 +147,12 @@ struct SignUpView: View {
                         VStack(alignment: .leading, spacing: 8) {
                             HStack {
                                 if isConfirmPasswordVisible {
-                                    TextField("Confirm password", text: .init(
+                                    TextField(String(localized: "signup.confirm.placeholder"), text: .init(
                                         get: { store.confirmPassword },
                                         set: { store.send(.confirmPasswordChanged($0)) }
                                     ))
                                 } else {
-                                    SecureField("Confirm password", text: .init(
+                                    SecureField(String(localized: "signup.confirm.placeholder"), text: .init(
                                         get: { store.confirmPassword },
                                         set: { store.send(.confirmPasswordChanged($0)) }
                                     ))
@@ -174,7 +174,7 @@ struct SignUpView: View {
                             )
                             
                             if !store.confirmPassword.isEmpty && store.confirmPassword != store.password {
-                                Text("Passwords don't match")
+                                Text(String(localized: "signup.confirm.mismatch"))
                                     .font(.caption)
                                     .foregroundColor(.red)
                                     .padding(.horizontal, 16)
@@ -185,7 +185,7 @@ struct SignUpView: View {
                         Button(action: {
                             showInterests = true
                         }) {
-                            Text("Sign Up")
+                            Text(String(localized: "signup.cta"))
                                 .font(.system(size: 16, weight: .semibold))
                                 .foregroundColor(.white)
                                 .frame(maxWidth: .infinity)
@@ -204,12 +204,12 @@ struct SignUpView: View {
                 
                 // Sign In Link
                 HStack(spacing: 4) {
-                    Text("Already have an account?")
+                    Text(String(localized: "signup.link.haveAccount"))
                         .font(.system(size: 14))
                         .foregroundColor(.secondary)
                     
                     Button(action: { dismiss() }) {
-                        Text("Sign In")
+                        Text(String(localized: "signup.link.signIn"))
                             .font(.system(size: 14, weight: .semibold))
                             .foregroundColor(.blue)
                     }

@@ -20,7 +20,7 @@ public struct SearchView: View {
                             .font(.system(size: 16))
                             .foregroundColor(.secondary)
                         
-                        TextField("Search...", text: $store.searchText.sending(\.searchTextChanged))
+                        TextField(String(localized: "events.search.placeholder"), text: $store.searchText.sending(\.searchTextChanged))
                             .textFieldStyle(.plain)
                             .font(.system(size: 15))
                             .focused($isSearchFocused)
@@ -68,7 +68,7 @@ public struct SearchView: View {
                     .padding(.bottom, 100)
                 }
             }
-            .navigationTitle("Search")
+            .navigationTitle(String(localized: "events.search.title"))
             .navigationBarTitleDisplayMode(.inline)
             .navigationBarBackButtonHidden(true)
             .gesture(
@@ -102,7 +102,7 @@ public struct SearchView: View {
     private var recentSearchesView: some View {
         VStack(alignment: .leading, spacing: 16) {
             if !store.recentSearches.isEmpty {
-                Text("Recent Search")
+                Text(String(localized: "events.search.recentTitle"))
                     .font(.system(size: 16, weight: .semibold))
                     .foregroundColor(.primary)
                     .padding(.horizontal, 20)
@@ -127,11 +127,11 @@ public struct SearchView: View {
                         .font(.system(size: 50))
                         .foregroundColor(.secondary)
                     
-                    Text("Search for events")
+                    Text(String(localized: "events.search.empty.title"))
                         .font(.system(size: 18, weight: .semibold))
                         .foregroundColor(.primary)
                     
-                    Text("Find concerts, festivals, sports and more")
+                    Text(String(localized: "events.search.empty.subtitle"))
                         .font(.system(size: 14))
                         .foregroundColor(.secondary)
                         .multilineTextAlignment(.center)
@@ -164,7 +164,7 @@ public struct SearchView: View {
             ProgressView()
                 .scaleEffect(1.2)
             
-            Text("Searching...")
+            Text(String(localized: "events.search.loading"))
                 .font(.system(size: 15))
                 .foregroundColor(.secondary)
         }
@@ -180,11 +180,11 @@ public struct SearchView: View {
                 .font(.system(size: 50))
                 .foregroundColor(.secondary)
             
-            Text("No results found")
+            Text(String(localized: "events.search.noResults"))
                 .font(.system(size: 18, weight: .semibold))
                 .foregroundColor(.primary)
             
-            Text("Try searching with different keywords")
+            Text(String(localized: "events.search.noResults.subtitle"))
                 .font(.system(size: 14))
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
@@ -327,7 +327,7 @@ struct EventSearchResultCard: View {
     
     private func getPriceText() -> String {
         if event.startPrice == 0 {
-            return "Free"
+            return String(localized: "events.price.free")
         }
         return "$\(Int(event.startPrice))"
     }

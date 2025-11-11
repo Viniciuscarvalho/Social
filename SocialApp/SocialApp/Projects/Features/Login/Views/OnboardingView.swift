@@ -9,20 +9,20 @@ struct OnboardingView: View {
   private let pages: [OnboardingPage] = [
     OnboardingPage(
       icon: "ticket.fill",
-      title: "Welcome to SocialClub",
-      subtitle: "Your smart assistant and discover unforgettable events around you and trade tickets.",
+      title: String(localized: "onboarding.page1.title"),
+      subtitle: String(localized: "onboarding.page1.subtitle"),
       primaryColor: .blue
     ),
     OnboardingPage(
       icon: "calendar.badge.plus",
-      title: "Create Tickets in Seconds",
-      subtitle: "Tell us what you need, our AI builds the schedule, and suggests venues.",
+      title: String(localized: "onboarding.page2.title"),
+      subtitle: String(localized: "onboarding.page2.subtitle"),
       primaryColor: .purple
     ),
     OnboardingPage(
       icon: "person.3.fill",
-      title: "Join Smarter Events",
-      subtitle: "Join and connect with the right crowd. Trade your tickets easily.",
+      title: String(localized: "onboarding.page3.title"),
+      subtitle: String(localized: "onboarding.page3.subtitle"),
       primaryColor: .green
     )
   ]
@@ -38,7 +38,7 @@ struct OnboardingView: View {
           Button(action: {
             onComplete()
           }) {
-            Text("Skip")
+            Text(String(localized: "onboarding.skip"))
               .font(.system(size: 16, weight: .medium))
               .foregroundColor(AppColors.primary)
               .padding(.horizontal, 20)
@@ -66,7 +66,7 @@ struct OnboardingView: View {
               onComplete()
             }
           }) {
-            Text(currentPage == pages.count - 1 ? "Get Started" : "Next")
+            Text(currentPage == pages.count - 1 ? String(localized: "onboarding.getStarted") : String(localized: "onboarding.next"))
               .font(.system(size: 16, weight: .semibold))
               .foregroundColor(.white)
               .frame(maxWidth: .infinity)

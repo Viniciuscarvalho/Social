@@ -38,7 +38,7 @@ public struct RecommendedEventsView: View {
             .padding(.top, 20)
             .padding(.bottom, 100)
         }
-        .navigationTitle("Recommended Events")
+        .navigationTitle(String(localized: "events.recommended.title"))
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden(true)
         .gesture(
@@ -170,7 +170,7 @@ struct RecommendedEventFullCard: View {
     
     private func getPriceText() -> String {
         if event.startPrice == 0 {
-            return "Free"
+            return String(localized: "events.price.free")
         }
         return "$\(Int(event.startPrice))"
     }

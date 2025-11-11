@@ -17,6 +17,9 @@ let project = Project(
         )
     ],
     settings: .settings(
+        base: [
+            "DEVELOPMENT_LANGUAGE": "pt-BR"
+        ],
         configurations: [
             .debug(name: "Debug"),
             .release(name: "Release")
@@ -30,7 +33,8 @@ let project = Project(
             bundleId: "dev.tuist.SocialApp",
             infoPlist: .extendingDefault(with: [
                 "FirebaseAppDelegateProxyEnabled": false,
-                "NSUserNotificationAlertSoundEnabled": false
+                "NSUserNotificationAlertSoundEnabled": false,
+                "CFBundleDevelopmentRegion": "pt-BR"
             ]),
             sources: [
                 "./SocialApp/Sources/**",

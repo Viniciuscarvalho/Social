@@ -144,7 +144,7 @@ struct TicketPricingStepView: View {
                             Text("\(store.quantity)")
                                 .font(.title3)
                                 .fontWeight(.semibold)
-                            Text(store.quantity == 1 ? "ingresso" : "ingressos")
+                            Text(store.quantity == 1 ? String(localized: "tickets.units.single") : String(localized: "tickets.units.plural"))
                                 .font(.body)
                                 .foregroundColor(.secondary)
                         }
@@ -157,13 +157,13 @@ struct TicketPricingStepView: View {
                 // Preview Card
                 if let priceValue = AddTicketFeature.parsePrice(store.price) {
                     VStack(alignment: .leading, spacing: 12) {
-                        Text("Preview")
+                        Text(String(localized: "tickets.pricing.preview"))
                             .font(.headline)
                             .foregroundColor(.secondary)
                         
                         HStack {
                             VStack(alignment: .leading, spacing: 4) {
-                                Text("Preço Total")
+                                Text(String(localized: "tickets.pricing.total"))
                                     .font(.caption)
                                     .foregroundColor(.secondary)
                                 
@@ -176,7 +176,7 @@ struct TicketPricingStepView: View {
                             Spacer()
                             
                             VStack(alignment: .trailing, spacing: 4) {
-                                Text("Por ingresso")
+                                Text(String(localized: "tickets.pricing.perTicket"))
                                     .font(.caption)
                                     .foregroundColor(.secondary)
                                 
