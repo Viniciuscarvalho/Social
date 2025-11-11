@@ -9,6 +9,7 @@ struct AuthClient {
     var signOut: @Sendable () async throws -> Void
     var getCurrentSession: @Sendable () async throws -> (user: User, profile: Profile)?
     var testCredentials: @Sendable (_ email: String, _ password: String) async throws -> Void
+    var refreshToken: @Sendable () async throws -> String
 }
 
 extension AuthClient: DependencyKey {
@@ -336,6 +337,29 @@ extension AuthClient: DependencyKey {
             } catch {
                 print("   ❌ Erro ao buscar profile: \(error)")
             }
+        },
+        refreshToken: {
+            print("🔄 AuthClient: Refrescando token JWT...")
+            let supabase = SupabaseManager.shared.client
+            
+            do {
+                // Tentar renovar a sessão
+                let session = try await supabase.auth.refreshSession()
+                
+                // Salvar o novo token
+                UserDefaults.standard.set(session.accessToken, forKey: "authToken")
+                UserDefaults.standard.set(session.refreshToken, forKey: "refreshToken")
+                
+                print("✅ AuthClient: Token refrescado com sucesso")
+                return session.accessToken
+            } catch {
+                print("❌ AuthClient: Erro ao refrescar token - \(error)")
+                // Limpar dados de auth se falhar
+                UserDefaults.standard.removeObject(forKey: "authToken")
+                UserDefaults.standard.removeObject(forKey: "currentUser")
+                UserDefaults.standard.removeObject(forKey: "currentUserId")
+                throw NetworkError.unauthorized
+            }
         }
     )
     
@@ -344,7 +368,8 @@ extension AuthClient: DependencyKey {
         signUp: unimplemented("AuthClient.signUp"),
         signOut: { },
         getCurrentSession: { nil },
-        testCredentials: unimplemented("AuthClient.testCredentials")
+        testCredentials: unimplemented("AuthClient.testCredentials"),
+        refreshToken: unimplemented("AuthClient.refreshToken")
     )
 }
 

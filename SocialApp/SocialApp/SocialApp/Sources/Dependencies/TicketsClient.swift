@@ -18,6 +18,8 @@ public struct TicketsClient {
 }
 
 extension TicketsClient: DependencyKey {
+    @Dependency(\.authClient) static var authClient
+    
     public static var liveValue: TicketsClient {
         TicketsClient(
             fetchTickets: {
@@ -174,16 +176,28 @@ extension TicketsClient: DependencyKey {
             },
             createTicket: { request in
                 do {
+                    // 🔄 CRÍTICO: Refrescar token antes de criar ticket
+                    print("🎫 TicketClient: Iniciando criação de ticket - tentando refrescar token...")
+                    do {
+                        let newToken = try await authClient.refreshToken()
+                        print("✅ TicketClient: Token refrescado com sucesso: \(newToken.prefix(20))...")
+                    } catch {
+                        print("⚠️ TicketClient: Falha ao refrescar token, tentando com token atual: \(error)")
+                    }
+                    
                     let createdTicket: CreateTicketResponse = try await NetworkService.shared.requestSingle(
                         endpoint: "/tickets",
                         method: .POST,
                         body: request,
                         requiresAuth: true
                     )
+                    print("✅ TicketClient: Ticket criado com sucesso: \(createdTicket.id)")
                     return createdTicket.toTicket()
                 } catch let networkError as NetworkError {
+                    print("❌ TicketClient: Erro ao criar ticket - \(networkError.errorDescription)")
                     throw networkError
                 } catch {
+                    print("❌ TicketClient: Erro desconhecido - \(error.localizedDescription)")
                     throw NetworkError.unknown("Erro ao criar ticket: \(error.localizedDescription)")
                 }
             },
