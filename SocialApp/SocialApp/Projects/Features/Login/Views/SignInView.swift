@@ -408,44 +408,18 @@ struct ForgotPasswordView: View {
     }
     
     private var successStepContent: some View {
-        VStack(spacing: 24) {
-            Spacer()
-            
-            VStack(spacing: 16) {
-                Circle()
-                    .fill(Color.green.opacity(0.1))
-                    .frame(width: 100, height: 100)
-                    .overlay(
-                        Image(systemName: "checkmark")
-                            .font(.system(size: 48, weight: .semibold))
-                            .foregroundColor(.green)
-                    )
-                
-                VStack(alignment: .center, spacing: 8) {
-                    Text(String(localized: "signin.success.title"))
-                        .font(.system(size: 28, weight: .bold))
-                        .foregroundColor(.primary)
-                    
-                    Text(String(localized: "signin.success.subtitle"))
-                        .font(.system(size: 16))
-                        .foregroundColor(.secondary)
-                        .multilineTextAlignment(.center)
-                }
+        SuccessView(
+            icon: "check_successfull",
+            iconColor: .green,
+            useCustomIcon: true,
+            title: String(localized: "success.password_reset.title"),
+            message: String(localized: "success.password_reset.message"),
+            buttonTitle: String(localized: "success.password_reset.button"),
+            buttonAction: {
+                dismiss()
             }
-            
-            Spacer()
-            
-            Button(action: { dismiss() }) {
-                Text(String(localized: "signin.success.done"))
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 50)
-                    .background(AppColors.primary)
-                    .cornerRadius(12)
-            }
-        }
-        .padding(.horizontal, 20)
+        )
+        .padding(40)
     }
     
     private func isValidEmail(_ email: String) -> Bool {

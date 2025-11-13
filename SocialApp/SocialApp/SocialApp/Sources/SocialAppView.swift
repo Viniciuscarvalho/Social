@@ -141,6 +141,15 @@ public struct SocialAppView: View {
                 store.send(.profileFeature(.ticketCreated))
             }
         }
+        
+        // Listener para navegação para eventos
+        NotificationCenter.default.addObserver(
+            forName: NSNotification.Name("NavigateToEventsTab"),
+            object: nil,
+            queue: .main
+        ) { _ in
+            store.send(.tabSelected(.home))
+        }
     }
 }
 

@@ -4,19 +4,32 @@ import ComposableArchitecture
 struct MyTicketsView: View {
     @Bindable var store: StoreOf<MyTicketsFeature>
     @Environment(\.dismiss) var dismiss
+    let onNavigateToEvents: (() -> Void)?
+    
+    init(store: StoreOf<MyTicketsFeature>, onNavigateToEvents: (() -> Void)? = nil) {
+        self.store = store
+        self.onNavigateToEvents = onNavigateToEvents
+    }
     
     var body: some View {
         NavigationStack {
-            ZStack {
-                AppColors.background
-                    .ignoresSafeArea()
+            VStack(spacing: 0) {
+                // Tabs
+                tabsView
+                    .padding(.top, 8)
+                    .padding(.bottom, 16)
                 
-                if store.isLoading {
-                    loadingView
-                } else if store.myTickets.isEmpty {
-                    emptyStateView
-                } else {
-                    ticketsList
+                ZStack {
+                    AppColors.background
+                        .ignoresSafeArea()
+                    
+                    if store.isLoading {
+                        loadingView
+                    } else if filteredTickets.isEmpty {
+                        emptyStateView
+                    } else {
+                        ticketsList
+                    }
                 }
             }
             .navigationTitle("Meus Ingressos")
@@ -61,29 +74,106 @@ struct MyTicketsView: View {
     
     private var emptyStateView: some View {
         VStack(spacing: 24) {
-            Image(systemName: "ticket.fill")
-                .font(.system(size: 60))
-                .foregroundColor(AppColors.accentGreen)
+            Spacer()
             
-            Text("Nenhum Ingresso Publicado")
-                .font(.title2)
-                .fontWeight(.semibold)
-                .foregroundColor(AppColors.primaryText)
+            // Ícone de ingresso em círculo amarelo/preto conforme design
+            ZStack {
+                Circle()
+                    .fill(Color(.systemGray5))
+                    .frame(width: 100, height: 100)
+                
+                Image(systemName: "ticket.fill")
+                    .font(.system(size: 50))
+                    .foregroundColor(.orange)
+            }
             
-            Text("Você ainda não possui ingressos para vender.\nVisite a aba principal para criar seus ingressos!")
-                .font(.body)
-                .foregroundColor(AppColors.secondaryText)
-                .multilineTextAlignment(.center)
-                .lineSpacing(4)
+            VStack(spacing: 8) {
+                Text(store.selectedTab == .upcoming 
+                     ? String(localized: "empty_state.tickets.no_upcoming.title")
+                     : String(localized: "empty_state.tickets.no_past.title"))
+                    .font(.system(size: 20, weight: .bold))
+                    .foregroundColor(AppColors.primaryText)
+                
+                Text(store.selectedTab == .upcoming
+                     ? String(localized: "empty_state.tickets.no_upcoming.message")
+                     : String(localized: "empty_state.tickets.no_past.message"))
+                    .font(.system(size: 15))
+                    .foregroundColor(AppColors.secondaryText)
+                    .multilineTextAlignment(.center)
+            }
+            
+            Spacer()
+            
+            Button(action: {
+                if let onNavigateToEvents = onNavigateToEvents {
+                    onNavigateToEvents()
+                } else {
+                    store.send(.navigateToEvents)
+                }
+            }) {
+                Text(String(localized: "empty_state.tickets.browse_events"))
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(AppColors.primary)
+                    .cornerRadius(12)
+            }
+            .padding(.horizontal, 40)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .padding()
+        .padding(40)
+    }
+    
+    // MARK: - Tabs View
+    
+    private var tabsView: some View {
+        HStack(spacing: 12) {
+            tabButton(
+                title: String(localized: "empty_state.tickets.tab.upcoming"),
+                isSelected: store.selectedTab == .upcoming
+            ) {
+                store.send(.tabChanged(.upcoming))
+            }
+            
+            tabButton(
+                title: String(localized: "empty_state.tickets.tab.past"),
+                isSelected: store.selectedTab == .past
+            ) {
+                store.send(.tabChanged(.past))
+            }
+        }
+        .padding(.horizontal, 20)
+    }
+    
+    private func tabButton(title: String, isSelected: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Text(title)
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundColor(isSelected ? .white : AppColors.primaryText)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 8)
+                .background(isSelected ? AppColors.primary : Color(.systemGray6))
+                .cornerRadius(20)
+        }
+    }
+    
+    // MARK: - Filtered Tickets
+    
+    private var filteredTickets: [Ticket] {
+        let now = Date()
+        switch store.selectedTab {
+        case .upcoming:
+            return store.myTickets.filter { $0.validUntil > now }
+        case .past:
+            return store.myTickets.filter { $0.validUntil <= now }
+        }
     }
     
     private var ticketsList: some View {
         ScrollView {
             LazyVStack(spacing: 16) {
-                ForEach(store.myTickets) { ticket in
+                ForEach(filteredTickets) { ticket in
                     MyTicketCard(
                         ticket: ticket,
                         currentUserId: store.currentUserId

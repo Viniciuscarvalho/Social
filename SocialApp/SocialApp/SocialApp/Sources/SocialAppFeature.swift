@@ -518,6 +518,10 @@ public struct SocialAppFeature {
             
             return .none
             
+        case .favoritesFeature(.navigateToEvents):
+            state.selectedTab = .home
+            return .none
+            
             // MARK: - Add Ticket Completion
         case let .addTicket(.publishTicketResponse(.success(ticket))):
             // Fecha o modal após sucesso

@@ -21,6 +21,7 @@ public struct FavoritesFeature {
         case removeFromFavorites(String) // eventId
         case favoriteToggled(Event)
         case eventSelected(UUID)
+        case navigateToEvents
     }
     
     @Dependency(\.favoritesClient) var favoritesClient
@@ -74,6 +75,9 @@ public struct FavoritesFeature {
                 }
                 
             case .eventSelected:
+                return .none
+                
+            case .navigateToEvents:
                 return .none
             }
         }

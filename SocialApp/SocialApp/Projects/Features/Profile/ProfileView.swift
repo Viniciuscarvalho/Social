@@ -588,18 +588,26 @@ private struct MyTicketsViewWrapper: View {
     var body: some View {
         Group {
             if let store = myTicketsStore {
-                MyTicketsView(store: store)
-                    .onReceive(
-                        NotificationCenter.default.publisher(for: NSNotification.Name("TicketDeleted"))
-                    ) { notification in
-                        // Quando um ticket é deletado, sincronizar com MyTicketsFeature
-                        if let ticketId = notification.userInfo?["ticketId"] as? String {
-                            print("📢 MyTicketsViewWrapper: Recebeu notificação de ticket deletado: \(ticketId)")
-                            store.send(.syncTicketDeleted(ticketId))
-                        }
-                        // Também notifica o ProfileFeature para atualizar contador
-                        profileStore.send(.ticketDeleted)
+                MyTicketsView(store: store) {
+                    // Navegação: fechar sheet e mudar para tab de eventos
+                    profileStore.send(.setShowingMyTickets(false))
+                    // Usar NotificationCenter para comunicar com SocialAppFeature
+                    NotificationCenter.default.post(
+                        name: NSNotification.Name("NavigateToEventsTab"),
+                        object: nil
+                    )
+                }
+                .onReceive(
+                    NotificationCenter.default.publisher(for: NSNotification.Name("TicketDeleted"))
+                ) { notification in
+                    // Quando um ticket é deletado, sincronizar com MyTicketsFeature
+                    if let ticketId = notification.userInfo?["ticketId"] as? String {
+                        print("📢 MyTicketsViewWrapper: Recebeu notificação de ticket deletado: \(ticketId)")
+                        store.send(.syncTicketDeleted(ticketId))
                     }
+                    // Também notifica o ProfileFeature para atualizar contador
+                    profileStore.send(.ticketDeleted)
+                }
             } else {
                 ProgressView()
                     .onAppear {

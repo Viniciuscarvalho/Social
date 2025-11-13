@@ -176,17 +176,23 @@ public struct SearchView: View {
     
     private var noResultsView: some View {
         VStack(spacing: 16) {
-            Image(systemName: "magnifyingglass")
-                .font(.system(size: 50))
-                .foregroundColor(.secondary)
+            ZStack {
+                Circle()
+                    .fill(Color(.systemGray5))
+                    .frame(width: 80, height: 80)
+                
+                Image(systemName: "magnifyingglass")
+                    .font(.system(size: 40))
+                    .foregroundColor(AppColors.secondary)
+            }
             
-            Text(String(localized: "events.search.noResults"))
+            Text(String(localized: "empty_state.search.no_results.title"))
                 .font(.system(size: 18, weight: .semibold))
-                .foregroundColor(.primary)
+                .foregroundColor(AppColors.primaryText)
             
-            Text(String(localized: "events.search.noResults.subtitle"))
+            Text(String(localized: "empty_state.search.no_results.message"))
                 .font(.system(size: 14))
-                .foregroundColor(.secondary)
+                .foregroundColor(AppColors.secondaryText)
                 .multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity)

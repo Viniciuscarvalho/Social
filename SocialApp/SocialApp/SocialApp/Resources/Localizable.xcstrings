@@ -1489,6 +1489,237 @@
           }
         }
       }
+    },
+    "empty_state.search.no_results.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nenhum Resultado Encontrado"
+          }
+        }
+      }
+    },
+    "empty_state.search.no_results.message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tente uma palavra-chave diferente ou filtro para encontrar eventos incríveis perto de você"
+          }
+        }
+      }
+    },
+    "empty_state.favorites.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nenhum Favorito Ainda"
+          }
+        }
+      }
+    },
+    "empty_state.favorites.message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toque no ícone de coração para salvar eventos que você ama e acessá-los a qualquer momento aqui."
+          }
+        }
+      }
+    },
+    "empty_state.favorites.add_button" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adicionar"
+          }
+        }
+      }
+    },
+    "empty_state.tickets.tab.upcoming" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Futuros"
+          }
+        }
+      }
+    },
+    "empty_state.tickets.tab.past" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Passados"
+          }
+        }
+      }
+    },
+    "empty_state.tickets.no_upcoming.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nenhum Ingresso Futuro"
+          }
+        }
+      }
+    },
+    "empty_state.tickets.no_upcoming.message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Você não tem eventos futuros. Encontre eventos emocionantes e compre seus ingressos hoje!"
+          }
+        }
+      }
+    },
+    "empty_state.tickets.no_past.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nenhum Ingresso Passado"
+          }
+        }
+      }
+    },
+    "empty_state.tickets.no_past.message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Você não tem ingressos passados."
+          }
+        }
+      }
+    },
+    "empty_state.tickets.browse_events" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Navegar Eventos"
+          }
+        }
+      }
+    },
+    "empty_state.announce_ticket.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anunciar Ingresso"
+          }
+        }
+      }
+    },
+    "empty_state.announce_ticket.message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Configure seu ingresso em minutos — personalize detalhes, preços e publique!"
+          }
+        }
+      }
+    },
+    "empty_state.announce_ticket.button" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anunciar Ingresso"
+          }
+        }
+      }
+    },
+    "success.announce_ticket.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anunciar Ingresso Está Pronto!"
+          }
+        }
+      }
+    },
+    "success.announce_ticket.message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Os detalhes do seu ingresso estão configurados. Revise e publique para disponibilizar para compradores."
+          }
+        }
+      }
+    },
+    "success.announce_ticket.button" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Concluir"
+          }
+        }
+      }
+    },
+    "success.password_reset.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bem-sucedido"
+          }
+        }
+      }
+    },
+    "success.password_reset.message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sua nova senha foi definida com sucesso!"
+          }
+        }
+      }
+    },
+    "success.password_reset.button" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Concluir"
+          }
+        }
+      }
     }
   },
   "version" : "1.1"

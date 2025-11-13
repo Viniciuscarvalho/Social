@@ -15,18 +15,7 @@ public struct FavoritesView: View {
                     ProgressView("Carregando favoritos...")
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else if store.favoriteEvents.isEmpty {
-                    ContentUnavailableView {
-                        Label {
-                            Text("Nenhum favorito")
-                        } icon: {
-                            Image("unfavorited", bundle: Bundle.main)
-                                .resizable()
-                                .aspectRatio(contentMode: .fit)
-                                .frame(width: 48, height: 48)
-                        }
-                    } description: {
-                        Text("Os eventos que você favoritar aparecerão aqui")
-                    }
+                    emptyStateView
                 } else {
                     ScrollView {
                         LazyVStack(spacing: 16) {
@@ -53,6 +42,52 @@ public struct FavoritesView: View {
         .onAppear {
             store.send(.onAppear)
         }
+    }
+    
+    // MARK: - Empty State View
+    
+    private var emptyStateView: some View {
+        VStack(spacing: 24) {
+            Spacer()
+            
+            ZStack {
+                Circle()
+                    .fill(Color.pink.opacity(0.1))
+                    .frame(width: 100, height: 100)
+                
+                Image(systemName: "heart.fill")
+                    .font(.system(size: 50))
+                    .foregroundColor(.pink)
+            }
+            
+            VStack(spacing: 8) {
+                Text(String(localized: "empty_state.favorites.title"))
+                    .font(.system(size: 20, weight: .bold))
+                    .foregroundColor(AppColors.primaryText)
+                
+                Text(String(localized: "empty_state.favorites.message"))
+                    .font(.system(size: 15))
+                    .foregroundColor(AppColors.secondaryText)
+                    .multilineTextAlignment(.center)
+            }
+            
+            Spacer()
+            
+            Button(action: {
+                store.send(.navigateToEvents)
+            }) {
+                Text(String(localized: "empty_state.favorites.add_button"))
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(AppColors.primary)
+                    .cornerRadius(12)
+            }
+            .padding(.horizontal, 40)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding(40)
     }
 }
 

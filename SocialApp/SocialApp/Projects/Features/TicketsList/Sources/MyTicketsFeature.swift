@@ -1,10 +1,16 @@
 import ComposableArchitecture
 import Foundation
 
+public enum TicketTab: Equatable {
+    case upcoming
+    case past
+}
+
 @Reducer
 struct MyTicketsFeature {
     @ObservableState
     struct State: Equatable {
+        var selectedTab: TicketTab = .upcoming
         var myTickets: [Ticket] = []
         var deletedTicketId: String? // Para remover localmente após delete
         var deletedTicketIds: Set<String> = [] // ✅ CRÍTICO: Track de tickets deletados para prevenir re-adição
@@ -34,6 +40,8 @@ struct MyTicketsFeature {
         case dismissError
         case syncFromGlobal([Ticket])
         case syncTicketDeleted(String)
+        case tabChanged(TicketTab)
+        case navigateToEvents
     }
     
     @Dependency(\.ticketsClient) var ticketsClient
@@ -286,6 +294,13 @@ struct MyTicketsFeature {
                 
             case .dismissError:
                 state.errorMessage = nil
+                return .none
+                
+            case let .tabChanged(tab):
+                state.selectedTab = tab
+                return .none
+                
+            case .navigateToEvents:
                 return .none
             }
         }

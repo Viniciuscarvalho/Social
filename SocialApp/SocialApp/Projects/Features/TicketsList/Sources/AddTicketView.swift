@@ -11,12 +11,17 @@ struct AddTicketView: View {
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
-                // Progress Indicator
-                StepProgressView(currentStep: store.currentStep)
-                    .padding()
+                // Progress Indicator (oculto no welcome)
+                if store.currentStep != .welcome {
+                    StepProgressView(currentStep: store.currentStep)
+                        .padding()
+                }
                 
                 // Step Content
                 TabView(selection: $store.currentStep) {
+                    welcomeStepView
+                        .tag(TicketCreationStep.welcome)
+                    
                     TicketDetailsStepView(store: store)
                         .tag(TicketCreationStep.details)
                     
@@ -31,12 +36,17 @@ struct AddTicketView: View {
                     
                     TicketReviewPublishView(store: store)
                         .tag(TicketCreationStep.review)
+                    
+                    successStepView
+                        .tag(TicketCreationStep.success)
                 }
                 .tabViewStyle(.page(indexDisplayMode: .never))
                 .animation(.easeInOut, value: store.currentStep)
                 
-                // Navigation Buttons
-                navigationButtons
+                // Navigation Buttons (oculto no welcome e success)
+                if store.currentStep != .welcome && store.currentStep != .success {
+                    navigationButtons
+                }
             }
             .background(AppColors.background)
             .navigationBarTitleDisplayMode(.inline)
@@ -54,9 +64,8 @@ struct AddTicketView: View {
                 store.send(.onAppear)
             }
             .onChange(of: store.publishSuccess) { _, success in
-                if success {
-                    dismiss()
-                }
+                // Não fechar automaticamente - deixar usuário ver a tela de sucesso
+                // O fechamento será feito pelo botão na successStepView
             }
             .alert("Erro", isPresented: errorBinding) {
                 Button("OK") {
@@ -123,6 +132,74 @@ struct AddTicketView: View {
             set: { _ in store.send(.clearError) }
         )
     }
+    
+    // MARK: - Welcome Step View
+    
+    private var welcomeStepView: some View {
+        VStack(spacing: 24) {
+            Spacer()
+            
+            // Ícone de calendário em círculo
+            ZStack {
+                Circle()
+                    .fill(Color(.systemGray5))
+                    .frame(width: 100, height: 100)
+                
+                Image(systemName: "calendar")
+                    .font(.system(size: 50))
+                    .foregroundColor(AppColors.primary)
+            }
+            
+            VStack(spacing: 8) {
+                Text(String(localized: "empty_state.announce_ticket.title"))
+                    .font(.system(size: 28, weight: .bold))
+                    .foregroundColor(AppColors.primaryText)
+                
+                Text(String(localized: "empty_state.announce_ticket.message"))
+                    .font(.system(size: 16))
+                    .foregroundColor(AppColors.secondaryText)
+                    .multilineTextAlignment(.center)
+            }
+            
+            Spacer()
+            
+            Button(action: {
+                store.send(.nextStep) // Vai para .details
+            }) {
+                Text(String(localized: "empty_state.announce_ticket.button"))
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(AppColors.primary)
+                    .cornerRadius(12)
+            }
+            .padding(.horizontal, 40)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding(40)
+        .background(AppColors.background)
+    }
+    
+    // MARK: - Success Step View
+    
+    private var successStepView: some View {
+        SuccessView(
+            icon: "check_successfull",
+            iconColor: .green,
+            useCustomIcon: true,
+            title: String(localized: "success.announce_ticket.title"),
+            message: String(localized: "success.announce_ticket.message"),
+            buttonTitle: String(localized: "success.announce_ticket.button"),
+            buttonAction: {
+                store.send(.closeAfterSuccess)
+                dismiss()
+            }
+        )
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding(40)
+        .background(AppColors.background)
+    }
 }
 
 // MARK: - Step Progress View
@@ -131,8 +208,11 @@ struct StepProgressView: View {
     let currentStep: TicketCreationStep
     
     var body: some View {
-        HStack(spacing: 8) {
-            ForEach(TicketCreationStep.allCases, id: \.self) { step in
+        // Filtrar apenas steps com rawValue >= 0 e < 5 (excluir .welcome e .success)
+        let validSteps = TicketCreationStep.allCases.filter { $0.rawValue >= 0 && $0.rawValue < 5 }
+        
+        return HStack(spacing: 8) {
+            ForEach(validSteps, id: \.self) { step in
                 VStack(spacing: 4) {
                     Circle()
                         .fill(stepColor(for: step))
@@ -145,7 +225,7 @@ struct StepProgressView: View {
                     }
                 }
                 
-                if step != TicketCreationStep.allCases.last {
+                if step != validSteps.last {
                     Rectangle()
                         .fill(step.rawValue < currentStep.rawValue ? AppColors.primary : Color.gray.opacity(0.3))
                         .frame(height: 2)

@@ -4,29 +4,35 @@ import Foundation
 // MARK: - Ticket Creation Steps
 
 public enum TicketCreationStep: Int, CaseIterable, Equatable {
+    case welcome = -1     // Tela inicial de boas-vindas
     case details = 0      // Etapa 1: Detalhes (eventId, título, descrição)
     case pricing = 1      // Etapa 2: Preço e Quantidade
     case validity = 2     // Etapa 3: Validade
     case media = 3        // Etapa 4: Mídia (opcional)
     case review = 4       // Etapa 5: Revisão e Publicação
+    case success = 5      // Tela de sucesso após publicação
     
     public var title: String {
         switch self {
+        case .welcome: return "Anunciar Ingresso"
         case .details: return "Detalhes do Ingresso"
         case .pricing: return "Preço e Quantidade"
         case .validity: return "Validade"
         case .media: return "Fotos (Opcional)"
         case .review: return "Revisão"
+        case .success: return "Anunciar Ingresso Está Pronto!"
         }
     }
     
     public var description: String {
         switch self {
+        case .welcome: return "Configure seu ingresso em minutos"
         case .details: return "Informe o evento e os detalhes do ingresso"
         case .pricing: return "Defina o preço e a quantidade disponível"
         case .validity: return "Escolha a data de validade do ingresso"
         case .media: return "Adicione fotos do ingresso (opcional)"
         case .review: return "Revise e publique seu ingresso"
+        case .success: return "Os detalhes do seu ingresso estão configurados"
         }
     }
 }
@@ -36,7 +42,8 @@ public struct AddTicketFeature {
     @ObservableState
     public struct State: Equatable {
         // Step Management
-        public var currentStep: TicketCreationStep = .details
+        public var currentStep: TicketCreationStep = .welcome
+        public var showWelcome: Bool = true
         
         // Ticket Data
         public var ticketName: String = ""
@@ -60,6 +67,8 @@ public struct AddTicketFeature {
         // Step Validation
         public var isCurrentStepValid: Bool {
             switch currentStep {
+            case .welcome:
+                return true // Welcome step não precisa validar
             case .details:
                 return isDetailsStepValid
             case .pricing:
@@ -70,6 +79,8 @@ public struct AddTicketFeature {
                 return true // Mídia é opcional
             case .review:
                 return isFormValid
+            case .success:
+                return true // Success step não precisa validar
             }
         }
         
@@ -111,7 +122,7 @@ public struct AddTicketFeature {
         }
         
         public var canGoBack: Bool {
-            return currentStep != .details
+            return currentStep != .details && currentStep != .welcome
         }
         
         public init(selectedEventId: UUID? = nil) {
@@ -135,6 +146,7 @@ public struct AddTicketFeature {
         case publishTicket
         case publishTicketResponse(Result<Ticket, APIError>)
         case dismissSuccess
+        case closeAfterSuccess
         case setSelectedEventId(UUID?)
         case clearError
     }
@@ -216,6 +228,14 @@ public struct AddTicketFeature {
             // MARK: - Step Navigation
                 
             case .nextStep:
+                // No welcome step, não precisa validar, apenas avançar para details
+                if state.currentStep == .welcome {
+                    state.currentStep = .details
+                    state.showWelcome = false
+                    state.errorMessage = nil
+                    return .none
+                }
+                
                 guard state.isCurrentStepValid else {
                     state.errorMessage = "Por favor, preencha todos os campos obrigatórios"
                     return .none
@@ -307,8 +327,10 @@ public struct AddTicketFeature {
                 state.publishSuccess = true
                 state.errorMessage = nil
                 
-                // Limpar formulário após sucesso
-                state.currentStep = .details
+                // Navegar para tela de sucesso
+                state.currentStep = .success
+                
+                // Limpar formulário após sucesso (será usado na próxima criação)
                 state.ticketName = ""
                 state.price = ""
                 state.originalPrice = ""
@@ -332,6 +354,11 @@ public struct AddTicketFeature {
                 return .none
                 
             case .dismissSuccess:
+                state.publishSuccess = false
+                return .none
+                
+            case .closeAfterSuccess:
+                // Fechar modal - será tratado no onChange do publishSuccess no AddTicketView
                 state.publishSuccess = false
                 return .none
                 
