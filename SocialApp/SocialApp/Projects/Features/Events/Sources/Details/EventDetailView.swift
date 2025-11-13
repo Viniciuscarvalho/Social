@@ -6,7 +6,6 @@ public struct EventDetailView: View {
     let eventId: UUID
     let event: Event? // ✅ Evento opcional para evitar chamada API
     @Environment(\.dismiss) var dismiss
-    @State private var selectedTab: EventDetailTab = .about
     
     public init(store: StoreOf<EventDetailFeature>, eventId: UUID, event: Event? = nil) {
         self.store = store
@@ -41,14 +40,68 @@ public struct EventDetailView: View {
     }
     
     private var loadingView: some View {
-        VStack(spacing: 20) {
-            ProgressView()
-                .scaleEffect(1.5)
-            Text("Carregando evento...")
-                .font(.headline)
-                .foregroundColor(.secondary)
+        ScrollView {
+            VStack(spacing: 0) {
+                // Hero image skeleton
+                Rectangle()
+                    .fill(Color(.systemGray5))
+                    .frame(height: 300)
+                    .shimmer()
+                
+                VStack(alignment: .leading, spacing: 20) {
+                    // Badge skeleton
+                    Capsule()
+                        .fill(Color(.systemGray5))
+                        .frame(width: 100, height: 30)
+                        .shimmer()
+                    
+                    // Title skeleton
+                    VStack(alignment: .leading, spacing: 8) {
+                        Rectangle()
+                            .fill(Color(.systemGray5))
+                            .frame(height: 28)
+                            .shimmer()
+                        
+                        Rectangle()
+                            .fill(Color(.systemGray5))
+                            .frame(width: 200, height: 28)
+                            .shimmer()
+                    }
+                    
+                    // Info cards skeletons
+                    ForEach(0..<3) { _ in
+                        HStack(spacing: 12) {
+                            Circle()
+                                .fill(Color(.systemGray5))
+                                .frame(width: 48, height: 48)
+                                .shimmer()
+                            
+                            VStack(alignment: .leading, spacing: 8) {
+                                Rectangle()
+                                    .fill(Color(.systemGray5))
+                                    .frame(width: 120, height: 16)
+                                    .shimmer()
+                                
+                                Rectangle()
+                                    .fill(Color(.systemGray5))
+                                    .frame(width: 80, height: 12)
+                                    .shimmer()
+                            }
+                            
+                            Spacer()
+                        }
+                        .padding()
+                        .background(
+                            RoundedRectangle(cornerRadius: 12)
+                                .fill(Color(.systemBackground))
+                                .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 2)
+                        )
+                    }
+                }
+                .padding(.horizontal, 20)
+                .padding(.top, 24)
+            }
         }
-        .frame(maxWidth: .infinity, minHeight: 200)
     }
     
     @ViewBuilder
@@ -91,55 +144,63 @@ public struct EventDetailView: View {
                         }
                         
                         // Conteúdo principal
-                        VStack(alignment: .leading, spacing: 20) {
-                            // Nome e data do evento - Responsivo
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text(event.name)
-                                    .font(.system(size: min(geometry.size.width * 0.08, 32), weight: .bold))
-                                    .foregroundColor(.primary)
-                                    .lineLimit(4)
-                                    .minimumScaleFactor(0.8)
-                                
-                                HStack(spacing: 12) {
-                                    HStack(spacing: 6) {
-                                        Image(systemName: "calendar")
-                                            .font(.system(size: 14))
-                                            .foregroundColor(.secondary)
-                                        Text("\(event.dateFormatted)")
-                                            .font(.system(size: 15))
-                                            .foregroundColor(.secondary)
-                                    }
-                                    
-                                    Text("•")
-                                        .foregroundColor(.secondary)
-                                    
-                                    HStack(spacing: 6) {
-                                        Image(systemName: "clock")
-                                            .font(.system(size: 14))
-                                            .foregroundColor(.secondary)
-                                        Text(event.timeRange)
-                                            .font(.system(size: 15))
-                                            .foregroundColor(.secondary)
-                                    }
+                        VStack(alignment: .leading, spacing: 0) {
+                            // Badge da categoria e nome do evento
+                            VStack(alignment: .leading, spacing: 12) {
+                                // Badge da categoria
+                                HStack(spacing: 6) {
+                                    Text(event.category.icon)
+                                        .font(.system(size: 14))
+                                    Text(event.category.displayName)
+                                        .font(.system(size: 13, weight: .medium))
+                                        .foregroundColor(.white)
                                 }
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 8)
+                                .background(
+                                    Capsule()
+                                        .fill(Color.blue)
+                                )
+                                
+                                // Nome do evento
+                                Text(event.name)
+                                    .font(.system(size: 28, weight: .bold))
+                                    .foregroundColor(.primary)
+                                    .lineLimit(3)
                             }
                             .padding(.horizontal, 20)
-                            .padding(.top, 20)
+                            .padding(.top, 24)
+                            .padding(.bottom, 20)
                             
-                            // Tabs customizadas
-                            tabSelector
+                            // Cards de informação
+                            infoCards(event: event)
                             
-                            // Conteúdo das tabs
-                            tabContent(event: event, geometry: geometry)
+                            Divider()
+                                .padding(.vertical, 24)
                             
-                            // Eventos recomendados
-                            if !store.recommendedEvents.isEmpty {
-                                recommendedEventsSection
+                            // Sobre o evento
+                            aboutSection(event: event)
+                            
+                            Divider()
+                                .padding(.vertical, 24)
+                            
+                            // Card do Vendedor
+                            if let seller = store.seller {
+                                sellerCard(seller: seller)
+                                    .padding(.horizontal, 20)
+                                    .padding(.bottom, 24)
                             }
+                            
+                            Divider()
+                                .padding(.vertical, 24)
+                            
+                            // Localização
+                            locationSection(event: event)
                             
                             // Botões de ação
                             actionButtons(event: event)
                                 .padding(.horizontal, 20)
+                                .padding(.top, 32)
                                 .padding(.bottom, 100)
                         }
                     }
@@ -178,123 +239,187 @@ public struct EventDetailView: View {
         .ignoresSafeArea(edges: .bottom)
     }
     
-    private var tabSelector: some View {
-        HStack(spacing: 0) {
-            ForEach(EventDetailTab.allCases, id: \.self) { tab in
-                Button {
-                    withAnimation(.easeInOut(duration: 0.2)) {
-                        selectedTab = tab
-                    }
-                } label: {
-                    VStack(spacing: 8) {
-                        Text(tab.title)
-                            .font(.system(size: 14, weight: selectedTab == tab ? .semibold : .regular))
-                            .foregroundColor(selectedTab == tab ? .primary : .secondary)
-                        
-                        Rectangle()
-                            .fill(selectedTab == tab ? Color.blue : Color.clear)
-                            .frame(height: 2)
-                    }
+    // MARK: - Info Cards (Preço, Data, Localização)
+    
+    @ViewBuilder
+    private func infoCards(event: Event) -> some View {
+        VStack(spacing: 16) {
+            // Card de Preço
+            HStack(spacing: 12) {
+                ZStack {
+                    Circle()
+                        .fill(Color.blue.opacity(0.1))
+                        .frame(width: 48, height: 48)
+                    
+                    Image(systemName: "ticket.fill")
+                        .font(.system(size: 20))
+                        .foregroundColor(.blue)
                 }
-                .frame(maxWidth: .infinity)
+                
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(formatPrice(event.startPrice))
+                        .font(.system(size: 18, weight: .bold))
+                        .foregroundColor(.primary)
+                    
+                    Text(String(localized: "events.detail.price.subtitle"))
+                        .font(.system(size: 13))
+                        .foregroundColor(.secondary)
+                }
+                
+                Spacer()
             }
+            .padding()
+            .frame(maxWidth: .infinity)
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(Color(.systemBackground))
+                    .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 2)
+            )
+            
+            // Card de Data e Hora
+            HStack(spacing: 12) {
+                ZStack {
+                    Circle()
+                        .fill(Color.blue.opacity(0.1))
+                        .frame(width: 48, height: 48)
+                    
+                    Image(systemName: "calendar")
+                        .font(.system(size: 20))
+                        .foregroundColor(.blue)
+                }
+                
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(event.dateFormatted)
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundColor(.primary)
+                    
+                    Text(event.timeRange)
+                        .font(.system(size: 13))
+                        .foregroundColor(.secondary)
+                }
+                
+                Spacer()
+            }
+            .padding()
+            .frame(maxWidth: .infinity)
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(Color(.systemBackground))
+                    .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 2)
+            )
+            
+            // Card de Localização
+            HStack(spacing: 12) {
+                ZStack {
+                    Circle()
+                        .fill(Color.blue.opacity(0.1))
+                        .frame(width: 48, height: 48)
+                    
+                    Image(systemName: "location.fill")
+                        .font(.system(size: 20))
+                        .foregroundColor(.blue)
+                }
+                
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("\(event.location.city), \(event.location.state)")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundColor(.primary)
+                    
+                    Text(event.location.name)
+                        .font(.system(size: 13))
+                        .foregroundColor(.secondary)
+                        .lineLimit(1)
+                }
+                
+                Spacer()
+            }
+            .padding()
+            .frame(maxWidth: .infinity)
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(Color(.systemBackground))
+                    .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 2)
+            )
         }
         .padding(.horizontal, 20)
-        .padding(.top, 16)
     }
     
-    @ViewBuilder
-    private func tabContent(event: Event, geometry: GeometryProxy) -> some View {
-        VStack(alignment: .leading, spacing: 16) {
-            switch selectedTab {
-            case .about:
-                aboutContent(event: event)
-            case .participants:
-                participantsContent()
-            case .location:
-                locationContent(event: event)
-            }
-        }
-        .padding(.horizontal, 20)
-        .padding(.top, 20)
-        .frame(minHeight: geometry.size.height * 0.3)
-        .animation(.easeInOut, value: selectedTab)
-    }
+    // MARK: - About Section
     
     @ViewBuilder
-    private func aboutContent(event: Event) -> some View {
-        VStack(alignment: .leading, spacing: 16) {
+    private func aboutSection(event: Event) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text(String(localized: "events.detail.about.title"))
+                .font(.system(size: 20, weight: .bold))
+                .foregroundColor(.primary)
+            
             if let description = event.description {
                 Text(description)
                     .font(.system(size: 15))
                     .foregroundColor(.secondary)
                     .lineSpacing(6)
             } else {
-                Text("This week, Abel comes back to California to perform his newest studio album, as well as some newest hits. Check him out!")
+                Text(String(localized: "events.detail.about.placeholder"))
                     .font(.system(size: 15))
                     .foregroundColor(.secondary)
                     .lineSpacing(6)
             }
-            
-            // Category
-            HStack(spacing: 8) {
-                Text(event.category.icon)
-                    .font(.system(size: 16))
-                Text(event.category.displayName)
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundColor(.blue)
-            }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 10)
-            .background(
-                RoundedRectangle(cornerRadius: 20)
-                    .fill(Color.blue.opacity(0.1))
-            )
         }
+        .padding(.horizontal, 20)
     }
     
-    @ViewBuilder
-    private func participantsContent() -> some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Participantes")
-                .font(.system(size: 16, weight: .semibold))
-            
-            Text("Esta funcionalidade estará disponível em breve.")
-                .font(.system(size: 15))
-                .foregroundColor(.secondary)
-        }
-    }
+    // MARK: - Location Section
     
     @ViewBuilder
-    private func locationContent(event: Event) -> some View {
+    private func locationSection(event: Event) -> some View {
         VStack(alignment: .leading, spacing: 16) {
-            HStack(spacing: 12) {
-                Image(systemName: "location.fill")
-                    .font(.system(size: 20))
-                    .foregroundColor(.blue)
+            Text(String(localized: "events.detail.location.title"))
+                .font(.system(size: 20, weight: .bold))
+                .foregroundColor(.primary)
+            
+            // Mapa placeholder com pin
+            ZStack {
+                Rectangle()
+                    .fill(
+                        LinearGradient(
+                            colors: [Color.blue.opacity(0.1), Color.purple.opacity(0.1)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .frame(height: 180)
+                    .cornerRadius(12)
                 
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(event.location.name)
-                        .font(.system(size: 16, weight: .semibold))
+                VStack(spacing: 8) {
+                    Image(systemName: "map.fill")
+                        .font(.system(size: 40))
+                        .foregroundColor(.blue.opacity(0.3))
                     
-                    if let address = event.location.address {
-                        Text(address)
-                            .font(.system(size: 14))
-                            .foregroundColor(.secondary)
+                    ZStack {
+                        Circle()
+                            .fill(Color.blue)
+                            .frame(width: 40, height: 40)
+                        
+                        Image(systemName: "mappin.circle.fill")
+                            .font(.system(size: 32))
+                            .foregroundColor(.white)
                     }
-                    
-                    Text("\(event.location.city), \(event.location.state)")
-                        .font(.system(size: 14))
-                        .foregroundColor(.secondary)
                 }
             }
-            .padding()
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(Color(.systemGray6))
-            )
         }
+        .padding(.horizontal, 20)
+    }
+    
+    private func formatPrice(_ price: Double) -> String {
+        if price == 0 {
+            return String(localized: "common.price.free")
+        }
+        
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .currency
+        formatter.currencyCode = "BRL"
+        formatter.locale = Locale(identifier: "pt_BR")
+        return formatter.string(from: NSNumber(value: price)) ?? "R$ \(price)"
     }
     
     @ViewBuilder
@@ -321,9 +446,9 @@ public struct EventDetailView: View {
     @ViewBuilder
     private func actionButtons(event: Event) -> some View {
         VStack(spacing: 12) {
-            // Botão principal - Negociar Ingresso
+            // Botão principal - Negociar Ingresso (navega para lista de vendedores)
             Button {
-                store.send(.negotiateTicket)
+                store.send(.viewAvailableTickets)
             } label: {
                 HStack(spacing: 8) {
                     Image(systemName: "bubble.left.and.bubble.right.fill")
@@ -367,6 +492,83 @@ public struct EventDetailView: View {
         }
     }
     
+    // MARK: - Seller Card
+    
+    @ViewBuilder
+    private func sellerCard(seller: User) -> some View {
+        Button {
+            if let sellerId = UUID(uuidString: seller.id) {
+                store.send(.viewSellerProfile(seller.id))
+            }
+        } label: {
+            HStack(spacing: 12) {
+                // Imagem de perfil
+                AsyncImage(url: URL(string: seller.profileImageURL ?? "")) { image in
+                    image
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                } placeholder: {
+                    ZStack {
+                        Color(.systemGray5)
+                        Image(systemName: "person.fill")
+                            .font(.system(size: 24))
+                            .foregroundColor(.gray)
+                    }
+                }
+                .frame(width: 60, height: 60)
+                .clipShape(RoundedRectangle(cornerRadius: 12))
+                
+                // Informações do vendedor
+                VStack(alignment: .leading, spacing: 6) {
+                    HStack(spacing: 6) {
+                        Text(seller.name)
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundColor(.primary)
+                        
+                        // Badge de verificação (usando cor do tema)
+                        if seller.isVerified {
+                            ZStack {
+                                Circle()
+                                    .fill(Color.green)
+                                    .frame(width: 18, height: 18)
+                                
+                                Image(systemName: "checkmark")
+                                    .font(.system(size: 10, weight: .bold))
+                                    .foregroundColor(.white)
+                            }
+                        }
+                    }
+                    
+                    // Rating (mockado por enquanto, pois User não tem rating)
+                    // Usando cor laranja do sistema para a estrela
+                    HStack(spacing: 4) {
+                        Image(systemName: "star.fill")
+                            .font(.system(size: 12))
+                            .foregroundColor(.orange)
+                        
+                        Text("4.8 (124 avaliações)")
+                            .font(.system(size: 13))
+                            .foregroundColor(.secondary)
+                    }
+                }
+                
+                Spacer()
+                
+                // Ícone de chat (usando cor do tema)
+                Image(systemName: "bubble.left.and.bubble.right.fill")
+                    .font(.system(size: 18))
+                    .foregroundColor(.secondary)
+            }
+            .padding(16)
+            .background(
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(Color(.systemBackground))
+                    .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 2)
+            )
+        }
+        .buttonStyle(PlainButtonStyle())
+    }
+    
     private var errorView: some View {
         VStack(spacing: 20) {
             Image(systemName: "exclamationmark.triangle")
@@ -393,24 +595,6 @@ public struct EventDetailView: View {
     }
 }
 
-// MARK: - Event Detail Tab
-
-enum EventDetailTab: CaseIterable {
-    case about
-    case participants
-    case location
-    
-    var title: String {
-        switch self {
-        case .about:
-            return "ABOUT"
-        case .participants:
-            return "PARTICIPANTS"
-        case .location:
-            return "LOCATION"
-        }
-    }
-}
 
 // MARK: - Recommended Event Small Card
 
@@ -504,5 +688,42 @@ struct RecommendedEventSmallCard: View {
             return Color.green
         }
         return Color.blue
+    }
+}
+
+// MARK: - Shimmer Effect
+
+extension View {
+    func shimmer() -> some View {
+        self.modifier(ShimmerModifier())
+    }
+}
+
+struct ShimmerModifier: ViewModifier {
+    @State private var phase: CGFloat = 0
+    
+    func body(content: Content) -> some View {
+        content
+            .overlay(
+                LinearGradient(
+                    gradient: Gradient(colors: [
+                        .clear,
+                        Color.white.opacity(0.3),
+                        .clear
+                    ]),
+                    startPoint: .leading,
+                    endPoint: .trailing
+                )
+                .offset(x: phase)
+                .mask(content)
+            )
+            .onAppear {
+                withAnimation(
+                    Animation.linear(duration: 1.5)
+                        .repeatForever(autoreverses: false)
+                ) {
+                    phase = UIScreen.main.bounds.width * 2
+                }
+            }
     }
 }

@@ -34,7 +34,12 @@ let project = Project(
             infoPlist: .extendingDefault(with: [
                 "FirebaseAppDelegateProxyEnabled": false,
                 "NSUserNotificationAlertSoundEnabled": false,
-                "CFBundleDevelopmentRegion": "pt-BR"
+                "CFBundleDevelopmentRegion": "pt-BR",
+                "UILaunchScreen": [
+                    "UIImageName": "splash",
+                    "UIImageRespectsSafeAreaInsets": true,
+                    "UIColorName": "AccentColor"
+                ]
             ]),
             sources: [
                 "./SocialApp/Sources/**",

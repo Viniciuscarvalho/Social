@@ -1,764 +1,1497 @@
 {
   "sourceLanguage" : "pt-BR",
   "strings" : {
-    "events.search.title" : {
+    " " : {
+
+    },
+    "-%.0f%%" : {
+
+    },
+    "*Campo obrigatório" : {
+
+    },
+    "%.0f" : {
+
+    },
+    "%@" : {
+
+    },
+    "%@ × %@" : {
       "localizations" : {
         "pt-BR" : {
           "stringUnit" : {
-            "value" : "Buscar"
+            "state" : "new",
+            "value" : "%1$@ × %2$@"
           }
         }
       }
     },
-    "tickets.units.single" : {
+    "%@ eventos" : {
+
+    },
+    "%@ foto(s) anexada(s)" : {
+
+    },
+    "%@, %@" : {
       "localizations" : {
         "pt-BR" : {
           "stringUnit" : {
-            "value" : "ingresso"
+            "state" : "new",
+            "value" : "%1$@, %2$@"
           }
         }
       }
     },
-    "tickets.units.plural" : {
+    "%@/%@" : {
       "localizations" : {
         "pt-BR" : {
           "stringUnit" : {
-            "value" : "ingressos"
+            "state" : "new",
+            "value" : "%1$@/%2$@"
           }
         }
       }
     },
-    "commons.priceRange.title" : {
+    "%@/5 fotos selecionadas" : {
+
+    },
+    "%@/60 caracteres" : {
+
+    },
+    "%@/500 caracteres" : {
+
+    },
+    "%@%%" : {
+
+    },
+    "•" : {
+
+    },
+    "© 2025 SocialApp" : {
+
+    },
+    "+55" : {
+
+    },
+    "🇧🇷" : {
+
+    },
+    "🇧🇷 Real (BRL)" : {
+
+    },
+    "🇪🇺 Euro (EUR)" : {
+
+    },
+    "🇺🇸 Dólar (USD)" : {
+
+    },
+    "$%@" : {
+
+    },
+    "$%@ - $%@" : {
       "localizations" : {
         "pt-BR" : {
           "stringUnit" : {
-            "value" : "PREÇO DO INGRESSO"
+            "state" : "new",
+            "value" : "$%1$@ - $%2$@"
+          }
+        }
+      }
+    },
+    "A data de validade deve ser no futuro" : {
+
+    },
+    "a partir de" : {
+
+    },
+    "A partir de" : {
+
+    },
+    "Adicionar Fotos" : {
+
+    },
+    "Adicionar Mais Fotos" : {
+
+    },
+    "Adicione até 5 fotos para destacar seu ingresso" : {
+
+    },
+    "Adicione detalhes sobre o ingresso..." : {
+
+    },
+    "Alterar Foto do Perfil" : {
+
+    },
+    "Anterior" : {
+
+    },
+    "Ao publicar, você concorda com nossos termos de serviço e política de privacidade." : {
+
+    },
+    "Aparência" : {
+
+    },
+    "Benefícios da Verificação" : {
+
+    },
+    "brand.name" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SocialClub"
+          }
+        }
+      }
+    },
+    "Carregando detalhes..." : {
+
+    },
+    "Carregando imagens..." : {
+
+    },
+    "Carregando ingressos..." : {
+
+    },
+    "Carregando perfil..." : {
+
+    },
+    "Carregando seus ingressos..." : {
+
+    },
+    "CATEGORIES" : {
+
+    },
+    "common.back" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Voltar"
+          }
+        }
+      }
+    },
+    "common.price.free" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gratuito"
           }
         }
       }
     },
     "commons.categories.all" : {
+      "extractionState" : "stale",
       "localizations" : {
         "pt-BR" : {
           "stringUnit" : {
+            "state" : "translated",
             "value" : "Todos"
           }
         }
       }
     },
-    "commons.filter.title" : {
-      "localizations" : {
-        "pt-BR" : {
-          "stringUnit" : {
-            "value" : "Filtrar eventos"
-          }
-        }
-      }
-    },
-    "commons.filter.section.location" : {
-      "localizations" : {
-        "pt-BR" : {
-          "stringUnit" : {
-            "value" : "LOCALIZAÇÃO"
-          }
-        }
-      }
-    },
-    "commons.filter.location.placeholder" : {
-      "localizations" : {
-        "pt-BR" : {
-          "stringUnit" : {
-            "value" : "Cidade, Estado"
-          }
-        }
-      }
-    },
-    "commons.filter.useMyLocation" : {
-      "localizations" : {
-        "pt-BR" : {
-          "stringUnit" : {
-            "value" : "Usar minha localização"
-          }
-        }
-      }
-    },
-    "commons.filter.section.categories" : {
-      "localizations" : {
-        "pt-BR" : {
-          "stringUnit" : {
-            "value" : "CATEGORIAS DE EVENTO"
-          }
-        }
-      }
-    },
     "commons.filter.apply" : {
+      "extractionState" : "stale",
       "localizations" : {
         "pt-BR" : {
           "stringUnit" : {
+            "state" : "translated",
             "value" : "Aplicar filtros"
           }
         }
       }
     },
     "commons.filter.categories.concerts" : {
+      "extractionState" : "stale",
       "localizations" : {
         "pt-BR" : {
           "stringUnit" : {
+            "state" : "translated",
             "value" : "Shows"
           }
         }
       }
     },
-    "commons.filter.categories.movies" : {
-      "localizations" : {
-        "pt-BR" : {
-          "stringUnit" : {
-            "value" : "Filmes"
-          }
-        }
-      }
-    },
     "commons.filter.categories.exhibitions" : {
+      "extractionState" : "stale",
       "localizations" : {
         "pt-BR" : {
           "stringUnit" : {
+            "state" : "translated",
             "value" : "Exposições"
           }
         }
       }
     },
-    "commons.filter.categories.tours" : {
+    "commons.filter.categories.movies" : {
+      "extractionState" : "stale",
       "localizations" : {
         "pt-BR" : {
           "stringUnit" : {
+            "state" : "translated",
+            "value" : "Filmes"
+          }
+        }
+      }
+    },
+    "commons.filter.categories.tours" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
             "value" : "Passeios"
           }
         }
       }
     },
-    "tickets.pricing.preview" : {
+    "commons.filter.location.placeholder" : {
+      "extractionState" : "stale",
       "localizations" : {
         "pt-BR" : {
           "stringUnit" : {
-            "value" : "Resumo"
+            "state" : "translated",
+            "value" : "Cidade, Estado"
           }
         }
       }
     },
-    "tickets.pricing.total" : {
+    "commons.filter.section.categories" : {
+      "extractionState" : "stale",
       "localizations" : {
         "pt-BR" : {
           "stringUnit" : {
-            "value" : "Preço Total"
+            "state" : "translated",
+            "value" : "CATEGORIAS DE EVENTO"
           }
         }
       }
     },
-    "tickets.pricing.perTicket" : {
+    "commons.filter.section.location" : {
+      "extractionState" : "stale",
       "localizations" : {
         "pt-BR" : {
           "stringUnit" : {
-            "value" : "Por ingresso"
+            "state" : "translated",
+            "value" : "LOCALIZAÇÃO"
           }
         }
       }
     },
-    "events.search.placeholder" : {
+    "commons.filter.title" : {
+      "extractionState" : "stale",
       "localizations" : {
         "pt-BR" : {
           "stringUnit" : {
-            "value" : "Buscar..."
+            "state" : "translated",
+            "value" : "Filtrar eventos"
           }
         }
       }
     },
-    "events.search.recentTitle" : {
+    "commons.filter.useMyLocation" : {
+      "extractionState" : "stale",
       "localizations" : {
         "pt-BR" : {
           "stringUnit" : {
-            "value" : "Buscas recentes"
+            "state" : "translated",
+            "value" : "Usar minha localização"
           }
         }
       }
     },
-    "events.search.empty.title" : {
+    "commons.priceRange.title" : {
+      "extractionState" : "stale",
       "localizations" : {
         "pt-BR" : {
           "stringUnit" : {
-            "value" : "Busque por eventos"
+            "state" : "translated",
+            "value" : "PREÇO DO INGRESSO"
           }
         }
       }
     },
-    "events.search.empty.subtitle" : {
+    "Continue" : {
+
+    },
+    "Criado em: %@" : {
+
+    },
+    "Criar Ingresso" : {
+
+    },
+    "Data a definir" : {
+
+    },
+    "Data Personalizada" : {
+
+    },
+    "Desconto de %@%%" : {
+
+    },
+    "Descrição (Opcional)" : {
+
+    },
+    "Dicas para boas fotos:" : {
+
+    },
+    "Documento Enviado!" : {
+
+    },
+    "E-mail Verificado!" : {
+
+    },
+    "emailverify.cta" : {
+      "extractionState" : "stale",
       "localizations" : {
         "pt-BR" : {
           "stringUnit" : {
-            "value" : "Encontre shows, festivais, esportes e mais"
+            "state" : "translated",
+            "value" : "Verificar"
           }
         }
       }
     },
-    "events.search.loading" : {
+    "emailverify.resend.cta" : {
+      "extractionState" : "stale",
       "localizations" : {
         "pt-BR" : {
           "stringUnit" : {
-            "value" : "Buscando..."
+            "state" : "translated",
+            "value" : "Reenviar código"
           }
         }
       }
     },
-    "events.search.noResults" : {
+    "emailverify.resend.prompt" : {
+      "extractionState" : "stale",
       "localizations" : {
         "pt-BR" : {
           "stringUnit" : {
-            "value" : "Nenhum resultado encontrado"
+            "state" : "translated",
+            "value" : "Não recebeu o código?"
           }
         }
       }
     },
-    "events.search.noResults.subtitle" : {
+    "emailverify.subtitle" : {
+      "extractionState" : "stale",
       "localizations" : {
         "pt-BR" : {
           "stringUnit" : {
-            "value" : "Tente buscar com palavras-chave diferentes"
+            "state" : "translated",
+            "value" : "Digite o código que enviamos por SMS para\\n%@"
+          }
+        }
+      }
+    },
+    "emailverify.title" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verifique seu endereço de e-mail"
+          }
+        }
+      }
+    },
+    "Enviando..." : {
+
+    },
+    "Enviar" : {
+
+    },
+    "Enviar Código" : {
+
+    },
+    "Enviar Documento" : {
+
+    },
+    "Envie provas do seu ingresso para validação" : {
+
+    },
+    "Envie uma foto do seu documento para\naumentar sua confiabilidade" : {
+
+    },
+    "Erro ao carregar detalhes" : {
+
+    },
+    "Erro ao carregar evento" : {
+
+    },
+    "Erro ao carregar perfil" : {
+
+    },
+    "Escolher Outra Foto" : {
+
+    },
+    "Esta etapa é opcional" : {
+
+    },
+    "Este vendedor ainda não adicionou uma biografia." : {
+
+    },
+    "Este vendedor não possui ingressos disponíveis no momento" : {
+
+    },
+    "Etapa %@ de %@" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Etapa %1$@ de %2$@"
+          }
+        }
+      }
+    },
+    "Evento" : {
+
+    },
+    "EVENTO" : {
+
+    },
+    "events.detail.about.placeholder" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prepare-se para uma noite eletrizante com apresentações ao vivo, comida, bebida e muito mais!"
+          }
+        }
+      }
+    },
+    "events.detail.about.title" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sobre o evento"
+          }
+        }
+      }
+    },
+    "events.detail.location.title" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Localização"
+          }
+        }
+      }
+    },
+    "events.detail.price.subtitle" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Preço do ingresso depende do pacote"
           }
         }
       }
     },
     "events.price.free" : {
+      "extractionState" : "stale",
       "localizations" : {
         "pt-BR" : {
           "stringUnit" : {
+            "state" : "translated",
             "value" : "Gratuito"
           }
         }
       }
     },
     "events.recommended.title" : {
+      "extractionState" : "stale",
       "localizations" : {
         "pt-BR" : {
           "stringUnit" : {
+            "state" : "translated",
             "value" : "Eventos recomendados"
           }
         }
       }
-    }
-    "brand.name" : {
+    },
+    "events.search.empty.subtitle" : {
+      "extractionState" : "stale",
       "localizations" : {
         "pt-BR" : {
           "stringUnit" : {
-            "value" : "SocialClub"
+            "state" : "translated",
+            "value" : "Encontre shows, festivais, esportes e mais"
           }
         }
       }
     },
-    "welcome.subtitle" : {
+    "events.search.empty.title" : {
+      "extractionState" : "stale",
       "localizations" : {
         "pt-BR" : {
           "stringUnit" : {
-            "value" : "Troque seus ingressos facilmente"
+            "state" : "translated",
+            "value" : "Busque por eventos"
           }
         }
       }
     },
-    "welcome.createAccount" : {
+    "events.search.loading" : {
+      "extractionState" : "stale",
       "localizations" : {
         "pt-BR" : {
           "stringUnit" : {
-            "value" : "Criar conta"
+            "state" : "translated",
+            "value" : "Buscando..."
           }
         }
       }
     },
-    "welcome.alreadyHaveAccount" : {
+    "events.search.noResults" : {
+      "extractionState" : "stale",
       "localizations" : {
         "pt-BR" : {
           "stringUnit" : {
-            "value" : "Já tem uma conta? "
+            "state" : "translated",
+            "value" : "Nenhum resultado encontrado"
           }
         }
       }
     },
-    "welcome.signIn" : {
+    "events.search.noResults.subtitle" : {
+      "extractionState" : "stale",
       "localizations" : {
         "pt-BR" : {
           "stringUnit" : {
-            "value" : "Entrar"
+            "state" : "translated",
+            "value" : "Tente buscar com palavras-chave diferentes"
           }
         }
       }
     },
-    "onboarding.page1.title" : {
+    "events.search.placeholder" : {
+      "extractionState" : "stale",
       "localizations" : {
         "pt-BR" : {
           "stringUnit" : {
-            "value" : "Bem-vindo ao SocialClub"
+            "state" : "translated",
+            "value" : "Buscar..."
           }
         }
       }
     },
-    "onboarding.page1.subtitle" : {
+    "events.search.recentTitle" : {
+      "extractionState" : "stale",
       "localizations" : {
         "pt-BR" : {
           "stringUnit" : {
-            "value" : "Seu assistente inteligente para descobrir eventos inesquecíveis perto de você e negociar ingressos."
+            "state" : "translated",
+            "value" : "Buscas recentes"
           }
         }
       }
     },
-    "onboarding.page2.title" : {
+    "events.search.title" : {
+      "extractionState" : "stale",
       "localizations" : {
         "pt-BR" : {
           "stringUnit" : {
-            "value" : "Crie ingressos em segundos"
+            "state" : "translated",
+            "value" : "Buscar"
           }
         }
       }
     },
-    "onboarding.page2.subtitle" : {
-      "localizations" : {
-        "pt-BR" : {
-          "stringUnit" : {
-            "value" : "Conte o que precisa: nossa IA monta o cronograma e sugere locais."
-          }
-        }
-      }
+    "Explore eventos" : {
+
     },
-    "onboarding.page3.title" : {
-      "localizations" : {
-        "pt-BR" : {
-          "stringUnit" : {
-            "value" : "Participe de eventos com mais inteligência"
-          }
-        }
-      }
+    "Favoritado em %@" : {
+
     },
-    "onboarding.page3.subtitle" : {
-      "localizations" : {
-        "pt-BR" : {
-          "stringUnit" : {
-            "value" : "Conecte-se com o público certo. Troque seus ingressos com facilidade."
-          }
-        }
-      }
+    "Formato inválido" : {
+
     },
-    "onboarding.skip" : {
-      "localizations" : {
-        "pt-BR" : {
-          "stringUnit" : {
-            "value" : "Pular"
-          }
-        }
-      }
+    "Formato inválido. Use: 120,00 ou 120.00" : {
+
     },
-    "onboarding.next" : {
-      "localizations" : {
-        "pt-BR" : {
-          "stringUnit" : {
-            "value" : "Avançar"
-          }
-        }
-      }
+    "Fotos" : {
+
+    },
+    "Fotos do Ingresso" : {
+
+    },
+    "Fuso horário: %@" : {
+
+    },
+    "Grátis" : {
+
+    },
+    "Hey! %@" : {
+
+    },
+    "HOJE" : {
+
+    },
+    "Informações Importantes" : {
+
+    },
+    "Ingresso expirado" : {
+
+    },
+    "Ingresso válido até:" : {
+
+    },
+    "Ingressos" : {
+
+    },
+    "Let's make your day eventful" : {
+
+    },
+    "Lista de Ingressos" : {
+
+    },
+    "Moeda" : {
+
+    },
+    "Motivo: %@" : {
+
+    },
+    "Não é seu ingresso" : {
+
+    },
+    "Não há ingressos disponíveis para este evento no momento." : {
+
+    },
+    "Não recebeu o código?" : {
+
+    },
+    "Negociações" : {
+
+    },
+    "Negociar" : {
+
+    },
+    "Negociar Ingresso" : {
+
+    },
+    "Nenhum evento disponível" : {
+
+    },
+    "Nenhum favorito" : {
+
+    },
+    "Nenhum Ingresso Disponível" : {
+
+    },
+    "Nenhum ingresso encontrado" : {
+
+    },
+    "Nenhum Ingresso Encontrado" : {
+
+    },
+    "Nenhum Ingresso Publicado" : {
+
+    },
+    "Nível: %@" : {
+
+    },
+    "Número de Telefone" : {
+
+    },
+    "O preço original deve ser maior que o preço" : {
+
     },
     "onboarding.getStarted" : {
+      "extractionState" : "stale",
       "localizations" : {
         "pt-BR" : {
           "stringUnit" : {
+            "state" : "translated",
             "value" : "Começar"
           }
         }
       }
     },
-    "common.back" : {
+    "onboarding.next" : {
+      "extractionState" : "stale",
       "localizations" : {
         "pt-BR" : {
           "stringUnit" : {
-            "value" : "Voltar"
+            "state" : "translated",
+            "value" : "Avançar"
           }
         }
       }
     },
-    "signup.title" : {
+    "onboarding.page1.subtitle" : {
+      "extractionState" : "stale",
       "localizations" : {
         "pt-BR" : {
           "stringUnit" : {
-            "value" : "Criar conta"
+            "state" : "translated",
+            "value" : "Seu assistente inteligente para descobrir eventos inesquecíveis perto de você e negociar ingressos."
           }
         }
       }
     },
-    "signup.subtitle" : {
+    "onboarding.page1.title" : {
+      "extractionState" : "stale",
       "localizations" : {
         "pt-BR" : {
           "stringUnit" : {
-            "value" : "Olá! Bem-vindo, preencha seus dados"
+            "state" : "translated",
+            "value" : "Bem-vindo ao SocialClub"
           }
         }
       }
     },
-    "signup.firstName.placeholder" : {
+    "onboarding.page2.subtitle" : {
+      "extractionState" : "stale",
       "localizations" : {
         "pt-BR" : {
           "stringUnit" : {
-            "value" : "Digite seu nome"
+            "state" : "translated",
+            "value" : "Conte o que precisa: nossa IA monta o cronograma e sugere locais."
           }
         }
       }
     },
-    "signup.lastName.placeholder" : {
+    "onboarding.page2.title" : {
+      "extractionState" : "stale",
       "localizations" : {
         "pt-BR" : {
           "stringUnit" : {
-            "value" : "Digite seu sobrenome"
+            "state" : "translated",
+            "value" : "Crie ingressos em segundos"
           }
         }
       }
     },
-    "signup.phone.placeholder" : {
+    "onboarding.page3.subtitle" : {
+      "extractionState" : "stale",
       "localizations" : {
         "pt-BR" : {
           "stringUnit" : {
-            "value" : "Digite seu telefone"
+            "state" : "translated",
+            "value" : "Conecte-se com o público certo. Troque seus ingressos com facilidade."
           }
         }
       }
     },
-    "signup.email.placeholder" : {
+    "onboarding.page3.title" : {
+      "extractionState" : "stale",
       "localizations" : {
         "pt-BR" : {
           "stringUnit" : {
-            "value" : "Digite seu e-mail"
+            "state" : "translated",
+            "value" : "Participe de eventos com mais inteligência"
           }
         }
       }
     },
-    "signup.email.invalid" : {
+    "onboarding.skip" : {
+      "extractionState" : "stale",
       "localizations" : {
         "pt-BR" : {
           "stringUnit" : {
-            "value" : "Digite um e-mail válido"
+            "state" : "translated",
+            "value" : "Pular"
           }
         }
       }
     },
-    "signup.password.placeholder" : {
-      "localizations" : {
-        "pt-BR" : {
-          "stringUnit" : {
-            "value" : "Digite a senha"
-          }
-        }
-      }
+    "Ops! Algo deu errado" : {
+
     },
-    "signup.password.invalid" : {
-      "localizations" : {
-        "pt-BR" : {
-          "stringUnit" : {
-            "value" : "Digite uma senha válida"
-          }
-        }
-      }
+    "Os eventos que você favoritar aparecerão aqui" : {
+
     },
-    "signup.confirm.placeholder" : {
-      "localizations" : {
-        "pt-BR" : {
-          "stringUnit" : {
-            "value" : "Confirme a senha"
-          }
-        }
-      }
+    "Outros eventos recomendados" : {
+
     },
-    "signup.confirm.mismatch" : {
-      "localizations" : {
-        "pt-BR" : {
-          "stringUnit" : {
-            "value" : "As senhas não coincidem"
-          }
-        }
-      }
+    "Para mostrar desconto" : {
+
     },
-    "signup.cta" : {
-      "localizations" : {
-        "pt-BR" : {
-          "stringUnit" : {
-            "value" : "Criar conta"
-          }
-        }
-      }
+    "POPULAR" : {
+
     },
-    "signup.link.haveAccount" : {
-      "localizations" : {
-        "pt-BR" : {
-          "stringUnit" : {
-            "value" : "Já tem uma conta?"
-          }
-        }
-      }
+    "Popular Event" : {
+
     },
-    "signup.link.signIn" : {
-      "localizations" : {
-        "pt-BR" : {
-          "stringUnit" : {
-            "value" : "Entrar"
-          }
-        }
-      }
+    "Preço" : {
+
     },
-    "signin.title" : {
-      "localizations" : {
-        "pt-BR" : {
-          "stringUnit" : {
-            "value" : "Entrar"
-          }
-        }
-      }
+    "Preço Original (Opcional)" : {
+
     },
-    "signin.subtitle" : {
-      "localizations" : {
-        "pt-BR" : {
-          "stringUnit" : {
-            "value" : "Vamos te colocar de volta."
-          }
-        }
-      }
+    "Preço Total" : {
+
     },
-    "signin.email.placeholder" : {
-      "localizations" : {
-        "pt-BR" : {
-          "stringUnit" : {
-            "value" : "Digite seu e-mail"
-          }
-        }
-      }
+    "Preço: %@" : {
+
     },
-    "signin.email.invalid" : {
-      "localizations" : {
-        "pt-BR" : {
-          "stringUnit" : {
-            "value" : "Digite um e-mail válido"
-          }
-        }
-      }
+    "Progresso" : {
+
     },
-    "signin.password.placeholder" : {
-      "localizations" : {
-        "pt-BR" : {
-          "stringUnit" : {
-            "value" : "Digite a senha"
-          }
-        }
-      }
+    "Próximo" : {
+
     },
-    "signin.forgotPassword" : {
-      "localizations" : {
-        "pt-BR" : {
-          "stringUnit" : {
-            "value" : "Esqueceu a senha"
-          }
-        }
-      }
+    "Publicar Ingresso" : {
+
     },
-    "signin.cta" : {
-      "localizations" : {
-        "pt-BR" : {
-          "stringUnit" : {
-            "value" : "Entrar"
-          }
-        }
-      }
+    "Pular" : {
+
     },
-    "signin.orWith" : {
-      "localizations" : {
-        "pt-BR" : {
-          "stringUnit" : {
-            "value" : "Ou entre com"
-          }
-        }
-      }
+    "Quantidade Disponível" : {
+
     },
-    "signin.google" : {
-      "localizations" : {
-        "pt-BR" : {
-          "stringUnit" : {
-            "value" : "Google"
-          }
-        }
-      }
+    "R$" : {
+
+    },
+    "R$ %.0f" : {
+
+    },
+    "R$ %.2f" : {
+
+    },
+    "R$ %@" : {
+
+    },
+    "Recomendado" : {
+
+    },
+    "Recommended Events" : {
+
+    },
+    "Reenviar" : {
+
+    },
+    "Reenviar código em %@" : {
+
+    },
+    "Sair" : {
+
+    },
+    "Score: %@" : {
+
+    },
+    "Search..." : {
+
+    },
+    "Seguidores" : {
+
+    },
+    "Seguindo" : {
+
+    },
+    "Seleção Rápida" : {
+
+    },
+    "Selecionar Foto" : {
+
+    },
+    "Selecione um evento" : {
+
+    },
+    "Select your Interests" : {
+
+    },
+    "Seu documento está em análise.\nVocê será notificado em breve." : {
+
+    },
+    "Seu número foi verificado com sucesso" : {
+
     },
     "signin.apple" : {
+      "extractionState" : "stale",
       "localizations" : {
         "pt-BR" : {
           "stringUnit" : {
+            "state" : "translated",
             "value" : "Apple"
           }
         }
       }
     },
-    "signin.link.noAccount" : {
+    "signin.confirmNewPassword.placeholder" : {
+      "extractionState" : "stale",
       "localizations" : {
         "pt-BR" : {
           "stringUnit" : {
+            "state" : "translated",
+            "value" : "Confirme a nova senha"
+          }
+        }
+      }
+    },
+    "signin.create.subtitle" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Defina uma senha forte para proteger sua conta."
+          }
+        }
+      }
+    },
+    "signin.create.title" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Criar nova senha"
+          }
+        }
+      }
+    },
+    "signin.cta" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Entrar"
+          }
+        }
+      }
+    },
+    "signin.email.invalid" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Digite um e-mail válido"
+          }
+        }
+      }
+    },
+    "signin.email.placeholder" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Digite seu e-mail"
+          }
+        }
+      }
+    },
+    "signin.forgotPassword" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esqueceu a senha"
+          }
+        }
+      }
+    },
+    "signin.google" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Google"
+          }
+        }
+      }
+    },
+    "signin.link.noAccount" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
             "value" : "Não tem uma conta?"
           }
         }
       }
     },
     "signin.link.signUp" : {
+      "extractionState" : "stale",
       "localizations" : {
         "pt-BR" : {
           "stringUnit" : {
+            "state" : "translated",
             "value" : "Criar conta"
           }
         }
       }
     },
-    "signin.reset.title" : {
+    "signin.newPassword.placeholder" : {
+      "extractionState" : "stale",
       "localizations" : {
         "pt-BR" : {
           "stringUnit" : {
+            "state" : "translated",
+            "value" : "Digite a nova senha"
+          }
+        }
+      }
+    },
+    "signin.orWith" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ou entre com"
+          }
+        }
+      }
+    },
+    "signin.password.placeholder" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Digite a senha"
+          }
+        }
+      }
+    },
+    "signin.reset.continue" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Continuar"
+          }
+        }
+      }
+    },
+    "signin.reset.cta" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
             "value" : "Redefinir senha"
           }
         }
       }
     },
     "signin.reset.subtitle" : {
+      "extractionState" : "stale",
       "localizations" : {
         "pt-BR" : {
           "stringUnit" : {
+            "state" : "translated",
             "value" : "Digite seu e-mail para receber um link de redefinição."
           }
         }
       }
     },
-    "signin.reset.continue" : {
+    "signin.reset.title" : {
+      "extractionState" : "stale",
       "localizations" : {
         "pt-BR" : {
           "stringUnit" : {
-            "value" : "Continuar"
-          }
-        }
-      }
-    },
-    "signin.create.title" : {
-      "localizations" : {
-        "pt-BR" : {
-          "stringUnit" : {
-            "value" : "Criar nova senha"
-          }
-        }
-      }
-    },
-    "signin.create.subtitle" : {
-      "localizations" : {
-        "pt-BR" : {
-          "stringUnit" : {
-            "value" : "Defina uma senha forte para proteger sua conta."
-          }
-        }
-      }
-    },
-    "signin.newPassword.placeholder" : {
-      "localizations" : {
-        "pt-BR" : {
-          "stringUnit" : {
-            "value" : "Digite a nova senha"
-          }
-        }
-      }
-    },
-    "signin.confirmNewPassword.placeholder" : {
-      "localizations" : {
-        "pt-BR" : {
-          "stringUnit" : {
-            "value" : "Confirme a nova senha"
-          }
-        }
-      }
-    },
-    "signin.reset.cta" : {
-      "localizations" : {
-        "pt-BR" : {
-          "stringUnit" : {
+            "state" : "translated",
             "value" : "Redefinir senha"
           }
         }
       }
     },
-    "signin.success.title" : {
+    "signin.subtitle" : {
+      "extractionState" : "stale",
       "localizations" : {
         "pt-BR" : {
           "stringUnit" : {
-            "value" : "Sucesso"
-          }
-        }
-      }
-    },
-    "signin.success.subtitle" : {
-      "localizations" : {
-        "pt-BR" : {
-          "stringUnit" : {
-            "value" : "Sua nova senha foi definida com sucesso!"
+            "state" : "translated",
+            "value" : "Vamos te colocar de volta."
           }
         }
       }
     },
     "signin.success.done" : {
+      "extractionState" : "stale",
       "localizations" : {
         "pt-BR" : {
           "stringUnit" : {
+            "state" : "translated",
             "value" : "Concluir"
           }
         }
       }
     },
-    "emailverify.title" : {
+    "signin.success.subtitle" : {
+      "extractionState" : "stale",
       "localizations" : {
         "pt-BR" : {
           "stringUnit" : {
-            "value" : "Verifique seu endereço de e-mail"
+            "state" : "translated",
+            "value" : "Sua nova senha foi definida com sucesso!"
           }
         }
       }
     },
-    "emailverify.subtitle" : {
+    "signin.success.title" : {
+      "extractionState" : "stale",
       "localizations" : {
         "pt-BR" : {
           "stringUnit" : {
-            "value" : "Digite o código que enviamos por SMS para\\n%@"
+            "state" : "translated",
+            "value" : "Sucesso"
           }
         }
       }
     },
-    "emailverify.resend.prompt" : {
+    "signin.title" : {
+      "extractionState" : "stale",
       "localizations" : {
         "pt-BR" : {
           "stringUnit" : {
-            "value" : "Não recebeu o código?"
+            "state" : "translated",
+            "value" : "Entrar"
           }
         }
       }
     },
-    "emailverify.resend.cta" : {
+    "signup.confirm.mismatch" : {
+      "extractionState" : "stale",
       "localizations" : {
         "pt-BR" : {
           "stringUnit" : {
-            "value" : "Reenviar código"
+            "state" : "translated",
+            "value" : "As senhas não coincidem"
           }
         }
       }
     },
-    "emailverify.cta" : {
+    "signup.confirm.placeholder" : {
+      "extractionState" : "stale",
       "localizations" : {
         "pt-BR" : {
           "stringUnit" : {
-            "value" : "Verificar"
+            "state" : "translated",
+            "value" : "Confirme a senha"
+          }
+        }
+      }
+    },
+    "signup.cta" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Criar conta"
+          }
+        }
+      }
+    },
+    "signup.email.invalid" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Digite um e-mail válido"
+          }
+        }
+      }
+    },
+    "signup.email.placeholder" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Digite seu e-mail"
+          }
+        }
+      }
+    },
+    "signup.firstName.placeholder" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Digite seu nome"
+          }
+        }
+      }
+    },
+    "signup.lastName.placeholder" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Digite seu sobrenome"
+          }
+        }
+      }
+    },
+    "signup.link.haveAccount" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Já tem uma conta?"
+          }
+        }
+      }
+    },
+    "signup.link.signIn" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Entrar"
+          }
+        }
+      }
+    },
+    "signup.password.invalid" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Digite uma senha válida"
+          }
+        }
+      }
+    },
+    "signup.password.placeholder" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Digite a senha"
+          }
+        }
+      }
+    },
+    "signup.phone.placeholder" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Digite seu telefone"
+          }
+        }
+      }
+    },
+    "signup.subtitle" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Olá! Bem-vindo, preencha seus dados"
+          }
+        }
+      }
+    },
+    "signup.title" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Criar conta"
+          }
+        }
+      }
+    },
+    "Sua conta foi verificada com sucesso" : {
+
+    },
+    "Telefone Verificado!" : {
+
+    },
+    "Tentar Novamente" : {
+
+    },
+    "Ticket Information" : {
+
+    },
+    "tickets.pricing.perTicket" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Por ingresso"
+          }
+        }
+      }
+    },
+    "tickets.pricing.preview" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Resumo"
+          }
+        }
+      }
+    },
+    "tickets.pricing.total" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Preço Total"
+          }
+        }
+      }
+    },
+    "tickets.units.plural" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ingressos"
+          }
+        }
+      }
+    },
+    "tickets.units.single" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ingresso"
+          }
+        }
+      }
+    },
+    "Tipo de Documento" : {
+
+    },
+    "Tipo de Ingresso" : {
+
+    },
+    "Título do Ingresso" : {
+
+    },
+    "Toque para escolher da galeria" : {
+
+    },
+    "Toque para selecionar até 5 imagens" : {
+
+    },
+    "Validação Pendente" : {
+
+    },
+    "Validate Ticket" : {
+
+    },
+    "Válido até: %@" : {
+
+    },
+    "Valor Total" : {
+
+    },
+    "Vendedor" : {
+
+    },
+    "Vendido com sucesso!" : {
+
+    },
+    "Verificação da Conta" : {
+
+    },
+    "Verificação de Conta" : {
+
+    },
+    "Verificação de Documento" : {
+
+    },
+    "Verificado" : {
+
+    },
+    "Verificando..." : {
+
+    },
+    "Versão 1.0.0" : {
+
+    },
+    "View all" : {
+
+    },
+    "Visível para compradores" : {
+
+    },
+    "Você ainda não possui ingressos para vender.\nVisite a aba principal para criar seus ingressos!" : {
+
+    },
+    "Voltar" : {
+
+    },
+    "welcome.alreadyHaveAccount" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Já tem uma conta? "
+          }
+        }
+      }
+    },
+    "welcome.createAccount" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Criar conta"
+          }
+        }
+      }
+    },
+    "welcome.signIn" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Entrar"
+          }
+        }
+      }
+    },
+    "welcome.subtitle" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Troque seus ingressos facilmente"
           }
         }
       }
     }
   },
-  "version" : "1.0",
-  "author" : "Xcode"
+  "version" : "1.0"
 }
-

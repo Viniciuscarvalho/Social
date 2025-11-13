@@ -39,3 +39,5 @@ Padronizar todo texto de UI via String Catalog (`Localizable.xcstrings`) com idi
 - Teste variações de tamanho de texto e quebras de linha.
 
 
+
+

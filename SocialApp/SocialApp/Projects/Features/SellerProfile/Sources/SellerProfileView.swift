@@ -164,7 +164,7 @@ public struct SellerProfileView: View {
         let currentUserId = UserDefaults.standard.string(forKey: "currentUserId")
         // ✅ CRÍTICO: Verificar se sellerId está disponível e corresponde ao usuário atual
         let sellerId = store.sellerId ?? store.seller?.id ?? ""
-        let isOwnProfile = ((currentUserId?.isEmpty) == nil) && !sellerId.isEmpty && currentUserId == sellerId
+        let isOwnProfile = (!sellerId.isEmpty) && (currentUserId == sellerId)
         
         return HStack(spacing: 12) {
             // Botão Seguir - só aparece se não for o próprio perfil
@@ -365,108 +365,126 @@ struct SellerTicketCard: View {
     let ticketWithEvent: TicketWithEvent
     
     var body: some View {
-        HStack(spacing: 12) {
-            // Imagem do evento
-            AsyncImage(url: URL(string: ticketWithEvent.event.imageURL ?? "")) { image in
-                image
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-            } placeholder: {
-                Rectangle()
-                    .fill(Color.gray.opacity(0.3))
-                    .overlay(
-                        Image(systemName: "photo")
-                            .foregroundColor(.gray)
-                    )
-            }
-            .frame(width: 80, height: 100)
-            .clipShape(RoundedRectangle(cornerRadius: 12))
-            .overlay(
-                // Badge "Free" ou preço
-                Group {
-                    if ticketWithEvent.ticket.price == 0 {
-                        Text("Grátis")
-                            .font(.system(size: 12, weight: .bold))
-                            .foregroundColor(.white)
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 4)
-                            .background(Color.green)
-                            .cornerRadius(8)
-                    } else {
-                        Text("$\(Int(ticketWithEvent.ticket.price))")
-                            .font(.system(size: 12, weight: .bold))
-                            .foregroundColor(.white)
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 4)
-                            .background(
-                                LinearGradient(
-                                    colors: [Color.blue, Color.purple],
-                                    startPoint: .leading,
-                                    endPoint: .trailing
-                                )
+        ZStack {
+            // Cartão com perfuração simulada
+            HStack(spacing: 0) {
+                // Lado esquerdo com informações e imagem
+                HStack(spacing: 12) {
+                    // Imagem do evento
+                    AsyncImage(url: URL(string: ticketWithEvent.event.imageURL ?? "")) { image in
+                        image
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                    } placeholder: {
+                        Rectangle()
+                            .fill(Color.gray.opacity(0.3))
+                            .overlay(
+                                Image(systemName: "photo")
+                                    .foregroundColor(.gray)
                             )
-                            .cornerRadius(8)
                     }
+                    .frame(width: 80, height: 100)
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                    .overlay(
+                        Group {
+                            if ticketWithEvent.ticket.price == 0 {
+                                Text("Grátis")
+                                    .font(.system(size: 12, weight: .bold))
+                                    .foregroundColor(.white)
+                                    .padding(.horizontal, 8)
+                                    .padding(.vertical, 4)
+                                    .background(Color.green)
+                                    .cornerRadius(8)
+                            } else {
+                                Text("R$\(Int(ticketWithEvent.ticket.price))")
+                                    .font(.system(size: 12, weight: .bold))
+                                    .foregroundColor(.white)
+                                    .padding(.horizontal, 8)
+                                    .padding(.vertical, 4)
+                                    .background(
+                                        LinearGradient(
+                                            colors: [Color.blue, Color.purple],
+                                            startPoint: .leading,
+                                            endPoint: .trailing
+                                        )
+                                    )
+                                    .cornerRadius(8)
+                            }
+                        }
+                        .padding(6),
+                        alignment: .topLeading
+                    )
+                    
+                    // Informações do ingresso
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(ticketWithEvent.event.name)
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundColor(.primary)
+                            .lineLimit(2)
+                        
+                        HStack(spacing: 4) {
+                            Image(systemName: "calendar")
+                                .font(.system(size: 12))
+                                .foregroundColor(.secondary)
+                            
+                            if let eventDate = ticketWithEvent.event.eventDate {
+                                Text(eventDate, style: .date)
+                                    .font(.system(size: 12))
+                                    .foregroundColor(.secondary)
+                            } else {
+                                Text("Data a definir")
+                                    .font(.system(size: 12))
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                        
+                        HStack(spacing: 4) {
+                            Image(systemName: "location.fill")
+                                .font(.system(size: 12))
+                                .foregroundColor(.secondary)
+                            
+                            Text(ticketWithEvent.event.location.address ?? ticketWithEvent.event.location.name)
+                                .font(.system(size: 12))
+                                .foregroundColor(.secondary)
+                                .lineLimit(1)
+                        }
+                    }
+                    
+                    Spacer()
                 }
-                .padding(6),
-                alignment: .topLeading
+                .padding(12)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                
+                // Linha perfurada
+                Rectangle()
+                    .fill(Color(.systemGray5))
+                    .frame(width: 1)
+                    .overlay(
+                        VStack(spacing: 6) {
+                            ForEach(0..<10) { _ in
+                                Circle()
+                                    .fill(Color(.systemBackground))
+                                    .frame(width: 3, height: 3)
+                            }
+                        }
+                    )
+                
+                // Lado direito com QR
+                ZStack {
+                    RoundedRectangle(cornerRadius: 0)
+                        .fill(Color(.systemGray6))
+                    Image(systemName: "qrcode")
+                        .font(.system(size: 28, weight: .regular))
+                        .foregroundColor(.gray)
+                }
+                .frame(width: 88)
+            }
+            .background(
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(Color(.systemBackground))
             )
-            
-            // Informações do ingresso
-            VStack(alignment: .leading, spacing: 6) {
-                // Nome do evento
-                Text(ticketWithEvent.event.name)
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundColor(.primary)
-                    .lineLimit(2)
-                
-                // Data e hora
-                HStack(spacing: 4) {
-                    Image(systemName: "calendar")
-                        .font(.system(size: 12))
-                        .foregroundColor(.secondary)
-                    
-                    if let eventDate = ticketWithEvent.event.eventDate {
-                        Text(eventDate, style: .date)
-                            .font(.system(size: 12))
-                            .foregroundColor(.secondary)
-                    } else {
-                        Text("Data a definir")
-                            .font(.system(size: 12))
-                            .foregroundColor(.secondary)
-                    }
-                }
-                
-                // Local
-                HStack(spacing: 4) {
-                    Image(systemName: "location.fill")
-                        .font(.system(size: 12))
-                        .foregroundColor(.secondary)
-                    
-                    Text(ticketWithEvent.event.location.address ?? ticketWithEvent.event.location.name)
-                        .font(.system(size: 12))
-                        .foregroundColor(.secondary)
-                        .lineLimit(1)
-                }
-            }
-            
-            Spacer()
-            
-            // Botão de favorito
-            Button {
-                // TODO: Implementar favoritar
-            } label: {
-                Image("unfavorited", bundle: Bundle.main)
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .frame(width: 20, height: 20)
-                    .foregroundColor(.blue)
-            }
-            .buttonStyle(PlainButtonStyle())
+            .clipShape(RoundedRectangle(cornerRadius: 16))
+            .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 2)
         }
-        .padding(12)
-        .background(Color(.systemBackground))
-        .cornerRadius(16)
-        .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 2)
     }
 }

@@ -43,3 +43,5 @@ Fonte: varredura automática por padrões comuns (Text, Button, Label, navigatio
 
 > Observação: Há ocorrências em português e inglês — objetivo é consolidar tudo para pt-BR via `String(localized:)`.
 
+
+

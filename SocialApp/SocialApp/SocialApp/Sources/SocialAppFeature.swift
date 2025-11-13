@@ -612,6 +612,13 @@ public struct SocialAppFeature {
             }
             return .none
             
+        case let .eventDetailFeature(.viewSellerProfile(sellerId)):
+            // Navegar para o perfil do vendedor
+            if let sellerUUID = UUID(uuidString: sellerId) {
+                state.selectedSellerId = sellerUUID
+            }
+            return .none
+            
         case .eventDetailFeature:
             // Outras event detail actions são tratadas internamente
             return .none

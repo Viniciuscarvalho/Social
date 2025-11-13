@@ -4,25 +4,37 @@ import SwiftUI
 public struct SocialAppView: View {
     @Bindable var store: StoreOf<SocialAppFeature>
     @Environment(ThemeManager.self) private var themeManager
+    @State private var showingSplash = true
     
     public init(store: StoreOf<SocialAppFeature>) {
         self.store = store
     }
     
     public var body: some View {
-        Group {
-            if store.isAuthenticated && store.currentUser != nil {
-                MainTabView(store: store)
-                    .onAppear {
-                        print("🏠 SocialAppView: MainTabView apareceu (usuário autenticado)")
-                    }
-            } else {
-                AuthenticationView(store: store)
-                    .onAppear {
-                        print("🔐 SocialAppView: AuthenticationView apareceu (usuário não autenticado)")
-                        print("   • store.isAuthenticated: \(store.isAuthenticated)")
-                        print("   • store.currentUser: \(store.currentUser?.name ?? "nil")")
-                    }
+        ZStack {
+            // Conteúdo principal
+            Group {
+                if store.isAuthenticated && store.currentUser != nil {
+                    MainTabView(store: store)
+                        .onAppear {
+                            print("🏠 SocialAppView: MainTabView apareceu (usuário autenticado)")
+                        }
+                } else {
+                    AuthenticationView(store: store)
+                        .onAppear {
+                            print("🔐 SocialAppView: AuthenticationView apareceu (usuário não autenticado)")
+                            print("   • store.isAuthenticated: \(store.isAuthenticated)")
+                            print("   • store.currentUser: \(store.currentUser?.name ?? "nil")")
+                        }
+                }
+            }
+            .opacity(showingSplash ? 0 : 1)
+            
+            // Splash sobreposto
+            if showingSplash {
+                SplashView()
+                    .transition(.opacity)
+                    .zIndex(1)
             }
         }
         .onAppear {
@@ -30,6 +42,14 @@ public struct SocialAppView: View {
             store.send(.onAppear)
             // Configurar listeners de NotificationCenter para sincronização global
             setupTicketSyncListeners(store: store)
+            
+            // Mostrar splash por 2 segundos
+            Task {
+                try? await Task.sleep(nanoseconds: 2_000_000_000) // 2 segundos
+                withAnimation(.easeOut(duration: 0.3)) {
+                    showingSplash = false
+                }
+            }
         }
         .preferredColorScheme(themeManager.colorScheme)
     }

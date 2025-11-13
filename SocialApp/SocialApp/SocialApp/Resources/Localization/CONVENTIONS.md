@@ -8,3 +8,5 @@
 - Interpolação/plural: definir variáveis e regras no `.xcstrings`.
 - Manter chaves curtas e semânticas; evite textos completos nas chaves.
 
+
+

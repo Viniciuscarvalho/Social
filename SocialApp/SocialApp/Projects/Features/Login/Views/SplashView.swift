@@ -1,24 +1,33 @@
 import SwiftUI
 
 struct SplashView: View {
+    @Environment(\.horizontalSizeClass) var horizontalSizeClass
+    
     var body: some View {
         ZStack {
             AppColors.backgroundGradient
                 .ignoresSafeArea()
             
-            VStack(spacing: 8) {
-                Text("SocialClub")
-                    .font(.system(size: 48, weight: .light, design: .default))
-                    .foregroundColor(.white)
+            VStack(spacing: 20) {
+                Spacer()
                 
-                Text("Onde você encontra alguém para ficar com seu ingresso")
-                    .font(.system(size: 14, weight: .regular))
-                    .foregroundColor(.gray)
+                // Imagem do splash - responsiva para todos os tamanhos de tela
+                Image("splash")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(
+                        maxWidth: horizontalSizeClass == .compact ? .infinity : 400,
+                        maxHeight: UIScreen.main.bounds.height * 0.4
+                    )
+                    .padding(.horizontal, 24)
+                    .clipped()
+                
+                Spacer()
                 
                 ProgressView()
                     .progressViewStyle(CircularProgressViewStyle(tint: .white))
                     .scaleEffect(1.2)
-                    .padding(.top, 30)
+                    .padding(.bottom, 30)
             }
         }
     }

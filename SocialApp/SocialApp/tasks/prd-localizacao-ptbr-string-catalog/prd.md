@@ -33,3 +33,5 @@ O aplicativo possui strings misturadas em português e inglês, espalhadas pelo 
 - pt-BR definido como Development Region e única localização ativa.
 
 
+
+

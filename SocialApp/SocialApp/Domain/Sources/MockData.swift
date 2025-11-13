@@ -62,7 +62,7 @@ public enum SharedMockData {
     
     // MARK: - Users (Ex-Seller Profiles)
     public static let sampleSellerProfiles: [User] = [
-        User(name: "João Silva", title: "Event Organizer", profileImageURL: "https://example.com/joao.jpg"),
+        User(name: "João Silva", title: "Vendedor", profileImageURL: "https://example.com/joao.jpg"),
         User(name: "Maria Santos", title: "Concert Promoter", profileImageURL: "https://example.com/maria.jpg"),
         User(name: "Pedro Costa", title: "UX Designer", profileImageURL: "https://example.com/pedro.jpg")
     ]
