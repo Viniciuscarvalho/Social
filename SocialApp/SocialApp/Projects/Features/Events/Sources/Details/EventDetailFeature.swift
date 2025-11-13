@@ -11,7 +11,6 @@ public struct EventDetailFeature {
         public var isLoading: Bool = false
         public var errorMessage: String?
         public var isFavorited: Bool = false
-        public var seller: User? // Vendedor do evento
         
         public init(eventId: UUID, event: Event? = nil) {
             self.eventId = eventId
@@ -25,12 +24,9 @@ public struct EventDetailFeature {
         case eventResponse(Result<Event, NetworkError>)
         case loadRecommendedEvents
         case recommendedEventsResponse(Result<[Event], NetworkError>)
-        case loadSellerForEvent // Buscar vendedor do evento
-        case sellerResponse(Result<User, NetworkError>)
         case viewAvailableTickets
         case negotiateTicket // ✅ Botão de negociação
         case sellTicketForEvent // ✅ Nova action para vender ingresso para este evento
-        case viewSellerProfile(String) // ✅ Nova action para ver perfil do vendedor
         case toggleFavorite
         case checkFavoriteStatus
         case favoriteStatusLoaded(Bool)
@@ -39,8 +35,6 @@ public struct EventDetailFeature {
     
     @Dependency(\.eventsClient) var eventsClient
     @Dependency(\.favoritesClient) var favoritesClient
-    @Dependency(\.ticketsClient) var ticketsClient
-    @Dependency(\.userClient) var userClient
     
     public init() {}
     
@@ -89,7 +83,6 @@ public struct EventDetailFeature {
                 return .run { send in
                     await send(.checkFavoriteStatus)
                     await send(.loadRecommendedEvents)
-                    await send(.loadSellerForEvent)
                 }
                 
             case let .eventResponse(.failure(error)):
@@ -136,37 +129,6 @@ public struct EventDetailFeature {
                 return .none
                 
             case .sellTicketForEvent:
-                // Esta action será tratada pelo parent (SocialAppFeature)
-                return .none
-                
-            case .loadSellerForEvent:
-                // Buscar vendedor através dos tickets do evento
-                guard let eventId = state.event?.id else { return .none }
-                return .run { send in
-                    do {
-                        // Buscar tickets do evento
-                        let tickets = try await ticketsClient.fetchTicketsByEvent(eventId)
-                        // Pegar o primeiro vendedor (ou o mais relevante)
-                        if let firstTicket = tickets.first,
-                           let sellerId = UUID(uuidString: firstTicket.sellerId) {
-                            let seller = try await userClient.getUserProfile(sellerId.uuidString)
-                            await send(.sellerResponse(.success(seller)))
-                        }
-                    } catch {
-                        // Ignora erro silenciosamente - o card simplesmente não aparecerá
-                        print("⚠️ Erro ao buscar vendedor: \(error.localizedDescription)")
-                    }
-                }
-                
-            case let .sellerResponse(.success(seller)):
-                state.seller = seller
-                return .none
-                
-            case .sellerResponse(.failure):
-                // Ignora erro silenciosamente
-                return .none
-                
-            case .viewSellerProfile:
                 // Esta action será tratada pelo parent (SocialAppFeature)
                 return .none
                 

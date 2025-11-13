@@ -184,16 +184,6 @@ public struct EventDetailView: View {
                             Divider()
                                 .padding(.vertical, 24)
                             
-                            // Card do Vendedor
-                            if let seller = store.seller {
-                                sellerCard(seller: seller)
-                                    .padding(.horizontal, 20)
-                                    .padding(.bottom, 24)
-                            }
-                            
-                            Divider()
-                                .padding(.vertical, 24)
-                            
                             // Localização
                             locationSection(event: event)
                             
@@ -490,83 +480,6 @@ public struct EventDetailView: View {
                 )
             }
         }
-    }
-    
-    // MARK: - Seller Card
-    
-    @ViewBuilder
-    private func sellerCard(seller: User) -> some View {
-        Button {
-            if let sellerId = UUID(uuidString: seller.id) {
-                store.send(.viewSellerProfile(seller.id))
-            }
-        } label: {
-            HStack(spacing: 12) {
-                // Imagem de perfil
-                AsyncImage(url: URL(string: seller.profileImageURL ?? "")) { image in
-                    image
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                } placeholder: {
-                    ZStack {
-                        Color(.systemGray5)
-                        Image(systemName: "person.fill")
-                            .font(.system(size: 24))
-                            .foregroundColor(.gray)
-                    }
-                }
-                .frame(width: 60, height: 60)
-                .clipShape(RoundedRectangle(cornerRadius: 12))
-                
-                // Informações do vendedor
-                VStack(alignment: .leading, spacing: 6) {
-                    HStack(spacing: 6) {
-                        Text(seller.name)
-                            .font(.system(size: 16, weight: .semibold))
-                            .foregroundColor(.primary)
-                        
-                        // Badge de verificação (usando cor do tema)
-                        if seller.isVerified {
-                            ZStack {
-                                Circle()
-                                    .fill(Color.green)
-                                    .frame(width: 18, height: 18)
-                                
-                                Image(systemName: "checkmark")
-                                    .font(.system(size: 10, weight: .bold))
-                                    .foregroundColor(.white)
-                            }
-                        }
-                    }
-                    
-                    // Rating (mockado por enquanto, pois User não tem rating)
-                    // Usando cor laranja do sistema para a estrela
-                    HStack(spacing: 4) {
-                        Image(systemName: "star.fill")
-                            .font(.system(size: 12))
-                            .foregroundColor(.orange)
-                        
-                        Text("4.8 (124 avaliações)")
-                            .font(.system(size: 13))
-                            .foregroundColor(.secondary)
-                    }
-                }
-                
-                Spacer()
-                
-                // Ícone de chat (usando cor do tema)
-                Image(systemName: "bubble.left.and.bubble.right.fill")
-                    .font(.system(size: 18))
-                    .foregroundColor(.secondary)
-            }
-            .padding(16)
-            .background(
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(Color(.systemBackground))
-                    .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 2)
-            )
-        }
-        .buttonStyle(PlainButtonStyle())
     }
     
     private var errorView: some View {

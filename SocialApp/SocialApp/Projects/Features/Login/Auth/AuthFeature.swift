@@ -49,6 +49,7 @@ public struct AuthFeature {
         case authResponse(Result<AuthResponse, NetworkError>)
         case userProfileResponse(Result<User, NetworkError>)
         case clearError
+        case markFirstLaunchComplete // Marcar que o primeiro launch foi completado
         case signInForm(SignInForm.Action)
         case signUpForm(SignUpForm.Action)
     }
@@ -161,6 +162,13 @@ public struct AuthFeature {
                 
             case .clearError:
               state.errorMessage = nil
+              return .none
+
+            case .markFirstLaunchComplete:
+              // Marcar que o app já foi aberto antes
+              UserDefaults.standard.set(true, forKey: "hasLaunchedBefore")
+              state.isFirstLaunch = false
+              print("✅ Primeiro launch marcado como completo")
               return .none
 
             case .signInForm(.signInTapped(let email, let password)):

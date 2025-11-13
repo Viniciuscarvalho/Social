@@ -9,7 +9,23 @@ public struct TicketsListView: View {
     }
     
     public var body: some View {
-        VStack {
+        VStack(spacing: 0) {
+            // Header
+            HStack {
+                Text("Ingressos")
+                    .font(.system(size: 28, weight: .bold))
+                    .foregroundColor(.primary)
+                
+                Spacer()
+            }
+            .padding(.horizontal, 20)
+            .padding(.top, 16)
+            .padding(.bottom, 20)
+            
+            // Filtros de categoria
+            categoryFilters
+            
+            // Conteúdo
             if store.isLoading {
                 loadingView
             } else if store.tickets.isEmpty {
@@ -20,26 +36,7 @@ public struct TicketsListView: View {
                 ticketsContentView
             }
         }
-        .navigationTitle(navigationTitle)
-        .toolbar {
-            ToolbarItem(placement: .navigationBarTrailing) {
-                Menu {
-                    filterMenu
-                } label: {
-                    Image(systemName: "line.3.horizontal.decrease.circle")
-                }
-            }
-            
-            // Botão para limpar filtro de evento
-            if store.selectedFilter.eventId != nil {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Todos") {
-                        store.send(.filterByEvent(nil))
-                    }
-                    .foregroundColor(.blue)
-                }
-            }
-        }
+        .navigationBarHidden(true)
         .onAppear {
             store.send(.onAppear)
         }
@@ -55,28 +52,71 @@ public struct TicketsListView: View {
         }
     }
     
-    // MARK: - Computed Properties
+    // MARK: - Category Filters
     
-    private var navigationTitle: String {
-        if store.selectedFilter.eventId != nil {
-            return "Ingressos do Evento"
+    private var categoryFilters: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 12) {
+                categoryFilterButton(title: "All Tickets", isSelected: store.selectedFilter.ticketType == nil) {
+                    var filter = store.selectedFilter
+                    filter.ticketType = nil
+                    store.send(.filterChanged(filter))
+                }
+                
+                categoryFilterButton(title: "VIP", isSelected: store.selectedFilter.ticketType == .vip) {
+                    var filter = store.selectedFilter
+                    filter.ticketType = .vip
+                    store.send(.filterChanged(filter))
+                }
+                
+                categoryFilterButton(title: "General", isSelected: store.selectedFilter.ticketType == .general) {
+                    var filter = store.selectedFilter
+                    filter.ticketType = .general
+                    store.send(.filterChanged(filter))
+                }
+                
+                categoryFilterButton(title: "Early Bird", isSelected: store.selectedFilter.ticketType == .earlyBird) {
+                    var filter = store.selectedFilter
+                    filter.ticketType = .earlyBird
+                    store.send(.filterChanged(filter))
+                }
+                
+                categoryFilterButton(title: "Group", isSelected: store.selectedFilter.ticketType == .group) {
+                    var filter = store.selectedFilter
+                    filter.ticketType = .group
+                    store.send(.filterChanged(filter))
+                }
+                
+                categoryFilterButton(title: "Student", isSelected: store.selectedFilter.ticketType == .student) {
+                    var filter = store.selectedFilter
+                    filter.ticketType = .student
+                    store.send(.filterChanged(filter))
+                }
+                
+                categoryFilterButton(title: "Senior", isSelected: store.selectedFilter.ticketType == .senior) {
+                    var filter = store.selectedFilter
+                    filter.ticketType = .senior
+                    store.send(.filterChanged(filter))
+                }
+            }
+            .padding(.horizontal, 20)
         }
-        return "Ingressos"
+        .padding(.bottom, 20)
     }
     
-    private var shouldShowEmptyState: Bool {
-        if store.selectedFilter.eventId != nil {
-            return store.displayTickets.isEmpty && !store.tickets.isEmpty
+    @ViewBuilder
+    private func categoryFilterButton(title: String, isSelected: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Text(title)
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundColor(isSelected ? .white : .primary)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 8)
+                .background(isSelected ? AppColors.primary : Color(.systemGray6))
+                .cornerRadius(20)
         }
-        return store.tickets.isEmpty
     }
     
-    private var emptyStateMessage: String {
-        if store.selectedFilter.eventId != nil {
-            return "Não há ingressos disponíveis para este evento no momento."
-        }
-        return "Nenhum ingresso encontrado. Explore os eventos disponíveis para encontrar ingressos."
-    }
     
     // MARK: - Views
     
@@ -137,7 +177,7 @@ public struct TicketsListView: View {
     
     private var ticketsContentView: some View {
         ScrollView {
-            LazyVStack(spacing: 12) {
+            LazyVStack(spacing: 16) {
                 ForEach(store.displayTickets) { ticket in
                     TicketCard(
                         ticket: ticket,
@@ -152,62 +192,8 @@ public struct TicketsListView: View {
                     )
                 }
             }
-            .padding(.horizontal, 16)
-        }
-    }
-    
-    private var filterMenu: some View {
-        VStack {
-            Menu("Tipo de Ingresso") {
-                Button("Todos") {
-                    var filter = store.selectedFilter
-                    filter.ticketType = nil
-                    store.send(.filterChanged(filter))
-                }
-                
-                ForEach(TicketType.allCases, id: \.self) { type in
-                    Button(type.displayName) {
-                        var filter = store.selectedFilter
-                        filter.ticketType = type
-                        store.send(.filterChanged(filter))
-                    }
-                }
-            }
-            
-            Menu("Status") {
-                Button("Todos") {
-                    var filter = store.selectedFilter
-                    filter.status = nil
-                    store.send(.filterChanged(filter))
-                }
-                
-                ForEach(TicketStatus.allCases, id: \.self) { status in
-                    Button(status.displayName) {
-                        var filter = store.selectedFilter
-                        filter.status = status
-                        store.send(.filterChanged(filter))
-                    }
-                }
-            }
-            
-            Menu("Ordenar Por") {
-                ForEach(TicketSortOption.allCases, id: \.self) { sortOption in
-                    Button(sortOption.displayName) {
-                        var filter = store.selectedFilter
-                        filter.sortBy = sortOption
-                        store.send(.filterChanged(filter))
-                    }
-                }
-            }
-            
-            Toggle("Apenas Favoritos", isOn: Binding(
-                get: { store.selectedFilter.showFavoritesOnly },
-                set: { newValue in
-                    var filter = store.selectedFilter
-                    filter.showFavoritesOnly = newValue
-                    store.send(.filterChanged(filter))
-                }
-            ))
+            .padding(.horizontal, 20)
+            .padding(.top, 8)
         }
     }
 }

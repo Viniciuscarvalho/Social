@@ -35,3 +35,4 @@ Usuários acessam a tela de detalhes do evento para entender rapidamente informa
 
 
 
+

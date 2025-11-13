@@ -51,357 +51,307 @@ public struct TicketDetailView: View {
     }
     
     private func ticketContentView(_ ticketDetail: TicketDetail) -> some View {
-        GeometryReader { geometry in
-            ZStack(alignment: .top) {
-                ScrollView {
-                    VStack(spacing: 0) {
-                        // Ticket/Event Image Header
-                        ZStack(alignment: .topLeading) {
-                            AsyncImage(url: URL(string: ticketDetail.event.imageURL ?? "")) { image in
-                                image
-                                    .resizable()
-                                    .aspectRatio(contentMode: .fill)
-                            } placeholder: {
-                                Rectangle()
-                                    .fill(
-                                        LinearGradient(
-                                            colors: [Color.blue.opacity(0.3), Color.purple.opacity(0.3)],
-                                            startPoint: .topLeading,
-                                            endPoint: .bottomTrailing
-                                        )
-                                    )
-                                    .overlay(
-                                        Image(systemName: "ticket.fill")
-                                            .font(.system(size: 40))
-                                            .foregroundColor(.white.opacity(0.5))
-                                    )
-                            }
-                            .frame(width: geometry.size.width, height: min(geometry.size.height * 0.4, 320))
-                            .clipped()
-                            
-                            // Gradient overlay
-                            LinearGradient(
-                                colors: [Color.black.opacity(0.3), Color.clear, Color.black.opacity(0.6)],
-                                startPoint: .top,
-                                endPoint: .bottom
-                            )
-                            .frame(width: geometry.size.width, height: min(geometry.size.height * 0.4, 320))
-                        }
-                        
-                        // Conteúdo principal
-                        VStack(alignment: .leading, spacing: 20) {
-                            // Evento e Info do Ingresso
-                            VStack(alignment: .leading, spacing: 12) {
-                                Text(ticketDetail.event.name)
-                                    .font(.system(size: 28, weight: .bold))
-                                    .foregroundColor(.primary)
-                                    .lineLimit(3)
-                                    .minimumScaleFactor(0.8)
-                                
-                                HStack(spacing: 8) {
-                                    Image(systemName: "location.fill")
-                                        .font(.system(size: 14))
-                                        .foregroundColor(.secondary)
-                                    Text(ticketDetail.event.location.name)
-                                        .font(.system(size: 14))
-                                        .foregroundColor(.secondary)
-                                        .lineLimit(1)
-                                }
-                                
-                                HStack(spacing: 12) {
-                                    HStack(spacing: 6) {
-                                        Image(systemName: "calendar")
-                                            .font(.system(size: 14))
-                                            .foregroundColor(.secondary)
-                                        Text(ticketDetail.event.dateFormatted)
-                                            .font(.system(size: 14))
-                                            .foregroundColor(.secondary)
-                                    }
-                                    
-                                    Text("•")
-                                        .foregroundColor(.secondary)
-                                    
-                                    HStack(spacing: 6) {
-                                        Image(systemName: "clock")
-                                            .font(.system(size: 14))
-                                            .foregroundColor(.secondary)
-                                        Text(ticketDetail.event.timeRange)
-                                            .font(.system(size: 14))
-                                            .foregroundColor(.secondary)
-                                    }
-                                }
-                            }
-                            .padding(.horizontal, 20)
-                            .padding(.top, 20)
-                            
-                            Divider()
-                                .padding(.horizontal, 20)
-                            
-                            // Informações do Ingresso
-                            VStack(alignment: .leading, spacing: 16) {
-                                Text("Ticket Information")
-                                    .font(.system(size: 16, weight: .semibold))
-                                    .foregroundColor(.primary)
-                                
-                                // Ticket Info Grid
-                                LazyVGrid(
-                                    columns: [
-                                        GridItem(.flexible()),
-                                        GridItem(.flexible())
-                                    ],
-                                    spacing: 12
-                                ) {
-                                    InfoCard(
-                                        icon: "ticket.fill",
-                                        title: "Tipo",
-                                        value: ticketDetail.ticketType.displayName
-                                    )
-                                    
-                                    InfoCard(
-                                        icon: "number",
-                                        title: "Quantidade",
-                                        value: "\(ticketDetail.quantity)"
-                                    )
-                                    
-                                    InfoCard(
-                                        icon: "checkmark.circle.fill",
-                                        title: "Status",
-                                        value: ticketDetail.status.displayName,
-                                        valueColor: Color(ticketDetail.status.color)
-                                    )
-                                    
-                                    InfoCard(
-                                        icon: "calendar",
-                                        title: "Válido até",
-                                        value: formatDate(ticketDetail.validUntil)
-                                    )
-                                }
-                            }
-                            .padding(.horizontal, 20)
-                            .padding(.top, 16)
-                            
-                            // Price Section
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text("Preço Total")
-                                    .font(.system(size: 14, weight: .semibold))
-                                    .foregroundColor(.secondary)
-                                Text("R$ \(String(format: "%.2f", ticketDetail.price))")
-                                    .font(.system(size: 28, weight: .bold))
-                                    .foregroundColor(.blue)
-                            }
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(16)
-                            .background(
-                                RoundedRectangle(cornerRadius: 12)
-                                    .fill(Color.blue.opacity(0.1))
-                            )
-                            .padding(.horizontal, 20)
-                            .padding(.top, 16)
-                            
-                            // Seller Info
-                            VStack(alignment: .leading, spacing: 12) {
-                                Text("Vendedor")
-                                    .font(.system(size: 16, weight: .semibold))
-                                    .foregroundColor(.primary)
-                                
-                                NavigationLink {
-                                    SellerProfileView(
-                                        store: Store(
-                                            initialState: SellerProfileFeature.State(sellerId: ticketDetail.seller.id)
-                                        ) {
-                                            SellerProfileFeature()
-                                        }
-                                    )
-                                } label: {
-                                    HStack(spacing: 12) {
-                                        AsyncImage(url: URL(string: ticketDetail.seller.profileImageURL ?? "")) { image in
-                                            image
-                                                .resizable()
-                                                .aspectRatio(contentMode: .fill)
-                                        } placeholder: {
-                                            Circle()
-                                                .fill(
-                                                    LinearGradient(
-                                                        colors: [Color.blue.opacity(0.6), Color.purple.opacity(0.6)],
-                                                        startPoint: .topLeading,
-                                                        endPoint: .bottomTrailing
-                                                    )
-                                                )
-                                                .overlay(
-                                                    Image(systemName: "person.fill")
-                                                        .font(.system(size: 18))
-                                                        .foregroundColor(.white)
-                                                )
-                                        }
-                                        .frame(width: 50, height: 50)
-                                        .clipShape(Circle())
-                                        
-                                        VStack(alignment: .leading, spacing: 4) {
-                                            HStack(spacing: 4) {
-                                                Text(ticketDetail.seller.name)
-                                                    .font(.system(size: 16, weight: .semibold))
-                                                    .foregroundColor(.primary)
-                                                
-                                                if ticketDetail.seller.isVerified {
-                                                    Image(systemName: "checkmark.seal.fill")
-                                                        .foregroundColor(.blue)
-                                                        .font(.system(size: 14))
-                                                }
-                                            }
-                                            
-                                            if let title = ticketDetail.seller.title {
-                                                Text(title)
-                                                    .font(.system(size: 13))
-                                                    .foregroundColor(.secondary)
-                                            }
-                                        }
-                                        
-                                        Spacer()
-                                        
-                                        Image(systemName: "chevron.right")
-                                            .font(.system(size: 14))
-                                            .foregroundColor(.secondary)
-                                    }
-                                }
-                            }
-                            .padding(16)
-                            .background(
-                                RoundedRectangle(cornerRadius: 12)
-                                    .fill(Color(.systemGray6))
-                            )
-                            .padding(.horizontal, 20)
-                            .padding(.top, 16)
-                            
-                            // Action Buttons
-                            VStack(spacing: 12) {
-                                if ticketDetail.status == .available {
-                                    Button(action: {
-                                        store.send(.negotiateTapped)
-                                    }) {
-                                        HStack(spacing: 8) {
-                                            Image(systemName: "bubble.left.and.bubble.right.fill")
-                                                .font(.system(size: 16))
-                                            Text("Negociar Ingresso")
-                                                .font(.system(size: 16, weight: .semibold))
-                                        }
-                                        .frame(maxWidth: .infinity)
-                                        .padding(.vertical, 16)
-                                        .background(
-                                            LinearGradient(
-                                                colors: [Color.blue, Color.purple],
-                                                startPoint: .leading,
-                                                endPoint: .trailing
-                                            )
-                                        )
-                                        .foregroundColor(.white)
-                                        .cornerRadius(12)
-                                    }
-                                }
-                                
-                                // Validate Ticket Button
-                                if ticketDetail.status == .sold || ticketDetail.status == .reserved {
-                                    Button(action: {
-                                        store.send(.validateTicket)
-                                    }) {
-                                        HStack(spacing: 8) {
-                                            Image(systemName: "checkmark.seal.fill")
-                                                .font(.system(size: 16))
-                                            Text("Validate Ticket")
-                                                .font(.system(size: 16, weight: .semibold))
-                                        }
-                                        .frame(maxWidth: .infinity)
-                                        .padding(.vertical, 16)
-                                        .background(
-                                            LinearGradient(
-                                                colors: [Color.green, Color.green.opacity(0.8)],
-                                                startPoint: .leading,
-                                                endPoint: .trailing
-                                            )
-                                        )
-                                        .foregroundColor(.white)
-                                        .cornerRadius(12)
-                                    }
-                                }
-                            }
-                            .padding(.horizontal, 20)
-                            .padding(.vertical, 20)
-                        }
-                    }
-                }
-                
-                // Botão de voltar FIXO no topo - Fora do ScrollView
-                VStack {
+        ZStack(alignment: .top) {
+            Color(.systemBackground)
+                .ignoresSafeArea()
+            
+            ScrollView {
+                VStack(spacing: 0) {
+                    // Header com botões de navegação
                     HStack {
                         Button {
                             dismiss()
                         } label: {
                             Image(systemName: "arrow.left")
-                                .font(.system(size: 18, weight: .semibold))
-                                .foregroundColor(.white)
-                                .frame(width: 44, height: 44)
-                                .background(
-                                    Circle()
-                                        .fill(Color.black.opacity(0.4))
-                                        .shadow(color: .black.opacity(0.2), radius: 4, x: 0, y: 2)
-                                )
-                                .overlay(
-                                    Circle()
-                                        .stroke(Color.white.opacity(0.3), lineWidth: 1)
-                                )
+                                .font(.system(size: 16, weight: .semibold))
+                                .foregroundColor(.primary)
+                                .frame(width: 40, height: 40)
+                                .background(Color(.systemGray6))
+                                .clipShape(RoundedRectangle(cornerRadius: 8))
                         }
-                        .padding(.leading, 16)
-                        .padding(.top, 8)
                         
                         Spacer()
+                        
+                        Button {
+                            // TODO: Implementar favoritar
+                        } label: {
+                            Image(systemName: "heart")
+                                .font(.system(size: 16, weight: .semibold))
+                                .foregroundColor(.primary)
+                                .frame(width: 40, height: 40)
+                                .background(Color(.systemGray6))
+                                .clipShape(RoundedRectangle(cornerRadius: 8))
+                        }
                     }
+                    .padding(.horizontal, 20)
+                    .padding(.top, 16)
+                    .padding(.bottom, 24)
                     
-                    Spacer()
+                    // Título do evento
+                    VStack(alignment: .leading, spacing: 16) {
+                        Text(ticketDetail.event.name)
+                            .font(.system(size: 24, weight: .bold))
+                            .foregroundColor(.primary)
+                            .lineLimit(2)
+                        
+                        // Informações do evento
+                        VStack(alignment: .leading, spacing: 12) {
+                            HStack(spacing: 8) {
+                                Image(systemName: "location.fill")
+                                    .font(.system(size: 14))
+                                    .foregroundColor(AppColors.primary)
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(ticketDetail.event.location.name)
+                                        .font(.system(size: 14, weight: .medium))
+                                        .foregroundColor(.primary)
+                                    Text("\(ticketDetail.event.location.city), \(ticketDetail.event.location.state)")
+                                        .font(.system(size: 13))
+                                        .foregroundColor(.secondary)
+                                }
+                            }
+                            
+                            HStack(spacing: 8) {
+                                Image(systemName: "calendar")
+                                    .font(.system(size: 14))
+                                    .foregroundColor(AppColors.primary)
+                                Text(ticketDetail.event.dateFormatted)
+                                    .font(.system(size: 14, weight: .medium))
+                                    .foregroundColor(.primary)
+                            }
+                            
+                            HStack(spacing: 8) {
+                                Image(systemName: "clock")
+                                    .font(.system(size: 14))
+                                    .foregroundColor(AppColors.primary)
+                                Text(ticketDetail.event.timeRange)
+                                    .font(.system(size: 14, weight: .medium))
+                                    .foregroundColor(.primary)
+                            }
+                        }
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.bottom, 24)
+                    
+                    // Informações do Ticket
+                    VStack(alignment: .leading, spacing: 16) {
+                        Text("Informações do Ticket")
+                            .font(.system(size: 18, weight: .bold))
+                            .foregroundColor(.primary)
+                            .padding(.horizontal, 20)
+                        
+                        VStack(spacing: 0) {
+                            // Tipo de Ingresso
+                            ticketInfoRow(
+                                title: "Tipo de Ingresso",
+                                value: ticketDetail.ticketType.displayName,
+                                icon: ticketTypeIcon(ticketDetail.ticketType),
+                                iconColor: ticketTypeColor(ticketDetail.ticketType)
+                            )
+                            
+                            Divider()
+                                .padding(.horizontal, 20)
+                            
+                            // Quantidade
+                            ticketInfoRow(
+                                title: "Quantidade",
+                                value: "\(ticketDetail.quantity) disponíveis"
+                            )
+                            
+                            Divider()
+                                .padding(.horizontal, 20)
+                            
+                            // Validade
+                            ticketInfoRow(
+                                title: "Validade",
+                                value: formatDate(ticketDetail.validUntil)
+                            )
+                            
+                            Divider()
+                                .padding(.horizontal, 20)
+                            
+                            // Preço
+                            HStack {
+                                Text("Preço")
+                                    .font(.system(size: 16, weight: .bold))
+                                    .foregroundColor(.primary)
+                                
+                                Spacer()
+                                
+                                Text("R$ \(String(format: "%.0f", ticketDetail.price))")
+                                    .font(.system(size: 24, weight: .bold))
+                                    .foregroundColor(AppColors.primary)
+                            }
+                            .padding(.horizontal, 20)
+                            .padding(.vertical, 16)
+                        }
+                        .background(Color(.systemBackground))
+                        .cornerRadius(12)
+                        .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 2)
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.bottom, 24)
+                    
+                    // Card do Vendedor
+                    VStack(alignment: .leading, spacing: 16) {
+                        HStack(spacing: 12) {
+                            // Imagem do vendedor
+                            AsyncImage(url: URL(string: ticketDetail.seller.profileImageURL ?? "")) { image in
+                                image
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fill)
+                            } placeholder: {
+                                Rectangle()
+                                    .fill(Color(.systemGray5))
+                                    .overlay(
+                                        Image(systemName: "person.fill")
+                                            .font(.system(size: 24))
+                                            .foregroundColor(.gray)
+                                    )
+                            }
+                            .frame(width: 60, height: 60)
+                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                            
+                            VStack(alignment: .leading, spacing: 6) {
+                                HStack(spacing: 6) {
+                                    Text(ticketDetail.seller.name)
+                                        .font(.system(size: 16, weight: .bold))
+                                        .foregroundColor(.primary)
+                                    
+                                    if ticketDetail.seller.isVerified {
+                                        ZStack {
+                                            Circle()
+                                                .fill(Color.green)
+                                                .frame(width: 18, height: 18)
+                                            Image(systemName: "checkmark")
+                                                .font(.system(size: 10, weight: .bold))
+                                                .foregroundColor(.white)
+                                        }
+                                    }
+                                }
+                                
+                                HStack(spacing: 4) {
+                                    Image(systemName: "star.fill")
+                                        .font(.system(size: 12))
+                                        .foregroundColor(.orange)
+                                    Text("4.8 (124 avaliações)")
+                                        .font(.system(size: 13))
+                                        .foregroundColor(.secondary)
+                                }
+                            }
+                            
+                            Spacer()
+                            
+                            Button {
+                                // TODO: Implementar chat
+                            } label: {
+                                Image(systemName: "bubble.left.and.bubble.right.fill")
+                                    .font(.system(size: 18))
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                    }
+                    .padding(16)
+                    .background(Color(.systemBackground))
+                    .cornerRadius(12)
+                    .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 2)
+                    .padding(.horizontal, 20)
+                    .padding(.bottom, 24)
+                    
+                    // Botão Negociar
+                    Button(action: {
+                        store.send(.negotiateTapped)
+                    }) {
+                        Text("Negociar Ingresso")
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 16)
+                            .background(AppColors.primary)
+                            .cornerRadius(12)
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.bottom, 32)
                 }
             }
         }
-        .ignoresSafeArea(edges: .bottom)
+    }
+    
+    @ViewBuilder
+    private func ticketInfoRow(title: String, value: String, icon: String? = nil, iconColor: Color? = nil) -> some View {
+        HStack {
+            if let icon = icon, let iconColor = iconColor {
+                Image(systemName: icon)
+                    .font(.system(size: 16))
+                    .foregroundColor(iconColor)
+                    .frame(width: 24)
+            }
+            
+            Text(title)
+                .font(.system(size: 14))
+                .foregroundColor(.secondary)
+            
+            Spacer()
+            
+            if let icon = icon, let iconColor = iconColor {
+                HStack(spacing: 4) {
+                    Image(systemName: icon)
+                        .font(.system(size: 14))
+                        .foregroundColor(iconColor)
+                    Text(value)
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundColor(.primary)
+                }
+            } else {
+                Text(value)
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundColor(.primary)
+            }
+        }
+        .padding(.horizontal, 20)
+        .padding(.vertical, 16)
+    }
+    
+    private func ticketTypeIcon(_ type: TicketType) -> String {
+        switch type {
+        case .vip:
+            return "crown.fill"
+        case .senior:
+            return "star.fill"
+        case .general:
+            return "person.3.fill"
+        case .earlyBird:
+            return "sunrise.fill"
+        case .group:
+            return "person.2.fill"
+        case .student:
+            return "graduationcap.fill"
+        }
+    }
+    
+    private func ticketTypeColor(_ type: TicketType) -> Color {
+        switch type {
+        case .vip:
+            return Color.purple
+        case .senior:
+            return Color.blue
+        case .general:
+            return Color.green
+        case .earlyBird:
+            return Color.yellow
+        case .group:
+            return Color.brown
+        case .student:
+            return Color.accentColor
+        }
     }
     
     private func formatDate(_ date: Date) -> String {
         let formatter = DateFormatter()
-        formatter.dateFormat = "dd/MM/yy"
+        formatter.dateFormat = "dd MMM yyyy"
         formatter.locale = Locale(identifier: "pt_BR")
-        return formatter.string(from: date)
-    }
-    
-    // MARK: - Supporting Views
-    
-    struct InfoCard: View {
-        let icon: String
-        let title: String
-        let value: String
-        var valueColor: Color = .primary
-        
-        var body: some View {
-            VStack(alignment: .leading, spacing: 8) {
-                HStack(spacing: 6) {
-                    Image(systemName: icon)
-                        .font(.system(size: 14))
-                        .foregroundColor(.blue)
-                    
-                    Text(title)
-                        .font(.system(size: 12))
-                        .foregroundColor(.secondary)
-                }
-                
-                Text(value)
-                    .font(.system(size: 15, weight: .semibold))
-                    .foregroundColor(valueColor)
-                    .lineLimit(2)
-                    .minimumScaleFactor(0.8)
-            }
-            .padding(12)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(
-                RoundedRectangle(cornerRadius: 10)
-                    .fill(Color(.systemGray6))
-            )
-        }
+        let dateString = formatter.string(from: date)
+        // Capitalizar primeira letra do mês
+        return dateString.prefix(1).uppercased() + dateString.dropFirst()
     }
     
     private var errorView: some View {

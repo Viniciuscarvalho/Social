@@ -4,7 +4,7 @@ import SwiftUI
 public struct SocialAppView: View {
     @Bindable var store: StoreOf<SocialAppFeature>
     @Environment(ThemeManager.self) private var themeManager
-    @State private var showingSplash = true
+    @State private var showingSplash = false
     
     public init(store: StoreOf<SocialAppFeature>) {
         self.store = store
@@ -30,7 +30,7 @@ public struct SocialAppView: View {
             }
             .opacity(showingSplash ? 0 : 1)
             
-            // Splash sobreposto
+            // Splash sobreposto - só aparece na primeira vez
             if showingSplash {
                 SplashView()
                     .transition(.opacity)
@@ -43,12 +43,23 @@ public struct SocialAppView: View {
             // Configurar listeners de NotificationCenter para sincronização global
             setupTicketSyncListeners(store: store)
             
-            // Mostrar splash por 2 segundos
-            Task {
-                try? await Task.sleep(nanoseconds: 2_000_000_000) // 2 segundos
-                withAnimation(.easeOut(duration: 0.3)) {
-                    showingSplash = false
+            // Mostrar splash apenas na primeira vez que o app abre
+            if store.isFirstLaunch {
+                print("🎬 Primeira vez abrindo o app - mostrando splash")
+                showingSplash = true
+                
+                // Mostrar splash por 2 segundos e depois marcar que não é mais o primeiro launch
+                Task {
+                    try? await Task.sleep(nanoseconds: 2_000_000_000) // 2 segundos
+                    withAnimation(.easeOut(duration: 0.3)) {
+                        showingSplash = false
+                    }
+                    // Marcar que não é mais o primeiro launch
+                    store.send(.auth(.markFirstLaunchComplete))
                 }
+            } else {
+                print("✅ App já foi aberto antes - pulando splash")
+                showingSplash = false
             }
         }
         .preferredColorScheme(themeManager.colorScheme)
