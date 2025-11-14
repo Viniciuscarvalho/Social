@@ -2,6 +2,7 @@ import SwiftUI
 import ComposableArchitecture
 
 public struct ProfileView: View {
+    @Environment(ThemeManager.self) private var themeManager
     @Bindable var store: StoreOf<ProfileFeature>
     
     public init(store: StoreOf<ProfileFeature>) {
@@ -19,15 +20,25 @@ public struct ProfileView: View {
             } else {
                 ScrollView {
                     VStack(spacing: 24) {
+                        // Header do perfil
                         profileHeaderView
                         
+                        // Estatísticas do usuário
                         if store.user != nil {
                             userStatsSection
                         }
                         
-                        mainMenuSection
+                        // Seção de configurações
+                        settingsSection
                         
-                        illustrationView
+                        // Seção de notificações
+                        notificationsSection
+                        
+                        // Seção de conta
+                        accountSection
+                        
+                        // Rodapé
+                        footerView
                     }
                     .padding()
                 }
@@ -43,11 +54,6 @@ public struct ProfileView: View {
         }
         .sheet(isPresented: $store.showingImagePicker.sending(\.setShowingImagePicker)) {
             imagePickerSheet
-        }
-        .sheet(isPresented: $store.showingMore.sending(\.setShowingMore)) {
-            NavigationStack {
-                MoreView()
-            }
         }
         .alert("Erro", isPresented: .constant(store.error != nil)) {
             Button("OK") {
@@ -74,50 +80,73 @@ public struct ProfileView: View {
     private var profileHeaderView: some View {
         VStack(spacing: 16) {
             if let user = store.user {
-                ZStack(alignment: .topTrailing) {
-                    RoundedRectangle(cornerRadius: 28)
-                        .fill(AppColors.profileGradient)
-                        .shadow(color: AppColors.cardShadow.opacity(0.3), radius: 16, x: 0, y: 12)
-                    
-                    VStack(alignment: .leading, spacing: 16) {
-                        HStack(alignment: .top, spacing: 16) {
-                            profileAvatarView(for: user)
-                            
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text(user.name)
-                                    .font(.title)
-                                    .fontWeight(.bold)
-                                    .foregroundColor(.white)
-                                
-                                Text(user.email)
-                                    .font(.subheadline)
-                                    .foregroundColor(Color.white.opacity(0.85))
-                                
-                                if let title = user.title {
-                                    Text(title)
-                                        .font(.caption)
-                                        .foregroundColor(.white)
-                                        .padding(.horizontal, 10)
-                                        .padding(.vertical, 6)
-                                        .background(Color.white.opacity(0.15))
-                                        .clipShape(Capsule())
-                                }
-                            }
-                            
-                            Spacer()
-                        }
-                        
-                        Spacer(minLength: 0)
+                // Foto do perfil
+                Button(action: { store.send(.changeProfileImageTapped) }) {
+                    AsyncImage(url: URL(string: user.profileImageURL ?? "")) { image in
+                        image
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                    } placeholder: {
+                        Image(systemName: "person.circle.fill")
+                            .font(.system(size: 80))
+                            .foregroundColor(AppColors.primary)
                     }
-                    .padding(20)
+                    .frame(width: 80, height: 80)
+                    .clipShape(Circle())
+                    .overlay(
+                        Circle()
+                            .stroke(AppColors.cardBackground, lineWidth: 2)
+                    )
+                    .overlay(
+                        Image(systemName: "camera.fill")
+                            .font(.system(size: 12))
+                            .foregroundColor(.white)
+                            .padding(6)
+                            .background(AppColors.primary)
+                            .clipShape(Circle())
+                            .offset(x: 28, y: 28)
+                    )
+                }
+                
+                // Informações do usuário
+                VStack(spacing: 4) {
+                    Text(user.name)
+                        .font(.title2)
+                        .fontWeight(.semibold)
+                        .foregroundColor(AppColors.primaryText)
                     
-                    editProfileIconButton
+                    Text(user.email)
+                        .font(.subheadline)
+                        .foregroundColor(AppColors.secondaryText)
+                    
+                    if let title = user.title {
+                        Text(title)
+                            .font(.caption)
+                            .foregroundColor(AppColors.primary)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(AppColors.primary.opacity(0.1))
+                            .cornerRadius(8)
+                    }
+                    
+                    Button("Editar Perfil") {
+                        store.send(.editProfileTapped)
+                    }
+                    .font(.subheadline)
+                    .foregroundColor(AppColors.primary)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 8)
+                    .background(
+                        RoundedRectangle(cornerRadius: 16)
+                            .stroke(AppColors.primary, lineWidth: 1)
+                            .fill(AppColors.cardBackground.opacity(0.1))
+                    )
                 }
             } else {
                 VStack(spacing: 12) {
                     Circle()
                         .fill(AppColors.cardBackground.opacity(0.3))
-                        .frame(width: 100, height: 100)
+                        .frame(width: 80, height: 80)
                     
                     Text("Carregando perfil...")
                         .font(.subheadline)
@@ -132,15 +161,39 @@ public struct ProfileView: View {
     private var userStatsSection: some View {
         if let user = store.user {
             HStack(spacing: 30) {
-                statItem(value: "\(user.followersCount)", label: "Seguidores")
-                statItem(value: "\(user.followingCount)", label: "Seguindo")
-                statItem(value: "\(store.user?.ticketsCount ?? store.ticketsCount)", label: "Ingressos")
+                VStack {
+                    Text("\(user.followersCount)")
+                        .font(.headline)
+                        .foregroundColor(AppColors.primaryText)
+                    Text("Seguidores")
+                        .font(.caption)
+                        .foregroundColor(AppColors.tertiaryText)
+                }
+                
+                VStack {
+                    Text("\(user.followingCount)")
+                        .font(.headline)
+                        .foregroundColor(AppColors.primaryText)
+                    Text("Seguindo")
+                        .font(.caption)
+                        .foregroundColor(AppColors.tertiaryText)
+                }
+                
+                VStack {
+                    Text("\(store.user?.ticketsCount ?? store.ticketsCount)")
+                        .font(.headline)
+                        .foregroundColor(AppColors.primaryText)
+                    Text("Ingressos")
+                        .font(.caption)
+                        .foregroundColor(AppColors.tertiaryText)
+                }
                 
                 if user.isVerified {
-                    VStack(spacing: 6) {
+                    VStack(spacing: 4) {
                         Image(systemName: "checkmark.seal.fill")
-                            .font(.system(size: 22))
+                            .font(.system(size: 20))
                             .foregroundColor(AppColors.primary)
+                        
                         Text("Verificado")
                             .font(.caption)
                             .foregroundColor(AppColors.primary)
@@ -149,59 +202,169 @@ public struct ProfileView: View {
             }
             .padding()
             .background(
-                RoundedRectangle(cornerRadius: 20)
+                RoundedRectangle(cornerRadius: 16)
                     .fill(AppColors.cardBackground)
-                    .shadow(color: AppColors.cardShadow.opacity(0.1), radius: 8, x: 0, y: 6)
+                    .shadow(color: AppColors.cardShadow.opacity(0.1), radius: 8, x: 0, y: 4)
             )
         }
     }
     
     @ViewBuilder
-    private var mainMenuSection: some View {
+    private var settingsSection: some View {
         VStack(spacing: 0) {
-            menuButton(
-                icon: "ticket.fill",
-                iconColor: AppColors.accentGreen,
-                title: "Meus Tickets",
-                subtitle: "Gerencie seus ingressos"
-            ) {
-                store.send(.myTicketsTapped)
+            sectionHeader("Configurações")
+            
+            VStack(spacing: 0) {
+                // Botão de aparência
+                settingsRow(
+                    icon: themeIcon,
+                    iconColor: AppColors.primary,
+                    title: "Aparência",
+                    subtitle: themeManager.displayName,
+                    action: {
+                        withAnimation(.easeInOut(duration: 0.3)) {
+                            themeManager.toggleColorScheme()
+                        }
+                    }
+                )
+                
+                Divider()
+                    .padding(.leading, 52)
+                
+                // Privacidade
+                settingsRow(
+                    icon: "hand.raised.fill",
+                    iconColor: AppColors.warning,
+                    title: "Privacidade e Segurança",
+                    subtitle: "Gerencie suas configurações",
+                    action: {
+                        store.send(.privacySettingsTapped)
+                    }
+                )
             }
-            
-            dividerInset
-            
-            menuButton(
-                icon: "heart.fill",
-                iconColor: AppColors.favoriteRed,
-                title: "My Favorite",
-                subtitle: "Eventos que você curtiu"
-            ) {
-                store.send(.favoritesTapped)
-            }
-            
-            dividerInset
-            
-            menuButton(
-                icon: "ellipsis.circle.fill",
-                iconColor: AppColors.secondary,
-                title: "More",
-                subtitle: "FAQs, suporte e mais"
-            ) {
-                store.send(.moreMenuTapped)
-            }
-            
-            dividerInset
-            
-            logoutButton
+            .background(
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(AppColors.cardBackground)
+                    .shadow(color: AppColors.cardShadow.opacity(0.1), radius: 8, x: 0, y: 4)
+            )
         }
-        .background(
-            RoundedRectangle(cornerRadius: 20)
-                .fill(AppColors.cardBackground)
-                .shadow(color: AppColors.cardShadow.opacity(0.08), radius: 8, x: 0, y: 4)
-        )
     }
     
-    private func menuButton(
+    @ViewBuilder
+    private var notificationsSection: some View {
+        VStack(spacing: 0) {
+            sectionHeader("Notificações")
+            
+            VStack(spacing: 0) {
+                // Push notifications
+                toggleRow(
+                    icon: "iphone",
+                    iconColor: AppColors.secondary,
+                    title: "Push",
+                    subtitle: "Notificações no dispositivo",
+                    isOn: $store.pushNotifications.sending(\.togglePushNotifications)
+                )
+            }
+            .background(
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(AppColors.cardBackground)
+                    .shadow(color: AppColors.cardShadow.opacity(0.1), radius: 8, x: 0, y: 4)
+            )
+        }
+    }
+    
+    @ViewBuilder
+    private var accountSection: some View {
+        VStack(spacing: 0) {
+            sectionHeader("Conta")
+            
+            VStack(spacing: 0) {
+                // Meus ingressos
+                settingsRow(
+                    icon: "ticket.fill",
+                    iconColor: AppColors.accentGreen,
+                    title: "Meus Ingressos",
+                    subtitle: "Gerenciar ingressos publicados",
+                    action: {
+                        store.send(.myTicketsTapped)
+                    }
+                )
+                
+                Divider()
+                    .padding(.leading, 52)
+                
+                // Suporte
+                settingsRow(
+                    icon: "questionmark.circle.fill",
+                    iconColor: AppColors.warning,
+                    title: "Suporte",
+                    subtitle: "Ajuda e perguntas frequentes",
+                    action: {
+                        store.send(.supportTapped)
+                    }
+                )
+                
+                Divider()
+                    .padding(.leading, 52)
+                
+                // Sair
+                Button(action: {
+                    store.send(.signOutTapped)
+                }) {
+                    HStack(spacing: 16) {
+                        Image(systemName: "rectangle.portrait.and.arrow.right")
+                            .font(.system(size: 20))
+                            .foregroundColor(AppColors.error)
+                            .frame(width: 28, height: 28)
+                        
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Sair")
+                                .font(.body)
+                                .foregroundColor(AppColors.error)
+                        }
+                        
+                        Spacer()
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 12)
+                }
+            }
+            .background(
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(AppColors.cardBackground)
+                    .shadow(color: AppColors.cardShadow.opacity(0.1), radius: 8, x: 0, y: 4)
+            )
+        }
+    }
+    
+    @ViewBuilder
+    private var footerView: some View {
+        VStack(spacing: 8) {
+            Text("Versão 1.0.0")
+                .font(.caption)
+                .foregroundColor(.gray)
+            
+            Text("© 2025 SocialApp")
+                .font(.caption)
+                .foregroundColor(.gray)
+        }
+        .padding(.top, 20)
+    }
+    
+    @ViewBuilder
+    private func sectionHeader(_ title: String) -> some View {
+        HStack {
+            Text(title)
+                .font(.headline)
+                .foregroundColor(AppColors.primaryText)
+            Spacer()
+        }
+        .padding(.horizontal, 4)
+        .padding(.bottom, 8)
+    }
+    
+    @ViewBuilder
+    private func settingsRow(
         icon: String,
         iconColor: Color,
         title: String,
@@ -209,30 +372,53 @@ public struct ProfileView: View {
         action: @escaping () -> Void
     ) -> some View {
         Button(action: action) {
-            menuRow(icon: icon, iconColor: iconColor, title: title, subtitle: subtitle, isDestructive: false)
+            HStack(spacing: 16) {
+                Image(systemName: icon)
+                    .font(.system(size: 20))
+                    .foregroundColor(iconColor)
+                    .frame(width: 28, height: 28)
+                
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(title)
+                        .font(.body)
+                        .foregroundColor(AppColors.primaryText)
+                    
+                    Text(subtitle)
+                        .font(.caption)
+                        .foregroundColor(AppColors.secondaryText)
+                }
+                
+                Spacer()
+                
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(AppColors.tertiaryText)
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
         }
         .buttonStyle(.plain)
     }
     
-    private func menuRow(
+    @ViewBuilder
+    private func toggleRow(
         icon: String,
         iconColor: Color,
         title: String,
         subtitle: String,
-        isDestructive: Bool
+        isOn: Binding<Bool>
     ) -> some View {
         HStack(spacing: 16) {
             Image(systemName: icon)
-                .font(.system(size: 22))
-                .foregroundColor(isDestructive ? AppColors.error : iconColor)
-                .frame(width: 32, height: 32)
-                .background((isDestructive ? AppColors.error : iconColor).opacity(0.12))
-                .clipShape(Circle())
+                .font(.system(size: 20))
+                .foregroundColor(iconColor)
+                .frame(width: 28, height: 28)
             
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: 2) {
                 Text(title)
-                    .font(.body.weight(.semibold))
-                    .foregroundColor(isDestructive ? AppColors.error : AppColors.primaryText)
+                    .font(.body)
+                    .foregroundColor(AppColors.primaryText)
+                
                 Text(subtitle)
                     .font(.caption)
                     .foregroundColor(AppColors.secondaryText)
@@ -240,107 +426,12 @@ public struct ProfileView: View {
             
             Spacer()
             
-            if !isDestructive {
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundColor(AppColors.tertiaryText)
-            }
+            Toggle("", isOn: isOn)
+                .labelsHidden()
+                .tint(AppColors.primary)
         }
-        .padding(.horizontal, 20)
-        .padding(.vertical, 16)
-    }
-    
-    private var logoutButton: some View {
-        Button(action: {
-            store.send(.signOutTapped)
-        }) {
-            menuRow(
-                icon: "rectangle.portrait.and.arrow.right",
-                iconColor: AppColors.error,
-                title: "Logout",
-                subtitle: "Saia da sua conta com segurança",
-                isDestructive: true
-            )
-        }
-        .buttonStyle(.plain)
-    }
-    
-    private var dividerInset: some View {
-        Divider()
-            .padding(.leading, 72)
-    }
-    
-    @ViewBuilder
-    private var illustrationView: some View {
-        Image("empty_events")
-            .resizable()
-            .scaledToFit()
-            .frame(maxWidth: .infinity)
-            .frame(height: 220)
-            .padding(.top, 8)
-            .accessibilityHidden(true)
-    }
-    
-    private func statItem(value: String, label: String) -> some View {
-        VStack(spacing: 6) {
-            Text(value)
-                .font(.title3.weight(.bold))
-                .foregroundColor(AppColors.primaryText)
-            Text(label)
-                .font(.caption)
-                .foregroundColor(AppColors.tertiaryText)
-        }
-        .frame(maxWidth: .infinity)
-    }
-    
-    @ViewBuilder
-    private func profileAvatarView(for user: User) -> some View {
-        ZStack(alignment: .bottomTrailing) {
-            AsyncImage(url: URL(string: user.profileImageURL ?? "")) { image in
-                image
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-            } placeholder: {
-                Image(systemName: "person.fill")
-                    .font(.system(size: 50))
-                    .foregroundColor(.white.opacity(0.7))
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-            }
-            .frame(width: 100, height: 100)
-            .clipShape(Circle())
-            .overlay(
-                Circle()
-                    .stroke(Color.white.opacity(0.3), lineWidth: 3)
-            )
-            
-            Button(action: {
-                store.send(.changeProfileImageTapped)
-            }) {
-                Image(systemName: "camera.fill")
-                    .font(.system(size: 14))
-                    .foregroundColor(.white)
-                    .padding(8)
-                    .background(AppColors.primary)
-                    .clipShape(Circle())
-                    .shadow(radius: 4)
-            }
-            .offset(x: 6, y: 6)
-        }
-    }
-    
-    private var editProfileIconButton: some View {
-        Button(action: {
-            store.send(.editProfileTapped)
-        }) {
-            Image(systemName: "square.and.pencil")
-                .font(.system(size: 16, weight: .semibold))
-                .foregroundColor(AppColors.primary)
-                .padding(12)
-                .background(Color.white)
-                .clipShape(Circle())
-                .shadow(radius: 4)
-        }
-        .padding(20)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
     }
     
     @ViewBuilder
@@ -408,21 +499,27 @@ public struct ProfileView: View {
         .presentationDetents([.height(200)])
     }
     
+    private var themeIcon: String {
+        switch themeManager.colorScheme {
+        case .light:
+            return "sun.max.fill"
+        case .dark:
+            return "moon.fill"
+        case .none:
+            return "circle.lefthalf.striped.horizontal"
+        default:
+            return "gear"
+        }
+    }
 }
 
 struct EditProfileView: View {
-    private enum FocusField {
-        case name, email, title
-    }
-    
     let user: User
     let onSave: (User) -> Void
     
     @State private var tempName: String
     @State private var tempEmail: String
     @State private var tempTitle: String
-    @State private var selectedInterests: Set<String>
-    @FocusState private var focusedField: FocusField?
     
     init(user: User, onSave: @escaping (User) -> Void) {
         self.user = user
@@ -430,181 +527,42 @@ struct EditProfileView: View {
         self._tempName = State(initialValue: user.name)
         self._tempEmail = State(initialValue: user.email)
         self._tempTitle = State(initialValue: user.title ?? "")
-        self._selectedInterests = State(initialValue: Set(user.interests ?? []))
     }
     
     var body: some View {
-        ScrollView {
-            VStack(spacing: 24) {
-                avatarSection
-                personalInfoSection
-                interestsSection
-            }
-            .padding(.horizontal, 20)
-            .padding(.top, 24)
-            .padding(.bottom, 120)
-        }
-        .background(AppColors.backgroundGradient.ignoresSafeArea())
-        .scrollDismissesKeyboard(.interactively)
-        .safeAreaInset(edge: .bottom) {
-            saveButton
-        }
-        .toolbar {
-            ToolbarItem(placement: .keyboard) {
-                Button("Fechar") {
-                    focusedField = nil
+        ZStack {
+            AppColors.backgroundGradient
+                .ignoresSafeArea()
+            
+            Form {
+                Section("Informações Pessoais") {
+                    TextField("Nome", text: $tempName)
+                        .foregroundColor(AppColors.primaryText)
+                    
+                    TextField("Email", text: $tempEmail)
+                        .keyboardType(.emailAddress)
+                        .autocapitalization(.none)
+                        .foregroundColor(AppColors.primaryText)
+                    
+                    TextField("Título/Profissão", text: $tempTitle)
+                        .foregroundColor(AppColors.primaryText)
                 }
-                .foregroundColor(AppColors.primary)
+                .listRowBackground(AppColors.cardBackground)
             }
-        }
-    }
-    
-    private var avatarSection: some View {
-        VStack(spacing: 16) {
-            ZStack(alignment: .bottomTrailing) {
-                AsyncImage(url: URL(string: user.profileImageURL ?? "")) { image in
-                    image
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                } placeholder: {
-                    Circle()
-                        .fill(AppColors.cardBackground)
-                        .overlay(
-                            Image(systemName: "person.fill")
-                                .font(.system(size: 48))
-                                .foregroundColor(AppColors.secondaryText)
-                        )
+            .scrollContentBackground(.hidden)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Salvar") {
+                        var updatedUser = user
+                        updatedUser.name = tempName
+                        updatedUser.email = tempEmail
+                        updatedUser.title = tempTitle.isEmpty ? nil : tempTitle
+                        onSave(updatedUser)
+                    }
+                    .foregroundColor(AppColors.primary)
+                    .disabled(tempName.isEmpty)
                 }
-                .frame(width: 140, height: 140)
-                .clipShape(Circle())
-                .overlay(
-                    Circle()
-                        .stroke(AppColors.cardBackground, lineWidth: 4)
-                )
-                
-                Button {
-                    // TODO: Integrar picker de fotos
-                } label: {
-                    Image(systemName: "camera.fill")
-                        .font(.system(size: 16))
-                        .foregroundColor(.white)
-                        .padding(10)
-                        .background(AppColors.primary)
-                        .clipShape(Circle())
-                        .shadow(radius: 4)
-                }
-                .offset(x: -8, y: -8)
             }
-            
-            VStack(spacing: 6) {
-                Text(user.name)
-                    .font(.title3.weight(.semibold))
-                    .foregroundColor(AppColors.primaryText)
-                Text(user.email)
-                    .font(.subheadline)
-                    .foregroundColor(AppColors.secondaryText)
-            }
-        }
-    }
-    
-    private var personalInfoSection: some View {
-        VStack(spacing: 16) {
-            inputField(
-                title: "Nome completo",
-                text: $tempName,
-                placeholder: "John Doe",
-                keyboard: .default,
-                focus: .name
-            )
-            
-            inputField(
-                title: "Email",
-                text: $tempEmail,
-                placeholder: "johndoe@email.com",
-                keyboard: .emailAddress,
-                textContentType: .emailAddress,
-                focus: .email,
-                capitalization: .none
-            )
-            
-            inputField(
-                title: "Título / Profissão",
-                text: $tempTitle,
-                placeholder: "Event Planner",
-                focus: .title
-            )
-        }
-        .padding()
-        .background(
-            RoundedRectangle(cornerRadius: 24)
-                .fill(AppColors.cardBackground)
-        )
-    }
-    
-    private var interestsSection: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("Change Interests")
-                .font(.headline)
-                .foregroundColor(AppColors.primaryText)
-            
-            InterestSelectionView(selectedInterests: $selectedInterests)
-        }
-        .padding()
-        .background(
-            RoundedRectangle(cornerRadius: 24)
-                .fill(AppColors.cardBackground)
-        )
-    }
-    
-    private var saveButton: some View {
-        Button {
-            var updatedUser = user
-            updatedUser.name = tempName
-            updatedUser.email = tempEmail
-            updatedUser.title = tempTitle.isEmpty ? nil : tempTitle
-            updatedUser.interests = Array(selectedInterests)
-            onSave(updatedUser)
-        } label: {
-            Text("Save")
-                .font(.system(size: 17, weight: .semibold))
-                .foregroundColor(.white)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 18)
-                .background(tempName.isEmpty ? AppColors.primary.opacity(0.5) : AppColors.primary)
-                .cornerRadius(18)
-                .padding(.horizontal, 24)
-                .padding(.bottom, 12)
-        }
-        .disabled(tempName.isEmpty)
-        .background(AppColors.backgroundGradient.ignoresSafeArea())
-    }
-    
-    @ViewBuilder
-    private func inputField(
-        title: String,
-        text: Binding<String>,
-        placeholder: String,
-        keyboard: UIKeyboardType = .default,
-        textContentType: UITextContentType? = nil,
-        focus: FocusField? = nil,
-        capitalization: TextInputAutocapitalization = .sentences
-    ) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(title)
-                .font(.subheadline.weight(.semibold))
-                .foregroundColor(AppColors.secondaryText)
-            
-            TextField(placeholder, text: text)
-                .keyboardType(keyboard)
-                .textContentType(textContentType)
-                .autocapitalization(capitalization)
-                .autocorrectionDisabled()
-                .foregroundColor(AppColors.primaryText)
-                .padding(.horizontal, 16)
-                .padding(.vertical, 12)
-                .background(AppColors.secondaryBackground)
-                .cornerRadius(16)
-                .focused($focusedField, equals: focus)
         }
     }
 }

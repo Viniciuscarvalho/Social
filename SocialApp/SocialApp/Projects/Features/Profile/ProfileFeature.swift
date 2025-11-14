@@ -12,14 +12,10 @@ public struct ProfileFeature {
         public var showingEditProfile = false
         public var showingImagePicker = false
         public var showingMyTickets = false
-        public var showingMore = false
-        public var selectedInterests: Set<String> = []
+        public var pushNotifications = true
         
         public init(user: User? = nil) {
             self.user = user
-            if let interests = user?.interests {
-                self.selectedInterests = Set(interests)
-            }
         }
     }
     
@@ -35,19 +31,18 @@ public struct ProfileFeature {
         case changeProfileImageTapped
         case myTicketsTapped
         case myTicketsSheetClosed
-        case favoritesTapped
-        case moreMenuTapped
+        case supportTapped
+        case privacySettingsTapped
         case signOutTapped
+        case togglePushNotifications(Bool)
         
         // Sheet management
         case setShowingEditProfile(Bool)
         case setShowingImagePicker(Bool)
         case setShowingMyTickets(Bool)
-        case setShowingMore(Bool)
         
         // Profile update
         case updateProfile(User)
-        case updateInterests(Set<String>)
         case updateProfileResponse(Result<User, NetworkError>)
         
         // Ticket management notifications
@@ -138,15 +133,17 @@ public struct ProfileFeature {
                     await send(.loadTicketsCount)
                 }
                 
-            case .favoritesTapped:
-                // TODO: Navegação para favoritos
+            case .supportTapped:
                 return .none
                 
-            case .moreMenuTapped:
-                state.showingMore = true
+            case .privacySettingsTapped:
                 return .none
                 
             case .signOutTapped:
+                return .none
+                
+            case let .togglePushNotifications(enabled):
+                state.pushNotifications = enabled
                 return .none
                 
             case let .setShowingEditProfile(showing):
@@ -161,30 +158,12 @@ public struct ProfileFeature {
                 state.showingMyTickets = showing
                 return .none
                 
-            case let .setShowingMore(showing):
-                state.showingMore = showing
-                return .none
-                
             case let .updateProfile(user):
                 state.user = user
-                if let interests = user.interests {
-                    state.selectedInterests = Set(interests)
-                }
-                return .none
-                
-            case let .updateInterests(interests):
-                state.selectedInterests = interests
-                if var user = state.user {
-                    user.interests = Array(interests)
-                    state.user = user
-                }
                 return .none
                 
             case let .updateProfileResponse(.success(user)):
                 state.user = user
-                if let interests = user.interests {
-                    state.selectedInterests = Set(interests)
-                }
                 return .none
                 
             case let .updateProfileResponse(.failure(error)):

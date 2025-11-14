@@ -6,6 +6,21 @@ struct SelectInterestsView: View {
     
     let onInterestsSelected: ([String]) -> Void
     
+    let interests = [
+        ("🏢", "Business"),
+        ("🎨", "Arts"),
+        ("🎵", "Music"),
+        ("❤️", "Health"),
+        ("🍔", "Food & Drink"),
+        ("🎮", "Gaming"),
+        ("🎬", "Film & Media"),
+        ("👨‍👩‍👧‍👦", "Family & Kids"),
+        ("🎭", "Theatre & Performing Arts"),
+        ("❤️‍🔥", "Community & Charity"),
+        ("🐾", "Pet & Animal Events"),
+        ("📚", "Books & Literature")
+    ]
+    
     var body: some View {
         ZStack {
             Color(.systemBackground)
@@ -25,9 +40,31 @@ struct SelectInterestsView: View {
                 
                 // Interests Grid
                 ScrollView {
-                    InterestSelectionView(selectedInterests: $selectedInterests)
-                        .padding(.horizontal, 20)
-                        .padding(.bottom, 32)
+                    VStack(spacing: 12) {
+                        let columns: [GridItem] = [
+                            GridItem(.flexible(), spacing: 12),
+                            GridItem(.flexible(), spacing: 12)
+                        ]
+                        
+                        LazyVGrid(columns: columns, spacing: 12) {
+                            ForEach(interests, id: \.1) { emoji, interest in
+                                InterestChip(
+                                    emoji: emoji,
+                                    title: interest,
+                                    isSelected: selectedInterests.contains(interest),
+                                    action: {
+                                        if selectedInterests.contains(interest) {
+                                            selectedInterests.remove(interest)
+                                        } else {
+                                            selectedInterests.insert(interest)
+                                        }
+                                    }
+                                )
+                            }
+                        }
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.bottom, 32)
                 }
                 
                 Spacer()
@@ -49,6 +86,36 @@ struct SelectInterestsView: View {
                 .padding(.horizontal, 20)
                 .padding(.bottom, 20)
             }
+        }
+    }
+}
+
+struct InterestChip: View {
+    let emoji: String
+    let title: String
+    let isSelected: Bool
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: action) {
+            VStack(spacing: 8) {
+                Text(emoji)
+                    .font(.system(size: 32))
+                
+                Text(title)
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundColor(.primary)
+                    .multilineTextAlignment(.center)
+                    .lineLimit(2)
+            }
+            .frame(maxWidth: .infinity)
+            .frame(height: 120)
+            .background(isSelected ? AppColors.primary.opacity(0.1) : Color(.systemGray6))
+            .border(
+                isSelected ? AppColors.primary : Color.clear,
+                width: 2
+            )
+            .cornerRadius(12)
         }
     }
 }
