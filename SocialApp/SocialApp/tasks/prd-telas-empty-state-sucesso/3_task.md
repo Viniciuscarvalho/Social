@@ -81,3 +81,5 @@ private var noResultsView: some View {
 - `Projects/Features/Events/Sources/SearchView.swift` (linhas 177-194 - noResultsView)
 - `SocialApp/Resources/Localizable.xcstrings` (chaves de localização)
 
+
+

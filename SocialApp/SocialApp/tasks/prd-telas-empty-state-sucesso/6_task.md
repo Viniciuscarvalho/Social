@@ -133,3 +133,5 @@ private var welcomeStepView: some View {
 - `Projects/Features/TicketsList/Sources/AddTicketFeature.swift` (modificar enum e state)
 - `SocialApp/Resources/Localizable.xcstrings` (chaves de localização)
 
+
+

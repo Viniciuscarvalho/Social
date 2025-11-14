@@ -118,3 +118,5 @@ private var filteredTickets: [Ticket] {
 - `Projects/Features/TicketsList/Sources/MyTicketsFeature.swift` (adicionar state e actions)
 - `SocialApp/Resources/Localizable.xcstrings` (chaves de localização)
 
+
+

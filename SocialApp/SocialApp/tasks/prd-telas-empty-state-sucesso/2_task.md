@@ -61,3 +61,5 @@ Se não precisar de mudanças, marcar tarefa como concluída rapidamente.
 - `SocialApp/Sources/Commons/ErrorView.swift` (linhas 125-177 - EmptyStateView)
 - Uso existente: `Projects/Features/TicketsList/Sources/TicketsListView.swift` (linha 134)
 
+
+

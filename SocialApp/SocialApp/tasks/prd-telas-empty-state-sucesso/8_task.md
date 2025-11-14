@@ -122,3 +122,5 @@ private var successStepContent: some View {
 - `SocialApp/Sources/Commons/SuccessView.swift` (componente criado na tarefa 1.0)
 - `SocialApp/Resources/Localizable.xcstrings` (chaves de localização)
 
+
+

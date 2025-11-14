@@ -96,3 +96,5 @@ Adicionar todas as chaves de localização necessárias para as telas de empty s
 - `SocialApp/Resources/Localizable.xcstrings` (arquivo principal)
 - Todas as views que usam localização (tarefas 3-8)
 
+
+

@@ -42,3 +42,5 @@ Padronizar todo texto de UI via String Catalog (`Localizable.xcstrings`) com idi
 
 
 
+
+

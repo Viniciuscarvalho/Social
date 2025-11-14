@@ -111,3 +111,5 @@ Este PRD descreve a implementação de telas de empty state (estados vazios) e s
 - Confirmar se a tela de sucesso de "Anunciar Ingresso" deve fechar automaticamente após alguns segundos ou apenas ao clicar no botão
 - Definir se "Meus Ingressos" deve ter tabs "Upcoming" e "Past Ticket" ou apenas mostrar empty state único
 
+
+

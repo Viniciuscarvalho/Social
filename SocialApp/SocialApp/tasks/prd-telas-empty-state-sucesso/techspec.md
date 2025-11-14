@@ -413,3 +413,5 @@ Criar snapshots para:
 **Localização**:
 - `SocialApp/Resources/Localizable.xcstrings`
 
+
+
