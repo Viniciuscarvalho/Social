@@ -20,6 +20,9 @@ public struct NegotiationDetailsView: View {
                     // Status Badge
                     statusBadge(negotiation)
                     
+                    // Máquina de Estados Visual
+                    NegotiationStateMachineView(negotiation: negotiation)
+                    
                     // Informações do ingresso
                     if let ticket = negotiation.ticket {
                         ticketInfoSection(ticket, negotiation: negotiation)
@@ -53,7 +56,7 @@ public struct NegotiationDetailsView: View {
             rejectSheet
         }
         .sheet(isPresented: $store.showingContactReveal) {
-            contactRevealSheet
+            ContactRevealView(store: store)
         }
         .alert("Erro", isPresented: $store.showingErrorAlert) {
             Button("OK") {

@@ -12,6 +12,8 @@ public struct TicketDetailFeature {
         public var errorMessage: String?
         public var isPurchasing: Bool = false
         public var currentTicketId: UUID?
+        public var isStartingNegotiation: Bool = false
+        public var showingNegotiationError: Bool = false
         
         public init(ticket: Ticket? = nil) {
             self.ticket = ticket
@@ -29,11 +31,22 @@ public struct TicketDetailFeature {
         case loadSellerProfile(UUID)
         case sellerProfile(SellerProfileFeature.Action)
         case negotiateTapped // Ação para iniciar negociação
+        case startNegotiation
+        case checkExistingNegotiation
+        case existingNegotiationResponse(Result<Negotiation?, NetworkError>)
+        case negotiationCreated(Result<Negotiation, NetworkError>)
+        case delegate(Delegate)
+        
+        public enum Delegate: Equatable {
+            case negotiationStarted(String) // negotiationId
+            case navigateToExistingNegotiation(String) // negotiationId
+        }
     }
     
     @Dependency(\.ticketsClient) var ticketsClient
     @Dependency(\.eventsClient) var eventsClient
     @Dependency(\.userClient) var userClient
+    @Dependency(\.negotiationClient) var negotiationClient
     
     public init() {}
     
@@ -149,8 +162,99 @@ public struct TicketDetailFeature {
                 return .none
                 
             case .negotiateTapped:
-                // Ação delegada à View/Navigation
-                print("🤝 Negociar ingresso tapped")
+                // Verifica condições antes de iniciar negociação
+                guard let ticketDetail = state.ticketDetail else {
+                    state.errorMessage = "Ticket não encontrado"
+                    return .none
+                }
+                
+                // Verifica se ticket está disponível
+                guard ticketDetail.status == .available else {
+                    state.errorMessage = "Este ingresso não está mais disponível para negociação"
+                    state.showingNegotiationError = true
+                    return .none
+                }
+                
+                // Verifica se pode iniciar negociação
+                return .run { send in
+                    await send(.checkExistingNegotiation)
+                }
+                
+            case .checkExistingNegotiation:
+                guard let ticketId = state.currentTicketId else {
+                    return .none
+                }
+                
+                return .run { send in
+                    do {
+                        // Busca negociações do usuário para verificar se já existe uma ativa
+                        let negotiations = try await negotiationClient.fetchMyNegotiations()
+                        let existingNegotiation = negotiations.first { negotiation in
+                            negotiation.ticket?.id == ticketId.uuidString &&
+                            negotiation.status != .cancelled &&
+                            negotiation.status != .completed
+                        }
+                        await send(.existingNegotiationResponse(.success(existingNegotiation)))
+                    } catch {
+                        let networkError = error as? NetworkError ?? NetworkError.unknown(error.localizedDescription)
+                        await send(.existingNegotiationResponse(.failure(networkError)))
+                    }
+                }
+                
+            case let .existingNegotiationResponse(.success(existingNegotiation)):
+                if let negotiation = existingNegotiation {
+                    // Já existe negociação ativa - navega para ela
+                    print("✅ Negociação existente encontrada: \(negotiation.id)")
+                    return .send(.delegate(.navigateToExistingNegotiation(negotiation.id)))
+                } else {
+                    // Não existe negociação - cria nova
+                    return .run { send in
+                        await send(.startNegotiation)
+                    }
+                }
+                
+            case let .existingNegotiationResponse(.failure(error)):
+                state.errorMessage = error.userFriendlyMessage
+                state.showingNegotiationError = true
+                print("❌ Erro ao verificar negociação existente: \(error.userFriendlyMessage)")
+                return .none
+                
+            case .startNegotiation:
+                guard let ticketDetail = state.ticketDetail,
+                      let ticketId = state.currentTicketId else {
+                    state.errorMessage = "Ticket não encontrado"
+                    state.showingNegotiationError = true
+                    return .none
+                }
+                
+                state.isStartingNegotiation = true
+                state.errorMessage = nil
+                
+                return .run { send in
+                    do {
+                        let request = CreateNegotiationRequest(ticketId: ticketId.uuidString)
+                        let negotiation = try await negotiationClient.createNegotiation(request)
+                        await send(.negotiationCreated(.success(negotiation)))
+                    } catch {
+                        let networkError = error as? NetworkError ?? NetworkError.unknown(error.localizedDescription)
+                        await send(.negotiationCreated(.failure(networkError)))
+                    }
+                }
+                
+            case let .negotiationCreated(.success(negotiation)):
+                state.isStartingNegotiation = false
+                print("✅ Negociação criada: \(negotiation.id)")
+                // Navega para a tela de negociação
+                return .send(.delegate(.negotiationStarted(negotiation.id)))
+                
+            case let .negotiationCreated(.failure(error)):
+                state.isStartingNegotiation = false
+                state.errorMessage = error.userFriendlyMessage
+                state.showingNegotiationError = true
+                print("❌ Erro ao criar negociação: \(error.userFriendlyMessage)")
+                return .none
+                
+            case .delegate:
                 return .none
             }
         }

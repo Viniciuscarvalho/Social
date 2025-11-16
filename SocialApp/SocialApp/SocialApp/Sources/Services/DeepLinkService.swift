@@ -217,6 +217,61 @@ public class DeepLinkService {
         guard let url = URL(string: "tg://") else { return false }
         return UIApplication.shared.canOpenURL(url)
     }
+    
+    // MARK: - Negotiation Methods
+    
+    /// Gera mensagem pré-formatada para negociação no WhatsApp
+    /// - Parameters:
+    ///   - negotiation: Negociação para incluir na mensagem
+    /// - Returns: Mensagem formatada
+    public func generateNegotiationMessage(negotiation: Negotiation) -> String {
+        var message = "Olá! Vi seu ingresso no SocialApp e gostaria de negociar.\n\n"
+        
+        // Evento
+        if let event = negotiation.ticket?.event {
+            message += "📅 Evento: \(event.name)\n"
+            if let eventDate = event.eventDate {
+                let formatter = DateFormatter()
+                formatter.dateFormat = "dd/MM/yyyy"
+                formatter.locale = Locale(identifier: "pt_BR")
+                message += "📆 Data: \(formatter.string(from: eventDate))\n"
+            }
+        }
+        
+        // Ingresso
+        if let ticket = negotiation.ticket {
+            message += "🎫 Ingresso: \(ticket.name ?? "Ingresso")\n"
+            message += "💰 Preço: \(formatPrice(ticket.price, currencyCode: ticket.currencyCode))\n"
+        }
+        
+        // ID da Negociação
+        message += "🆔 ID da Negociação: \(negotiation.id)\n\n"
+        
+        message += "Podemos conversar sobre os detalhes?"
+        
+        return message
+    }
+    
+    /// Abre WhatsApp com mensagem pré-formatada de negociação
+    /// - Parameters:
+    ///   - phoneNumber: Número de telefone
+    ///   - negotiation: Negociação para incluir na mensagem
+    /// - Returns: `true` se conseguiu abrir o WhatsApp, `false` caso contrário
+    @discardableResult
+    public func openWhatsAppWithNegotiation(phoneNumber: String, negotiation: Negotiation) -> Bool {
+        let message = generateNegotiationMessage(negotiation: negotiation)
+        return openWhatsApp(phoneNumber: phoneNumber, message: message)
+    }
+    
+    // MARK: - Helper Methods
+    
+    private func formatPrice(_ price: Double, currencyCode: String) -> String {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .currency
+        formatter.currencyCode = currencyCode
+        formatter.locale = Locale(identifier: "pt_BR")
+        return formatter.string(from: NSNumber(value: price)) ?? "R$ \(String(format: "%.2f", price))"
+    }
 }
 
 // MARK: - Dependency Key

@@ -178,8 +178,8 @@ struct MainTabView: View {
                     ticketsTab
                 case .addTicket:
                     Color.clear
-                case .favorites:
-                    favoritesTab
+                case .negotiations:
+                    negotiationsTab
                 case .profile:
                     profileTab
                 }
@@ -339,29 +339,39 @@ struct MainTabView: View {
     }
     
     @ViewBuilder
-    private var favoritesTab: some View {
+    private var negotiationsTab: some View {
         NavigationStack {
             ZStack {
                 AppColors.backgroundGradient
                     .ignoresSafeArea()
                 
-                FavoritesView(
+                NegotiationsListView(
                     store: store.scope(
-                        state: \.favoritesFeature,
-                        action: \.favoritesFeature
+                        state: \.negotiationsListFeature,
+                        action: \.negotiationsListFeature
                     )
                 )
-                .padding(.bottom, 100)
+                .padding(.bottom, 120)
             }
-            .navigationDestination(item: $store.selectedEventId.sending(\.dismissEventNavigation)) { eventId in
+            .navigationDestination(item: $store.selectedNegotiationId.sending(\.dismissNegotiationNavigation)) { negotiationId in
                 ZStack {
                     AppColors.backgroundGradient
                         .ignoresSafeArea()
                     
-                    if let eventDetailStore = store.scope(state: \.eventDetailFeature, action: \.eventDetailFeature) {
-                        EventDetailView(store: eventDetailStore, eventId: eventId)
-                        .toolbar(.hidden, for: .tabBar)
+                    NegotiationChatView(
+                        store: Store(
+                            initialState: NegotiationDetailsFeature.State(negotiationId: negotiationId),
+                            reducer: { NegotiationDetailsFeature() }
+                        )
+                    )
+                    .onReceive(
+                        NotificationCenter.default.publisher(for: NSNotification.Name("NegotiationRead"))
+                    ) { notification in
+                        if let negotiationId = notification.userInfo?["negotiationId"] as? String {
+                            store.send(.negotiationsListFeature(.delegate(.negotiationRead(negotiationId))))
+                        }
                     }
+                    .toolbar(.hidden, for: .tabBar)
                 }
             }
         }
@@ -414,12 +424,13 @@ struct CustomTabBar: View {
             AddButton(action: onAddTicket)
                 .offset(y: -8)
             
-            // Favorites
+            // Negotiations
             TabBarButton(
-                icon: AppTab.favorites.icon,
-                isSelected: selectedTab == .favorites
+                icon: AppTab.negotiations.icon,
+                isSelected: selectedTab == .negotiations,
+                badgeCount: store.unreadQuestionsCount > 0 ? store.unreadQuestionsCount : nil
             ) {
-                selectedTab = .favorites
+                selectedTab = .negotiations
             }
             
             // Profile
@@ -460,18 +471,43 @@ struct CustomTabBar: View {
 struct TabBarButton: View {
     let icon: String
     let isSelected: Bool
+    let badgeCount: Int?
     let action: () -> Void
+    
+    init(icon: String, isSelected: Bool, badgeCount: Int? = nil, action: @escaping () -> Void) {
+        self.icon = icon
+        self.isSelected = isSelected
+        self.badgeCount = badgeCount
+        self.action = action
+    }
     
     var body: some View {
         Button(action: action) {
-            VStack(spacing: 4) {
-                Image(systemName: icon)
-                    .font(.system(size: 22, weight: .medium))
-                    .frame(height: 28)
+            ZStack(alignment: .topTrailing) {
+                VStack(spacing: 4) {
+                    Image(systemName: icon)
+                        .font(.system(size: 22, weight: .medium))
+                        .frame(height: 28)
+                }
+                .frame(maxWidth: .infinity)
+                .frame(height: 60)
+                .foregroundColor(isSelected ? Color.blue : Color.gray)
+                
+                // Badge
+                if let count = badgeCount, count > 0 {
+                    Text(count > 99 ? "99+" : "\(count)")
+                        .font(.system(size: 11, weight: .bold))
+                        .foregroundColor(.white)
+                        .padding(.horizontal, count > 9 ? 5 : 6)
+                        .padding(.vertical, 2)
+                        .background(
+                            Capsule()
+                                .fill(Color.red)
+                        )
+                        .offset(x: 8, y: -4)
+                        .animation(.spring(response: 0.3), value: count)
+                }
             }
-            .frame(maxWidth: .infinity)
-            .frame(height: 60)
-            .foregroundColor(isSelected ? Color.blue : Color.gray)
             .contentShape(Rectangle())
         }
         .buttonStyle(PlainButtonStyle())

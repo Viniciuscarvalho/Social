@@ -19,7 +19,7 @@ public struct SocialAppFeature {
         public var homeFeature = HomeFeature.State()
         public var ticketsListFeature = TicketsListFeature.State()
         public var addTicket = AddTicketFeature.State()
-        public var favoritesFeature = FavoritesFeature.State()
+        public var negotiationsListFeature = NegotiationsListFeature.State()
         public var profileFeature = ProfileFeature.State()
         public var sellerProfileFeature = SellerProfileFeature.State()
         public var ticketDetailFeature = TicketDetailFeature.State()
@@ -30,9 +30,14 @@ public struct SocialAppFeature {
         public var selectedEventId: UUID?
         public var selectedTicketId: UUID?
         public var selectedSellerId: UUID?
+        public var selectedNegotiationId: String?
         public var showingAddTicket = false
         public var showingRecommendedEvents = false
         public var showingPopularEvents = false
+        
+        // Badge state
+        public var unreadQuestionsCount: Int = 0
+        public var lastBadgeUpdate: Date?
         
         // Computed properties for easier access
         public var isAuthenticated: Bool {
@@ -58,6 +63,12 @@ public struct SocialAppFeature {
         case signOut
         case syncAuthData // Nova action para sincronizar dados
         
+        // Badge actions
+        case updateBadgeCount
+        case badgeCountUpdated(Int)
+        case startBadgePolling
+        case stopBadgePolling
+        
         // Auth actions
         case auth(AuthFeature.Action)
         
@@ -71,7 +82,7 @@ public struct SocialAppFeature {
         case homeFeature(HomeFeature.Action)
         case ticketsListFeature(TicketsListFeature.Action)
         case addTicket(AddTicketFeature.Action)
-        case favoritesFeature(FavoritesFeature.Action)
+        case negotiationsListFeature(NegotiationsListFeature.Action)
         case profileFeature(ProfileFeature.Action)
         case sellerProfileFeature(SellerProfileFeature.Action)
         case ticketDetailFeature(TicketDetailFeature.Action)
@@ -87,6 +98,7 @@ public struct SocialAppFeature {
         case dismissEventNavigation(UUID?)
         case dismissTicketNavigation(UUID?)
         case dismissSellerNavigation(UUID?)
+        case dismissNegotiationNavigation(String?)
         
         // Add ticket modal actions
         case addTicketTapped
@@ -101,6 +113,8 @@ public struct SocialAppFeature {
         case showPopularEvents
         case setShowingPopularEvents(Bool)
     }
+    
+    @Dependency(\.negotiationClient) var negotiationClient
     
     public init() {}
     
@@ -128,8 +142,8 @@ public struct SocialAppFeature {
             AddTicketFeature()
         }
         
-        Scope(state: \.favoritesFeature, action: \.favoritesFeature) {
-            FavoritesFeature()
+        Scope(state: \.negotiationsListFeature, action: \.negotiationsListFeature) {
+            NegotiationsListFeature()
         }
         
         Scope(state: \.profileFeature, action: \.profileFeature) {
@@ -161,6 +175,40 @@ public struct SocialAppFeature {
         case .onAppear:
             // O AuthFeature já faz checkAuthStatus() no init do State
             // Então não precisa disparar onAppear novamente
+            // Atualiza badge quando app aparece
+            return .run { send in
+                await send(.updateBadgeCount)
+                await send(.startBadgePolling)
+            }
+            
+        case .updateBadgeCount:
+            return .run { send in
+                do {
+                    let count = try await negotiationClient.fetchUnreadQuestionsCount()
+                    await send(.badgeCountUpdated(count))
+                } catch {
+                    print("❌ Erro ao buscar contador de badge: \(error.localizedDescription)")
+                    // Não atualiza em caso de erro para não confundir usuário
+                }
+            }
+            
+        case let .badgeCountUpdated(count):
+            state.unreadQuestionsCount = count
+            state.lastBadgeUpdate = Date()
+            print("🔔 Badge atualizado: \(count) perguntas não respondidas")
+            return .none
+            
+        case .startBadgePolling:
+            // Inicia polling a cada 30 segundos
+            return .run { send in
+                while true {
+                    try? await Task.sleep(nanoseconds: 30_000_000_000) // 30 segundos
+                    await send(.updateBadgeCount)
+                }
+            }
+            
+        case .stopBadgePolling:
+            // Para o polling (será cancelado automaticamente quando o reducer for destruído)
             return .none
             
         case .syncAuthData:
@@ -214,7 +262,7 @@ public struct SocialAppFeature {
             state.homeFeature = HomeFeature.State()
             state.ticketsListFeature = TicketsListFeature.State()
             state.addTicket = AddTicketFeature.State()
-            state.favoritesFeature = FavoritesFeature.State()
+            state.negotiationsListFeature = NegotiationsListFeature.State()
             state.profileFeature = ProfileFeature.State()
             state.sellerProfileFeature = SellerProfileFeature.State()
             state.ticketDetailFeature = TicketDetailFeature.State()
@@ -313,9 +361,9 @@ public struct SocialAppFeature {
                 return .run { send in
                     await send(.ticketsListFeature(.loadTickets))
                 }
-            case .favorites:
+            case .negotiations:
                 return .run { send in
-                    await send(.favoritesFeature(.loadFavorites))
+                    await send(.negotiationsListFeature(.loadNegotiations))
                 }
             case .addTicket:
                 return .none
@@ -394,6 +442,11 @@ public struct SocialAppFeature {
             // que já configuram o ticketDetailFeature.State com o ticket
             state.selectedTicketId = ticketId
             return .none
+            
+        case let .dismissNegotiationNavigation(negotiationId):
+            state.selectedNegotiationId = negotiationId
+            return .none
+            
             
         case let .navigateToSellerProfile(sellerId):
             state.selectedSellerId = sellerId
@@ -496,30 +549,22 @@ public struct SocialAppFeature {
             state.selectedTicketId = ticketId
             return .none
             
-        case let .favoritesFeature(.eventSelected(eventId)):
-            // Busca o evento favorito correspondente (comparação case-insensitive)
-            let favoriteEvent = state.favoritesFeature.favoriteEvents.first {
-                $0.eventId.lowercased() == eventId.uuidString.lowercased()
-            }
-            
-            // Reconstrói o Event a partir do FavoriteEvent usando a extensão asEvent
-            // (o ID já vem normalizado em lowercase do FavoriteEvent)
-            let reconstructedEvent: Event? = favoriteEvent?.asEvent
-            
-            // Cria o EventDetailFeature.State com o evento reconstruído
-            state.selectedEventId = eventId
-            state.eventDetailFeature = EventDetailFeature.State(eventId: eventId, event: reconstructedEvent)
-            
-            if reconstructedEvent != nil {
-                print("✅ Navegando para evento favorito com dados pré-carregados")
-            } else {
-                print("⚠️ Evento favorito não encontrado, fará chamada API")
-            }
-            
+        case let .negotiationsListFeature(.delegate(.negotiationSelected(negotiationId))):
+            // Navega para detalhes da negociação
+            state.selectedNegotiationId = negotiationId
             return .none
             
-        case .favoritesFeature(.navigateToEvents):
-            state.selectedTab = .home
+        case .negotiationsListFeature(.negotiationSelected):
+            // Esta action é tratada internamente pelo NegotiationsListFeature
+            return .none
+            
+        case let .negotiationsListFeature(.delegate(.negotiationRead(negotiationId))):
+            // Quando uma negociação é marcada como lida, atualiza o badge
+            // Decrementa o contador localmente (será sincronizado no próximo polling)
+            if state.unreadQuestionsCount > 0 {
+                state.unreadQuestionsCount = max(0, state.unreadQuestionsCount - 1)
+                print("🔔 Badge decrementado após marcar negociação como lida: \(negotiationId)")
+            }
             return .none
             
             // MARK: - Add Ticket Completion
@@ -557,7 +602,26 @@ public struct SocialAppFeature {
         case .addTicket:
             return .none
             
-        case .favoritesFeature:
+        case .negotiationsListFeature:
+            return .none
+            
+        case let .ticketDetailFeature(.delegate(.negotiationStarted(negotiationId))):
+            // Navega para a tela de negociação após criar
+            state.selectedNegotiationId = negotiationId
+            // Muda para a tab de negociações
+            state.selectedTab = .negotiations
+            print("✅ Navegando para negociação criada: \(negotiationId)")
+            return .none
+            
+        case let .ticketDetailFeature(.delegate(.navigateToExistingNegotiation(negotiationId))):
+            // Navega para negociação existente
+            state.selectedNegotiationId = negotiationId
+            // Muda para a tab de negociações
+            state.selectedTab = .negotiations
+            print("✅ Navegando para negociação existente: \(negotiationId)")
+            return .none
+            
+        case .ticketDetailFeature:
             return .none
             
         case .profileFeature(.updateProfileResponse(.success(let user))):

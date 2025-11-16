@@ -537,7 +537,7 @@ public enum AppTab: Hashable, CaseIterable {
     case home
     case tickets
     case addTicket
-    case favorites
+    case negotiations
     case profile
     
     var icon: String {
@@ -545,7 +545,7 @@ public enum AppTab: Hashable, CaseIterable {
         case .home: return "house.fill"
         case .tickets: return "ticket.fill"
         case .addTicket: return "plus"
-        case .favorites: return "heart.fill"
+        case .negotiations: return "message.fill"
         case .profile: return "person.fill"
         }
     }
@@ -1769,6 +1769,10 @@ public struct Negotiation: Codable, Identifiable, Equatable {
     public var buyer: User?
     public var seller: User?
     
+    // Perguntas e documentos da negociação
+    public var questions: [NegotiationQuestion]?
+    public var documents: [NegotiationDocument]?
+    
     public init(
         id: String = UUID().uuidString,
         ticketId: String,
@@ -1827,6 +1831,477 @@ public struct Negotiation: Codable, Identifiable, Equatable {
         case approvedAt = "approved_at"
         case completedAt = "completed_at"
         case cancelledAt = "cancelled_at"
+    }
+    
+    // Computed properties para perguntas e documentos
+    public var hasUnreadQuestions: Bool {
+        guard let questions = questions else { return false }
+        return questions.contains { !$0.isRead && $0.isAnswered }
+    }
+    
+    public var unreadQuestionsCount: Int {
+        guard let questions = questions else { return 0 }
+        return questions.filter { !$0.isRead && $0.isAnswered }.count
+    }
+    
+    public var unansweredQuestionsCount: Int {
+        guard let questions = questions else { return 0 }
+        return questions.filter { !$0.isAnswered }.count
+    }
+    
+    public var lastMessagePreview: String? {
+        guard let questions = questions, !questions.isEmpty else { return nil }
+        // Retorna a última pergunta ou resposta
+        let sortedQuestions = questions.sorted { $0.createdAt > $1.createdAt }
+        if let lastQuestion = sortedQuestions.first {
+            if let answer = lastQuestion.answer {
+                return answer.answerText
+            }
+            return lastQuestion.questionText
+        }
+        return nil
+    }
+    
+    public var lastMessageDate: Date? {
+        guard let questions = questions, !questions.isEmpty else { return createdAt }
+        let sortedQuestions = questions.sorted { $0.createdAt > $1.createdAt }
+        if let lastQuestion = sortedQuestions.first {
+            if let answer = lastQuestion.answer {
+                return answer.createdAt
+            }
+            return lastQuestion.createdAt
+        }
+        return createdAt
+    }
+}
+
+// MARK: - Negotiation Questions and Answers
+
+public enum QuestionCategory: String, Codable, CaseIterable, Equatable {
+    case authenticity = "authenticity"
+    case conditions = "conditions"
+    case delivery = "delivery"
+    case payment = "payment"
+    case other = "other"
+    
+    public var displayName: String {
+        switch self {
+        case .authenticity: return "Autenticidade"
+        case .conditions: return "Condições"
+        case .delivery: return "Entrega"
+        case .payment: return "Pagamento"
+        case .other: return "Outros"
+        }
+    }
+    
+    public var icon: String {
+        switch self {
+        case .authenticity: return "checkmark.seal.fill"
+        case .conditions: return "doc.text.fill"
+        case .delivery: return "shippingbox.fill"
+        case .payment: return "creditcard.fill"
+        case .other: return "ellipsis.circle.fill"
+        }
+    }
+}
+
+public struct NegotiationQuestion: Codable, Identifiable, Equatable {
+    public var id: String
+    public var negotiationId: String
+    public var questionText: String
+    public var category: QuestionCategory
+    public var isAnswered: Bool
+    public var answer: NegotiationAnswer?
+    public var createdAt: Date
+    public var answeredAt: Date?
+    public var isRead: Bool
+    
+    public init(
+        id: String = UUID().uuidString,
+        negotiationId: String,
+        questionText: String,
+        category: QuestionCategory,
+        isAnswered: Bool = false,
+        answer: NegotiationAnswer? = nil,
+        createdAt: Date = Date(),
+        answeredAt: Date? = nil,
+        isRead: Bool = false
+    ) {
+        self.id = id
+        self.negotiationId = negotiationId
+        self.questionText = questionText
+        self.category = category
+        self.isAnswered = isAnswered
+        self.answer = answer
+        self.createdAt = createdAt
+        self.answeredAt = answeredAt
+        self.isRead = isRead
+    }
+    
+    enum CodingKeys: String, CodingKey {
+        case id, category, answer
+        case negotiationId = "negotiation_id"
+        case questionText = "question_text"
+        case isAnswered = "is_answered"
+        case createdAt = "created_at"
+        case answeredAt = "answered_at"
+        case isRead = "is_read"
+    }
+}
+
+public struct NegotiationAnswer: Codable, Identifiable, Equatable {
+    public var id: String
+    public var questionId: String
+    public var negotiationId: String
+    public var answerText: String
+    public var answeredBy: String
+    public var createdAt: Date
+    
+    public init(
+        id: String = UUID().uuidString,
+        questionId: String,
+        negotiationId: String,
+        answerText: String,
+        answeredBy: String,
+        createdAt: Date = Date()
+    ) {
+        self.id = id
+        self.questionId = questionId
+        self.negotiationId = negotiationId
+        self.answerText = answerText
+        self.answeredBy = answeredBy
+        self.createdAt = createdAt
+    }
+    
+    enum CodingKeys: String, CodingKey {
+        case id, createdAt
+        case questionId = "question_id"
+        case negotiationId = "negotiation_id"
+        case answerText = "answer_text"
+        case answeredBy = "answered_by"
+    }
+}
+
+// MARK: - Negotiation Documents
+
+public enum DocumentType: String, Codable, Equatable {
+    case ticketPhoto = "ticket_photo"
+    case idDocument = "id_document"
+    
+    public var displayName: String {
+        switch self {
+        case .ticketPhoto: return "Foto do Ingresso"
+        case .idDocument: return "Documento de Identidade"
+        }
+    }
+    
+    public var icon: String {
+        switch self {
+        case .ticketPhoto: return "ticket.fill"
+        case .idDocument: return "person.text.rectangle.fill"
+        }
+    }
+}
+
+public struct NegotiationDocument: Codable, Identifiable, Equatable {
+    public var id: String
+    public var negotiationId: String
+    public var documentType: DocumentType
+    public var fileUrl: String
+    public var thumbnailUrl: String?
+    public var status: ValidationStatus
+    public var uploadedAt: Date
+    public var validatedAt: Date?
+    
+    public init(
+        id: String = UUID().uuidString,
+        negotiationId: String,
+        documentType: DocumentType,
+        fileUrl: String,
+        thumbnailUrl: String? = nil,
+        status: ValidationStatus = .pending,
+        uploadedAt: Date = Date(),
+        validatedAt: Date? = nil
+    ) {
+        self.id = id
+        self.negotiationId = negotiationId
+        self.documentType = documentType
+        self.fileUrl = fileUrl
+        self.thumbnailUrl = thumbnailUrl
+        self.status = status
+        self.uploadedAt = uploadedAt
+        self.validatedAt = validatedAt
+    }
+    
+    enum CodingKeys: String, CodingKey {
+        case id, fileUrl, thumbnailUrl, status, uploadedAt, validatedAt
+        case negotiationId = "negotiation_id"
+        case documentType = "document_type"
+        case fileUrl = "file_url"
+        case thumbnailUrl = "thumbnail_url"
+        case uploadedAt = "uploaded_at"
+        case validatedAt = "validated_at"
+    }
+}
+
+// MARK: - Request Models for Questions and Documents
+
+public struct CreateQuestionRequest: Codable {
+    public let questionText: String
+    public let category: QuestionCategory
+    
+    public init(questionText: String, category: QuestionCategory) {
+        self.questionText = questionText
+        self.category = category
+    }
+    
+    enum CodingKeys: String, CodingKey {
+        case questionText = "question_text"
+        case category
+    }
+}
+
+public struct AnswerQuestionRequest: Codable {
+    public let answerText: String
+    
+    public init(answerText: String) {
+        self.answerText = answerText
+    }
+    
+    enum CodingKeys: String, CodingKey {
+        case answerText = "answer_text"
+    }
+}
+
+public struct UploadDocumentRequest: Codable {
+    public let documentType: DocumentType
+    public let description: String?
+    
+    public init(documentType: DocumentType, description: String? = nil) {
+        self.documentType = documentType
+        self.description = description
+    }
+    
+    enum CodingKeys: String, CodingKey {
+        case documentType = "document_type"
+        case description
+    }
+}
+
+// MARK: - API Response Models for Questions and Documents
+
+public struct APINegotiationQuestionResponse: Codable {
+    let id: String
+    let negotiationId: String?
+    let negotiation_id: String?
+    let questionText: String?
+    let question_text: String?
+    let category: String
+    let isAnswered: Bool?
+    let is_answered: Bool?
+    let answer: APINegotiationAnswerResponse?
+    let createdAt: String?
+    let created_at: String?
+    let answeredAt: String?
+    let answered_at: String?
+    let isRead: Bool?
+    let is_read: Bool?
+    
+    var finalNegotiationId: String {
+        return negotiationId ?? negotiation_id ?? ""
+    }
+    
+    var finalQuestionText: String {
+        return questionText ?? question_text ?? ""
+    }
+    
+    var finalIsAnswered: Bool {
+        return isAnswered ?? is_answered ?? false
+    }
+    
+    var finalCreatedAt: String? {
+        return createdAt ?? created_at
+    }
+    
+    var finalAnsweredAt: String? {
+        return answeredAt ?? answered_at
+    }
+    
+    var finalIsRead: Bool {
+        return isRead ?? is_read ?? false
+    }
+    
+    func toNegotiationQuestion() -> NegotiationQuestion {
+        let dateFormatter = DateFormatter()
+        dateFormatter.locale = Locale(identifier: "en_US_POSIX")
+        let dateFormats = [
+            "yyyy-MM-dd'T'HH:mm:ss.SSSZ",
+            "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
+            "yyyy-MM-dd'T'HH:mm:ssZ",
+            "yyyy-MM-dd'T'HH:mm:ss'Z'"
+        ]
+        
+        func parseDate(_ dateString: String?) -> Date? {
+            guard let dateString = dateString else { return nil }
+            for format in dateFormats {
+                dateFormatter.dateFormat = format
+                if let date = dateFormatter.date(from: dateString) {
+                    return date
+                }
+            }
+            return nil
+        }
+        
+        return NegotiationQuestion(
+            id: id,
+            negotiationId: finalNegotiationId,
+            questionText: finalQuestionText,
+            category: QuestionCategory(rawValue: category) ?? .other,
+            isAnswered: finalIsAnswered,
+            answer: answer?.toNegotiationAnswer(),
+            createdAt: parseDate(finalCreatedAt) ?? Date(),
+            answeredAt: parseDate(finalAnsweredAt),
+            isRead: finalIsRead
+        )
+    }
+}
+
+public struct APINegotiationAnswerResponse: Codable {
+    let id: String
+    let questionId: String?
+    let question_id: String?
+    let negotiationId: String?
+    let negotiation_id: String?
+    let answerText: String?
+    let answer_text: String?
+    let answeredBy: String?
+    let answered_by: String?
+    let createdAt: String?
+    let created_at: String?
+    
+    var finalQuestionId: String {
+        return questionId ?? question_id ?? ""
+    }
+    
+    var finalNegotiationId: String {
+        return negotiationId ?? negotiation_id ?? ""
+    }
+    
+    var finalAnswerText: String {
+        return answerText ?? answer_text ?? ""
+    }
+    
+    var finalAnsweredBy: String {
+        return answeredBy ?? answered_by ?? ""
+    }
+    
+    var finalCreatedAt: String? {
+        return createdAt ?? created_at
+    }
+    
+    func toNegotiationAnswer() -> NegotiationAnswer {
+        let dateFormatter = DateFormatter()
+        dateFormatter.locale = Locale(identifier: "en_US_POSIX")
+        let dateFormats = [
+            "yyyy-MM-dd'T'HH:mm:ss.SSSZ",
+            "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
+            "yyyy-MM-dd'T'HH:mm:ssZ",
+            "yyyy-MM-dd'T'HH:mm:ss'Z'"
+        ]
+        
+        func parseDate(_ dateString: String?) -> Date? {
+            guard let dateString = dateString else { return nil }
+            for format in dateFormats {
+                dateFormatter.dateFormat = format
+                if let date = dateFormatter.date(from: dateString) {
+                    return date
+                }
+            }
+            return nil
+        }
+        
+        return NegotiationAnswer(
+            id: id,
+            questionId: finalQuestionId,
+            negotiationId: finalNegotiationId,
+            answerText: finalAnswerText,
+            answeredBy: finalAnsweredBy,
+            createdAt: parseDate(finalCreatedAt) ?? Date()
+        )
+    }
+}
+
+public struct APINegotiationDocumentResponse: Codable {
+    let id: String
+    let negotiationId: String?
+    let negotiation_id: String?
+    let documentType: String?
+    let document_type: String?
+    let fileUrl: String?
+    let file_url: String?
+    let thumbnailUrl: String?
+    let thumbnail_url: String?
+    let status: String
+    let uploadedAt: String?
+    let uploaded_at: String?
+    let validatedAt: String?
+    let validated_at: String?
+    
+    var finalNegotiationId: String {
+        return negotiationId ?? negotiation_id ?? ""
+    }
+    
+    var finalDocumentType: String {
+        return documentType ?? document_type ?? "ticket_photo"
+    }
+    
+    var finalFileUrl: String {
+        return fileUrl ?? file_url ?? ""
+    }
+    
+    var finalThumbnailUrl: String? {
+        return thumbnailUrl ?? thumbnail_url
+    }
+    
+    var finalUploadedAt: String? {
+        return uploadedAt ?? uploaded_at
+    }
+    
+    var finalValidatedAt: String? {
+        return validatedAt ?? validated_at
+    }
+    
+    func toNegotiationDocument() -> NegotiationDocument {
+        let dateFormatter = DateFormatter()
+        dateFormatter.locale = Locale(identifier: "en_US_POSIX")
+        let dateFormats = [
+            "yyyy-MM-dd'T'HH:mm:ss.SSSZ",
+            "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
+            "yyyy-MM-dd'T'HH:mm:ssZ",
+            "yyyy-MM-dd'T'HH:mm:ss'Z'"
+        ]
+        
+        func parseDate(_ dateString: String?) -> Date? {
+            guard let dateString = dateString else { return nil }
+            for format in dateFormats {
+                dateFormatter.dateFormat = format
+                if let date = dateFormatter.date(from: dateString) {
+                    return date
+                }
+            }
+            return nil
+        }
+        
+        return NegotiationDocument(
+            id: id,
+            negotiationId: finalNegotiationId,
+            documentType: DocumentType(rawValue: finalDocumentType) ?? .ticketPhoto,
+            fileUrl: finalFileUrl,
+            thumbnailUrl: finalThumbnailUrl,
+            status: ValidationStatus(rawValue: status) ?? .pending,
+            uploadedAt: parseDate(finalUploadedAt) ?? Date(),
+            validatedAt: parseDate(finalValidatedAt)
+        )
     }
 }
 

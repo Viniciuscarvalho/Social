@@ -147,7 +147,7 @@ public struct ProfileView: View {
             menuRow(
                 icon: "qrcode",
                 iconTint: AppColors.accentGreen,
-                title: "Tickets",
+                title: "Ingressos",
                 subtitle: "Seus ingressos e QR Codes"
             ) {
                 store.send(.myTicketsTapped)

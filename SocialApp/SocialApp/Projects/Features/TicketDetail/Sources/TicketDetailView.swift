@@ -261,16 +261,37 @@ public struct TicketDetailView: View {
                     Button(action: {
                         store.send(.negotiateTapped)
                     }) {
-                        Text("Negociar Ingresso")
-                            .font(.system(size: 16, weight: .semibold))
-                            .foregroundColor(.white)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 16)
-                            .background(AppColors.primary)
-                            .cornerRadius(12)
+                        HStack {
+                            if store.isStartingNegotiation {
+                                ProgressView()
+                                    .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                    .scaleEffect(0.9)
+                            } else {
+                                Text("Iniciar Negociação")
+                                    .font(.system(size: 16, weight: .semibold))
+                            }
+                        }
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 16)
+                        .background(
+                            (store.ticketDetail?.status == .available && !store.isStartingNegotiation) ?
+                            AppColors.primary : Color.gray
+                        )
+                        .cornerRadius(12)
                     }
+                    .disabled(store.ticketDetail?.status != .available || store.isStartingNegotiation)
                     .padding(.horizontal, 20)
                     .padding(.bottom, 32)
+                    .alert("Erro", isPresented: $store.showingNegotiationError) {
+                        Button("OK", role: .cancel) {
+                            store.showingNegotiationError = false
+                        }
+                    } message: {
+                        if let errorMessage = store.errorMessage {
+                            Text(errorMessage)
+                        }
+                    }
                 }
             }
         }
