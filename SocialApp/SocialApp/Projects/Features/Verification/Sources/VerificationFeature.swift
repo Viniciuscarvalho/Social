@@ -1,6 +1,67 @@
 import ComposableArchitecture
 import Foundation
 
+// MARK: - Minimal child features stubs (kept here to ensure target membership)
+@Reducer
+public struct EmailVerificationFeature {
+    @ObservableState
+    public struct State: Equatable {
+        public var email: String
+        public init(email: String = "") { self.email = email }
+    }
+    public enum Action {
+        case delegate(Delegate)
+        public enum Delegate: Equatable {
+            case verificationCompleted(UserVerification)
+            case dismiss
+        }
+    }
+    public init() {}
+    public var body: some ReducerOf<Self> {
+        Reduce { _, action in
+            switch action { case .delegate: return .none }
+        }
+    }
+}
+
+@Reducer
+public struct PhoneVerificationFeature {
+    @ObservableState
+    public struct State: Equatable { public init() {} }
+    public enum Action {
+        case delegate(Delegate)
+        public enum Delegate: Equatable {
+            case verificationCompleted(UserVerification)
+            case dismiss
+        }
+    }
+    public init() {}
+    public var body: some ReducerOf<Self> {
+        Reduce { _, action in
+            switch action { case .delegate: return .none }
+        }
+    }
+}
+
+@Reducer
+public struct DocumentVerificationFeature {
+    @ObservableState
+    public struct State: Equatable { public init() {} }
+    public enum Action {
+        case delegate(Delegate)
+        public enum Delegate: Equatable {
+            case verificationSubmitted(UserVerification)
+            case dismiss
+        }
+    }
+    public init() {}
+    public var body: some ReducerOf<Self> {
+        Reduce { _, action in
+            switch action { case .delegate: return .none }
+        }
+    }
+}
+
 @Reducer
 public struct VerificationFeature {
     // MARK: - Verification Type

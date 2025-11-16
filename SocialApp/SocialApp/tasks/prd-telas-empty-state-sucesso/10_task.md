@@ -118,3 +118,4 @@ Implementar testes unitários e de integração para garantir que todas as telas
 - `SocialApp/Sources/Commons/ErrorView.swift` (EmptyStateView a testar)
 - Todas as views atualizadas nas tarefas 3-8
 
+

@@ -36,3 +36,4 @@ O aplicativo possui strings misturadas em português e inglês, espalhadas pelo 
 
 
 
+

@@ -101,3 +101,4 @@ private var emptyStateView: some View {
 - `SocialApp/Resources/Localizable.xcstrings` (chaves de localização)
 - `SocialApp/Sources/SocialAppView.swift` (referência de navegação entre tabs)
 
+

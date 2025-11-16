@@ -86,3 +86,4 @@ public struct SuccessView: View {
 - `SocialApp/Sources/ThemeApp/AppColors.swift` (referência de cores)
 - `SocialApp/Sources/Commons/ErrorView.swift` (referência de estrutura similar)
 
+

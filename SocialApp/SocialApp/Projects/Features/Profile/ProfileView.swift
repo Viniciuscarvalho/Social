@@ -20,22 +20,11 @@ public struct ProfileView: View {
             } else {
                 ScrollView {
                     VStack(spacing: 24) {
-                        // Header do perfil
+                        // Header do perfil (cartão principal)
                         profileHeaderView
                         
-                        // Estatísticas do usuário
-                        if store.user != nil {
-                            userStatsSection
-                        }
-                        
-                        // Seção de configurações
-                        settingsSection
-                        
-                        // Seção de notificações
-                        notificationsSection
-                        
-                        // Seção de conta
-                        accountSection
+                        // Menu principal (Tickets, Mais, Logout)
+                        menuSection
                         
                         // Rodapé
                         footerView
@@ -80,67 +69,61 @@ public struct ProfileView: View {
     private var profileHeaderView: some View {
         VStack(spacing: 16) {
             if let user = store.user {
-                // Foto do perfil
-                Button(action: { store.send(.changeProfileImageTapped) }) {
-                    AsyncImage(url: URL(string: user.profileImageURL ?? "")) { image in
-                        image
-                            .resizable()
-                            .aspectRatio(contentMode: .fill)
-                    } placeholder: {
-                        Image(systemName: "person.circle.fill")
-                            .font(.system(size: 80))
-                            .foregroundColor(AppColors.primary)
-                    }
-                    .frame(width: 80, height: 80)
-                    .clipShape(Circle())
-                    .overlay(
-                        Circle()
-                            .stroke(AppColors.cardBackground, lineWidth: 2)
-                    )
-                    .overlay(
-                        Image(systemName: "camera.fill")
-                            .font(.system(size: 12))
-                            .foregroundColor(.white)
-                            .padding(6)
-                            .background(AppColors.primary)
-                            .clipShape(Circle())
-                            .offset(x: 28, y: 28)
-                    )
-                }
-                
-                // Informações do usuário
-                VStack(spacing: 4) {
-                    Text(user.name)
-                        .font(.title2)
-                        .fontWeight(.semibold)
-                        .foregroundColor(AppColors.primaryText)
+                ZStack {
+                    RoundedRectangle(cornerRadius: 20)
+                        .fill(AppColors.cardBackground)
+                        .shadow(color: AppColors.cardShadow.opacity(0.12), radius: 12, x: 0, y: 6)
                     
-                    Text(user.email)
-                        .font(.subheadline)
-                        .foregroundColor(AppColors.secondaryText)
-                    
-                    if let title = user.title {
-                        Text(title)
-                            .font(.caption)
-                            .foregroundColor(AppColors.primary)
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 4)
-                            .background(AppColors.primary.opacity(0.1))
-                            .cornerRadius(8)
+                    HStack(spacing: 16) {
+                        // Avatar
+                        Button(action: { store.send(.changeProfileImageTapped) }) {
+                            ZStack(alignment: .bottomTrailing) {
+                                AsyncImage(url: URL(string: user.profileImageURL ?? "")) { image in
+                                    image
+                                        .resizable()
+                                        .aspectRatio(contentMode: .fill)
+                                } placeholder: {
+                                    Image(systemName: "person.crop.circle.fill")
+                                        .resizable()
+                                        .scaledToFit()
+                                        .foregroundColor(AppColors.primary)
+                                }
+                                .frame(width: 64, height: 64)
+                                .clipShape(Circle())
+                                
+                                Image(systemName: "camera.fill")
+                                    .font(.system(size: 10))
+                                    .foregroundColor(.white)
+                                    .padding(6)
+                                    .background(AppColors.primary)
+                                    .clipShape(Circle())
+                            }
+                        }
+                        
+                        // Nome e email
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(user.name)
+                                .font(.headline)
+                                .foregroundColor(AppColors.primaryText)
+                            
+                            Text(user.email)
+                                .font(.subheadline)
+                                .foregroundColor(AppColors.secondaryText)
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        
+                        // Editar
+                        Button(action: { store.send(.editProfileTapped) }) {
+                            Image(systemName: "pencil")
+                                .font(.system(size: 14, weight: .semibold))
+                                .foregroundColor(.white)
+                                .padding(10)
+                                .background(AppColors.primary)
+                                .clipShape(Circle())
+                        }
+                        .accessibilityLabel("Editar perfil")
                     }
-                    
-                    Button("Editar Perfil") {
-                        store.send(.editProfileTapped)
-                    }
-                    .font(.subheadline)
-                    .foregroundColor(AppColors.primary)
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 8)
-                    .background(
-                        RoundedRectangle(cornerRadius: 16)
-                            .stroke(AppColors.primary, lineWidth: 1)
-                            .fill(AppColors.cardBackground.opacity(0.1))
-                    )
+                    .padding(16)
                 }
             } else {
                 VStack(spacing: 12) {
@@ -158,182 +141,59 @@ public struct ProfileView: View {
     }
     
     @ViewBuilder
-    private var userStatsSection: some View {
-        if let user = store.user {
-            HStack(spacing: 30) {
-                VStack {
-                    Text("\(user.followersCount)")
-                        .font(.headline)
-                        .foregroundColor(AppColors.primaryText)
-                    Text("Seguidores")
-                        .font(.caption)
-                        .foregroundColor(AppColors.tertiaryText)
-                }
-                
-                VStack {
-                    Text("\(user.followingCount)")
-                        .font(.headline)
-                        .foregroundColor(AppColors.primaryText)
-                    Text("Seguindo")
-                        .font(.caption)
-                        .foregroundColor(AppColors.tertiaryText)
-                }
-                
-                VStack {
-                    Text("\(store.user?.ticketsCount ?? store.ticketsCount)")
-                        .font(.headline)
-                        .foregroundColor(AppColors.primaryText)
-                    Text("Ingressos")
-                        .font(.caption)
-                        .foregroundColor(AppColors.tertiaryText)
-                }
-                
-                if user.isVerified {
-                    VStack(spacing: 4) {
-                        Image(systemName: "checkmark.seal.fill")
-                            .font(.system(size: 20))
-                            .foregroundColor(AppColors.primary)
-                        
-                        Text("Verificado")
-                            .font(.caption)
-                            .foregroundColor(AppColors.primary)
-                    }
-                }
+    private var menuSection: some View {
+        VStack(spacing: 12) {
+            // Tickets
+            menuRow(
+                icon: "qrcode",
+                iconTint: AppColors.accentGreen,
+                title: "Tickets",
+                subtitle: "Seus ingressos e QR Codes"
+            ) {
+                store.send(.myTicketsTapped)
             }
-            .padding()
-            .background(
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(AppColors.cardBackground)
-                    .shadow(color: AppColors.cardShadow.opacity(0.1), radius: 8, x: 0, y: 4)
-            )
-        }
-    }
-    
-    @ViewBuilder
-    private var settingsSection: some View {
-        VStack(spacing: 0) {
-            sectionHeader("Configurações")
             
-            VStack(spacing: 0) {
-                // Botão de aparência
-                settingsRow(
-                    icon: themeIcon,
-                    iconColor: AppColors.primary,
-                    title: "Aparência",
-                    subtitle: themeManager.displayName,
-                    action: {
-                        withAnimation(.easeInOut(duration: 0.3)) {
-                            themeManager.toggleColorScheme()
-                        }
-                    }
-                )
-                
-                Divider()
-                    .padding(.leading, 52)
-                
-                // Privacidade
-                settingsRow(
-                    icon: "hand.raised.fill",
-                    iconColor: AppColors.warning,
-                    title: "Privacidade e Segurança",
-                    subtitle: "Gerencie suas configurações",
-                    action: {
-                        store.send(.privacySettingsTapped)
-                    }
-                )
+            // Mais (usando ação de suporte existente)
+            menuRow(
+                icon: "ellipsis.circle.fill",
+                iconTint: AppColors.secondary,
+                title: "More",
+                subtitle: "FAQ, Política de Privacidade e contato"
+            ) {
+                store.send(.supportTapped)
             }
-            .background(
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(AppColors.cardBackground)
-                    .shadow(color: AppColors.cardShadow.opacity(0.1), radius: 8, x: 0, y: 4)
-            )
-        }
-    }
-    
-    @ViewBuilder
-    private var notificationsSection: some View {
-        VStack(spacing: 0) {
-            sectionHeader("Notificações")
             
-            VStack(spacing: 0) {
-                // Push notifications
-                toggleRow(
-                    icon: "iphone",
-                    iconColor: AppColors.secondary,
-                    title: "Push",
-                    subtitle: "Notificações no dispositivo",
-                    isOn: $store.pushNotifications.sending(\.togglePushNotifications)
-                )
-            }
-            .background(
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(AppColors.cardBackground)
-                    .shadow(color: AppColors.cardShadow.opacity(0.1), radius: 8, x: 0, y: 4)
-            )
-        }
-    }
-    
-    @ViewBuilder
-    private var accountSection: some View {
-        VStack(spacing: 0) {
-            sectionHeader("Conta")
-            
-            VStack(spacing: 0) {
-                // Meus ingressos
-                settingsRow(
-                    icon: "ticket.fill",
-                    iconColor: AppColors.accentGreen,
-                    title: "Meus Ingressos",
-                    subtitle: "Gerenciar ingressos publicados",
-                    action: {
-                        store.send(.myTicketsTapped)
-                    }
-                )
-                
-                Divider()
-                    .padding(.leading, 52)
-                
-                // Suporte
-                settingsRow(
-                    icon: "questionmark.circle.fill",
-                    iconColor: AppColors.warning,
-                    title: "Suporte",
-                    subtitle: "Ajuda e perguntas frequentes",
-                    action: {
-                        store.send(.supportTapped)
-                    }
-                )
-                
-                Divider()
-                    .padding(.leading, 52)
-                
-                // Sair
-                Button(action: {
-                    store.send(.signOutTapped)
-                }) {
-                    HStack(spacing: 16) {
+            // Logout
+            Button(action: { store.send(.signOutTapped) }) {
+                HStack(spacing: 12) {
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(AppColors.error.opacity(0.12))
+                            .frame(width: 36, height: 36)
                         Image(systemName: "rectangle.portrait.and.arrow.right")
-                            .font(.system(size: 20))
+                            .font(.system(size: 16, weight: .semibold))
                             .foregroundColor(AppColors.error)
-                            .frame(width: 28, height: 28)
-                        
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("Sair")
-                                .font(.body)
-                                .foregroundColor(AppColors.error)
-                        }
-                        
-                        Spacer()
                     }
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 12)
+                    
+                    Text("Logout")
+                        .font(.body.weight(.semibold))
+                        .foregroundColor(AppColors.error)
+                    
+                    Spacer()
+                    
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(AppColors.tertiaryText)
                 }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 14)
+                .background(
+                    RoundedRectangle(cornerRadius: 16)
+                        .fill(AppColors.cardBackground)
+                        .shadow(color: AppColors.cardShadow.opacity(0.08), radius: 8, x: 0, y: 4)
+                )
             }
-            .background(
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(AppColors.cardBackground)
-                    .shadow(color: AppColors.cardShadow.opacity(0.1), radius: 8, x: 0, y: 4)
-            )
+            .buttonStyle(.plain)
         }
     }
     
@@ -396,6 +256,51 @@ public struct ProfileView: View {
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
+        }
+        .buttonStyle(.plain)
+    }
+    
+    @ViewBuilder
+    private func menuRow(
+        icon: String,
+        iconTint: Color,
+        title: String,
+        subtitle: String,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            HStack(spacing: 12) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(iconTint.opacity(0.12))
+                        .frame(width: 36, height: 36)
+                    Image(systemName: icon)
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundColor(iconTint)
+                }
+                
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(title)
+                        .font(.body.weight(.semibold))
+                        .foregroundColor(AppColors.primaryText)
+                    Text(subtitle)
+                        .font(.caption)
+                        .foregroundColor(AppColors.secondaryText)
+                }
+                
+                Spacer()
+                
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(AppColors.tertiaryText)
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 14)
+            .background(
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(AppColors.cardBackground)
+                    .shadow(color: AppColors.cardShadow.opacity(0.08), radius: 8, x: 0, y: 4)
+            )
         }
         .buttonStyle(.plain)
     }

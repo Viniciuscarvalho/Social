@@ -1,5 +1,10 @@
 import SwiftUI
 import ComposableArchitecture
+import Foundation
+
+// Importar as views de verificação que estão definidas nos arquivos de Feature
+// PhoneVerificationView está em PhoneVerificationFeature.swift
+// DocumentVerificationView está em DocumentVerificationFeature.swift
 
 public struct VerificationView: View {
     @Bindable var store: StoreOf<VerificationFeature>

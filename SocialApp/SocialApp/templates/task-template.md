@@ -1,3 +1,22 @@
+# [X.0] Título da Tarefa (S/M/L)
+
+## Objetivo
+- Descreva claramente o objetivo da tarefa e o resultado esperado.
+
+## Subtarefas
+- [ ] X.1 Descrever primeira subtarefa
+- [ ] X.2 Descrever segunda subtarefa
+- [ ] X.3 Descrever terceira subtarefa
+
+## Critérios de Sucesso
+- Aponte critérios objetivos e verificáveis para considerar a tarefa concluída.
+
+## Dependências
+- Liste tarefas ou recursos que precisam existir antes desta.
+
+## Observações
+- Notas adicionais relevantes para execução/validação.
+
 ## markdown
 
 ## status: pending # Opções: pending, in-progress, completed, excluded

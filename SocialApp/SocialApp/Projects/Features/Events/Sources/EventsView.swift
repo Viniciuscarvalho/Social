@@ -16,16 +16,6 @@ public struct EventsView: View {
                     Spacer()
                         .frame(height: 100)
                     
-                    // Barra de busca persistente
-                    SearchBarView(
-                        searchText: $store.searchText.sending(\.searchTextChanged),
-                        placeholder: "Search...",
-                        onFilterTap: {
-                            store.send(.showFilterSheetChanged(true))
-                        }
-                    )
-                    .padding(.horizontal, 16)
-                    
                     // Seção Popular
                     if !store.popularEvents.isEmpty {
                         popularSection
