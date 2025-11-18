@@ -220,25 +220,27 @@ public struct ContactRevealView: View {
     }
     
     private func openWhatsAppWithNegotiation(negotiation: Negotiation) {
-        // Por enquanto, como não temos phone no User, vamos usar um fallback
-        // Quando phone estiver disponível, usar:
-        // if let phone = store.revealedSeller?.phone, !phone.isEmpty {
-        //     let success = DeepLinkService.shared.openWhatsAppWithNegotiation(
-        //         phoneNumber: phone,
-        //         negotiation: negotiation
-        //     )
-        //     if !success {
-        //         // Fallback: copiar mensagem
-        //         let message = DeepLinkService.shared.generateNegotiationMessage(negotiation: negotiation)
-        //         DeepLinkService.shared.copyToClipboard(message)
-        //         showingCopiedFeedback = true
-        //     }
-        // }
+        guard let seller = store.revealedSeller else { return }
         
-        // Por enquanto, apenas copia a mensagem para clipboard
-        let message = DeepLinkService.shared.generateNegotiationMessage(negotiation: negotiation)
-        DeepLinkService.shared.copyToClipboard(message)
-        showingCopiedFeedback = true
+        // Tenta usar telefone se disponível
+        if let phone = seller.phone, !phone.isEmpty {
+            let success = DeepLinkService.shared.openWhatsAppWithNegotiation(
+                phoneNumber: phone,
+                negotiation: negotiation
+            )
+            
+            if !success {
+                // Fallback: copiar mensagem para clipboard
+                let message = DeepLinkService.shared.generateNegotiationMessage(negotiation: negotiation)
+                DeepLinkService.shared.copyToClipboard(message)
+                showingCopiedFeedback = true
+            }
+        } else {
+            // Se não houver telefone, copia a mensagem para clipboard
+            let message = DeepLinkService.shared.generateNegotiationMessage(negotiation: negotiation)
+            DeepLinkService.shared.copyToClipboard(message)
+            showingCopiedFeedback = true
+        }
     }
 }
 

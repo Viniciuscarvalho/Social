@@ -150,6 +150,26 @@ public struct SocialAppView: View {
         ) { _ in
             store.send(.tabSelected(.home))
         }
+        
+        // Listener para atualizar badge quando pergunta é respondida
+        NotificationCenter.default.addObserver(
+            forName: NSNotification.Name("QuestionAnswered"),
+            object: nil,
+            queue: .main
+        ) { _ in
+            print("🔔 Pergunta respondida - atualizando badge")
+            store.send(.updateBadgeCount)
+        }
+        
+        // Listener para atualizar badge quando negociação é marcada como lida
+        NotificationCenter.default.addObserver(
+            forName: NSNotification.Name("NegotiationRead"),
+            object: nil,
+            queue: .main
+        ) { _ in
+            print("🔔 Negociação marcada como lida - atualizando badge")
+            store.send(.updateBadgeCount)
+        }
     }
 }
 
@@ -191,6 +211,7 @@ struct MainTabView: View {
             if !isShowingDetail {
                 CustomTabBar(
                     selectedTab: $store.selectedTab.sending(\.tabSelected),
+                    unreadQuestionsCount: store.unreadQuestionsCount,
                     onAddTicket: {
                         store.send(.addTicketTapped)
                     }
@@ -400,6 +421,7 @@ struct MainTabView: View {
 
 struct CustomTabBar: View {
     @Binding var selectedTab: AppTab
+    let unreadQuestionsCount: Int
     let onAddTicket: () -> Void
     
     var body: some View {
@@ -428,7 +450,7 @@ struct CustomTabBar: View {
             TabBarButton(
                 icon: AppTab.negotiations.icon,
                 isSelected: selectedTab == .negotiations,
-                badgeCount: store.unreadQuestionsCount > 0 ? store.unreadQuestionsCount : nil
+                badgeCount: unreadQuestionsCount > 0 ? unreadQuestionsCount : nil
             ) {
                 selectedTab = .negotiations
             }

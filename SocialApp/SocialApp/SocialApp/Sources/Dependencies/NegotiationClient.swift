@@ -439,248 +439,6 @@ extension NegotiationClient: DependencyKey {
             return mockVerification
         },
         
-        // MARK: - Questions and Answers Implementation
-        fetchQuestions: { negotiationId in
-            print("❓ Buscando perguntas da negociação: \(negotiationId)")
-            struct APIQuestionResponse: Codable {
-                let id: String
-                let negotiationId: String?
-                let negotiation_id: String?
-                let questionText: String?
-                let question_text: String?
-                let category: String
-                let isAnswered: Bool?
-                let is_answered: Bool?
-                let answer: APIAnswerResponse?
-                let createdAt: String?
-                let created_at: String?
-                let answeredAt: String?
-                let answered_at: String?
-                let isRead: Bool?
-                let is_read: Bool?
-                
-                struct APIAnswerResponse: Codable {
-                    let id: String
-                    let questionId: String?
-                    let question_id: String?
-                    let negotiationId: String?
-                    let negotiation_id: String?
-                    let answerText: String?
-                    let answer_text: String?
-                    let answeredBy: String?
-                    let answered_by: String?
-                    let createdAt: String?
-                    let created_at: String?
-                    
-                    func toAnswer() -> NegotiationAnswer {
-                        let dateFormatter = DateFormatter()
-                        dateFormatter.locale = Locale(identifier: "en_US_POSIX")
-                        let dateFormats = [
-                            "yyyy-MM-dd'T'HH:mm:ss.SSSZ",
-                            "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
-                            "yyyy-MM-dd'T'HH:mm:ssZ",
-                            "yyyy-MM-dd'T'HH:mm:ss'Z'"
-                        ]
-                        
-                        var createdAtDate = Date()
-                        let createdAtString = createdAt ?? created_at ?? ""
-                        if !createdAtString.isEmpty {
-                            for format in dateFormats {
-                                dateFormatter.dateFormat = format
-                                if let date = dateFormatter.date(from: createdAtString) {
-                                    createdAtDate = date
-                                    break
-                                }
-                            }
-                        }
-                        
-                        return NegotiationAnswer(
-                            id: id,
-                            questionId: questionId ?? question_id ?? "",
-                            negotiationId: negotiationId ?? negotiation_id ?? "",
-                            answerText: answerText ?? answer_text ?? "",
-                            answeredBy: answeredBy ?? answered_by ?? "",
-                            createdAt: createdAtDate
-                        )
-                    }
-                }
-                
-                func toQuestion() -> NegotiationQuestion {
-                    let dateFormatter = DateFormatter()
-                    dateFormatter.locale = Locale(identifier: "en_US_POSIX")
-                    let dateFormats = [
-                        "yyyy-MM-dd'T'HH:mm:ss.SSSZ",
-                        "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
-                        "yyyy-MM-dd'T'HH:mm:ssZ",
-                        "yyyy-MM-dd'T'HH:mm:ss'Z'"
-                    ]
-                    
-                    var createdAtDate = Date()
-                    let createdAtString = createdAt ?? created_at ?? ""
-                    if !createdAtString.isEmpty {
-                        for format in dateFormats {
-                            dateFormatter.dateFormat = format
-                            if let date = dateFormatter.date(from: createdAtString) {
-                                createdAtDate = date
-                                break
-                            }
-                        }
-                    }
-                    
-                    var answeredAtDate: Date? = nil
-                    let answeredAtString = answeredAt ?? answered_at
-                    if let answeredAtString = answeredAtString, !answeredAtString.isEmpty {
-                        for format in dateFormats {
-                            dateFormatter.dateFormat = format
-                            if let date = dateFormatter.date(from: answeredAtString) {
-                                answeredAtDate = date
-                                break
-                            }
-                        }
-                    }
-                    
-                    return NegotiationQuestion(
-                        id: id,
-                        negotiationId: negotiationId ?? negotiation_id ?? "",
-                        questionText: questionText ?? question_text ?? "",
-                        category: QuestionCategory(rawValue: category) ?? .other,
-                        isAnswered: isAnswered ?? is_answered ?? false,
-                        answer: answer?.toAnswer(),
-                        createdAt: createdAtDate,
-                        answeredAt: answeredAtDate,
-                        isRead: isRead ?? is_read ?? false
-                    )
-                }
-            }
-            
-            let questions: [APIQuestionResponse] = try await NetworkService.shared.requestArray(
-                endpoint: "/negotiations/\(negotiationId)/questions",
-                method: .GET,
-                requiresAuth: true
-            )
-            print("✅ \(questions.count) perguntas encontradas")
-            return questions.map { $0.toQuestion() }
-        },
-        
-        createQuestion: { negotiationId, request in
-            print("❓ Criando pergunta na negociação: \(negotiationId)")
-            struct APIQuestionResponse: Codable {
-                let id: String
-                let negotiationId: String?
-                let negotiation_id: String?
-                let questionText: String?
-                let question_text: String?
-                let category: String
-                let isAnswered: Bool?
-                let is_answered: Bool?
-                let createdAt: String?
-                let created_at: String?
-                
-                func toQuestion() -> NegotiationQuestion {
-                    let dateFormatter = DateFormatter()
-                    dateFormatter.locale = Locale(identifier: "en_US_POSIX")
-                    dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
-                    
-                    return NegotiationQuestion(
-                        id: id,
-                        negotiationId: negotiationId ?? negotiation_id ?? "",
-                        questionText: questionText ?? question_text ?? "",
-                        category: QuestionCategory(rawValue: category) ?? .other,
-                        isAnswered: false,
-                        answer: nil,
-                        createdAt: dateFormatter.date(from: createdAt ?? created_at ?? "") ?? Date(),
-                        answeredAt: nil,
-                        isRead: false
-                    )
-                }
-            }
-            
-            let question: APIQuestionResponse = try await NetworkService.shared.requestSingle(
-                endpoint: "/negotiations/\(negotiationId)/questions",
-                method: .POST,
-                body: request,
-                requiresAuth: true
-            )
-            print("✅ Pergunta criada: \(question.id)")
-            return question.toQuestion()
-        },
-        
-        answerQuestion: { negotiationId, questionId, answerText in
-            print("💬 Respondendo pergunta \(questionId) na negociação: \(negotiationId)")
-            struct AnswerRequest: Codable {
-                let answerText: String
-                
-                enum CodingKeys: String, CodingKey {
-                    case answerText = "answer_text"
-                }
-            }
-            
-            struct APIAnswerResponse: Codable {
-                let id: String
-                let questionId: String?
-                let question_id: String?
-                let negotiationId: String?
-                let negotiation_id: String?
-                let answerText: String?
-                let answer_text: String?
-                let answeredBy: String?
-                let answered_by: String?
-                let createdAt: String?
-                let created_at: String?
-                
-                func toAnswer() -> NegotiationAnswer {
-                    let dateFormatter = DateFormatter()
-                    dateFormatter.locale = Locale(identifier: "en_US_POSIX")
-                    let dateFormats = [
-                        "yyyy-MM-dd'T'HH:mm:ss.SSSZ",
-                        "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
-                        "yyyy-MM-dd'T'HH:mm:ssZ",
-                        "yyyy-MM-dd'T'HH:mm:ss'Z'"
-                    ]
-                    
-                    var createdAtDate = Date()
-                    let createdAtString = createdAt ?? created_at ?? ""
-                    if !createdAtString.isEmpty {
-                        for format in dateFormats {
-                            dateFormatter.dateFormat = format
-                            if let date = dateFormatter.date(from: createdAtString) {
-                                createdAtDate = date
-                                break
-                            }
-                        }
-                    }
-                    
-                    return NegotiationAnswer(
-                        id: id,
-                        questionId: questionId ?? question_id ?? "",
-                        negotiationId: negotiationId ?? negotiation_id ?? "",
-                        answerText: answerText ?? answer_text ?? "",
-                        answeredBy: answeredBy ?? answered_by ?? "",
-                        createdAt: createdAtDate
-                    )
-                }
-            }
-            
-            let answer: APIAnswerResponse = try await NetworkService.shared.requestSingle(
-                endpoint: "/negotiations/\(negotiationId)/questions/\(questionId)/answer",
-                method: .POST,
-                body: AnswerRequest(answerText: answerText),
-                requiresAuth: true
-            )
-            print("✅ Resposta enviada")
-            return answer.toAnswer()
-        },
-        
-        markAsRead: { negotiationId in
-            print("👁️ Marcando negociação como lida: \(negotiationId)")
-            let _: APISingleResponse<String> = try await NetworkService.shared.requestSingle(
-                endpoint: "/negotiations/\(negotiationId)/mark-read",
-                method: .PATCH,
-                requiresAuth: true
-            )
-            print("✅ Negociação marcada como lida")
-        },
-        
         fetchUnreadQuestionsCount: {
             print("🔔 Buscando contador de perguntas não respondidas")
             struct UnreadCountResponse: Codable {
@@ -694,157 +452,6 @@ extension NegotiationClient: DependencyKey {
             )
             print("✅ \(response.count) perguntas não respondidas")
             return response.count
-        },
-        
-        // MARK: - Documents Implementation
-        fetchDocuments: { negotiationId in
-            print("📄 Buscando documentos da negociação: \(negotiationId)")
-            struct APIDocumentResponse: Codable {
-                let id: String
-                let negotiationId: String?
-                let negotiation_id: String?
-                let documentType: String?
-                let document_type: String?
-                let fileUrl: String?
-                let file_url: String?
-                let thumbnailUrl: String?
-                let thumbnail_url: String?
-                let status: String
-                let uploadedAt: String?
-                let uploaded_at: String?
-                let validatedAt: String?
-                let validated_at: String?
-                
-                func toDocument() -> NegotiationDocument {
-                    let dateFormatter = DateFormatter()
-                    dateFormatter.locale = Locale(identifier: "en_US_POSIX")
-                    let dateFormats = [
-                        "yyyy-MM-dd'T'HH:mm:ss.SSSZ",
-                        "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
-                        "yyyy-MM-dd'T'HH:mm:ssZ",
-                        "yyyy-MM-dd'T'HH:mm:ss'Z'"
-                    ]
-                    
-                    var uploadedAtDate = Date()
-                    let uploadedAtString = uploadedAt ?? uploaded_at ?? ""
-                    if !uploadedAtString.isEmpty {
-                        for format in dateFormats {
-                            dateFormatter.dateFormat = format
-                            if let date = dateFormatter.date(from: uploadedAtString) {
-                                uploadedAtDate = date
-                                break
-                            }
-                        }
-                    }
-                    
-                    var validatedAtDate: Date? = nil
-                    let validatedAtString = validatedAt ?? validated_at
-                    if let validatedAtString = validatedAtString, !validatedAtString.isEmpty {
-                        for format in dateFormats {
-                            dateFormatter.dateFormat = format
-                            if let date = dateFormatter.date(from: validatedAtString) {
-                                validatedAtDate = date
-                                break
-                            }
-                        }
-                    }
-                    
-                    return NegotiationDocument(
-                        id: id,
-                        negotiationId: negotiationId ?? negotiation_id ?? "",
-                        documentType: DocumentType(rawValue: documentType ?? document_type ?? "ticket_photo") ?? .ticketPhoto,
-                        fileUrl: fileUrl ?? file_url ?? "",
-                        thumbnailUrl: thumbnailUrl ?? thumbnail_url,
-                        status: ValidationStatus(rawValue: status) ?? .pending,
-                        uploadedAt: uploadedAtDate,
-                        validatedAt: validatedAtDate
-                    )
-                }
-            }
-            
-            let documents: [APIDocumentResponse] = try await NetworkService.shared.requestArray(
-                endpoint: "/negotiations/\(negotiationId)/documents",
-                method: .GET,
-                requiresAuth: true
-            )
-            print("✅ \(documents.count) documentos encontrados")
-            return documents.map { $0.toDocument() }
-        },
-        
-        uploadDocument: { negotiationId, documentData, documentType in
-            print("📤 Fazendo upload de documento na negociação: \(negotiationId)")
-            print("   Tipo: \(documentType)")
-            print("   Tamanho: \(documentData.count) bytes")
-            
-            let boundary = UUID().uuidString
-            var body = Data()
-            
-            body.append("--\(boundary)\r\n".data(using: .utf8)!)
-            body.append("Content-Disposition: form-data; name=\"document_type\"\r\n\r\n".data(using: .utf8)!)
-            body.append(documentType.data(using: .utf8)!)
-            body.append("\r\n".data(using: .utf8)!)
-            
-            body.append("--\(boundary)\r\n".data(using: .utf8)!)
-            body.append("Content-Disposition: form-data; name=\"file\"; filename=\"document.jpg\"\r\n".data(using: .utf8)!)
-            body.append("Content-Type: image/jpeg\r\n\r\n".data(using: .utf8)!)
-            body.append(documentData)
-            body.append("\r\n".data(using: .utf8)!)
-            body.append("--\(boundary)--\r\n".data(using: .utf8)!)
-            
-            struct APIDocumentResponse: Codable {
-                let id: String
-                let negotiationId: String?
-                let negotiation_id: String?
-                let documentType: String?
-                let document_type: String?
-                let fileUrl: String?
-                let file_url: String?
-                let thumbnailUrl: String?
-                let thumbnail_url: String?
-                let status: String
-                let uploadedAt: String?
-                let uploaded_at: String?
-                
-                func toDocument() -> NegotiationDocument {
-                    let dateFormatter = DateFormatter()
-                    dateFormatter.locale = Locale(identifier: "en_US_POSIX")
-                    dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
-                    
-                    return NegotiationDocument(
-                        id: id,
-                        negotiationId: negotiationId ?? negotiation_id ?? "",
-                        documentType: DocumentType(rawValue: documentType ?? document_type ?? "ticket_photo") ?? .ticketPhoto,
-                        fileUrl: fileUrl ?? file_url ?? "",
-                        thumbnailUrl: thumbnailUrl ?? thumbnail_url,
-                        status: ValidationStatus(rawValue: status) ?? .pending,
-                        uploadedAt: dateFormatter.date(from: uploadedAt ?? uploaded_at ?? "") ?? Date(),
-                        validatedAt: nil
-                    )
-                }
-            }
-            
-            // Para multipart/form-data, precisamos fazer uma requisição customizada
-            // Por enquanto, vamos usar um mock até implementar suporte completo no NetworkService
-            let document = NegotiationDocument(
-                id: UUID().uuidString,
-                negotiationId: negotiationId,
-                documentType: DocumentType(rawValue: documentType) ?? .ticketPhoto,
-                fileUrl: "https://example.com/document.jpg",
-                status: .pending,
-                uploadedAt: Date()
-            )
-            print("✅ Documento enviado (mock)")
-            return document
-        },
-        
-        deleteDocument: { negotiationId, documentId in
-            print("🗑️ Removendo documento \(documentId) da negociação: \(negotiationId)")
-            let _: APISingleResponse<String> = try await NetworkService.shared.requestSingle(
-                endpoint: "/negotiations/\(negotiationId)/documents/\(documentId)",
-                method: .DELETE,
-                requiresAuth: true
-            )
-            print("✅ Documento removido")
         },
         
         fetchUserReviews: { userId in
@@ -1109,14 +716,71 @@ extension NegotiationClient: DependencyKey {
             print("   - Type: \(documentType)")
             print("   - Size: \(data.count) bytes")
             
-            // TODO: Implementar multipart/form-data upload
-            // Por enquanto, retorna um documento mock
-            return NegotiationDocument(
-                negotiationId: negotiationId,
-                documentType: DocumentType(rawValue: documentType) ?? .ticketPhoto,
-                fileUrl: "https://example.com/document.jpg",
-                status: .pending
-            )
+            // Construir multipart/form-data
+            let boundary = UUID().uuidString
+            var body = Data()
+            
+            // Adicionar negotiation_id
+            body.append("--\(boundary)\r\n".data(using: .utf8)!)
+            body.append("Content-Disposition: form-data; name=\"negotiation_id\"\r\n\r\n".data(using: .utf8)!)
+            body.append(negotiationId.data(using: .utf8)!)
+            body.append("\r\n".data(using: .utf8)!)
+            
+            // Adicionar document_type
+            body.append("--\(boundary)\r\n".data(using: .utf8)!)
+            body.append("Content-Disposition: form-data; name=\"document_type\"\r\n\r\n".data(using: .utf8)!)
+            body.append(documentType.data(using: .utf8)!)
+            body.append("\r\n".data(using: .utf8)!)
+            
+            // Adicionar arquivo
+            body.append("--\(boundary)\r\n".data(using: .utf8)!)
+            body.append("Content-Disposition: form-data; name=\"file\"; filename=\"document.jpg\"\r\n".data(using: .utf8)!)
+            body.append("Content-Type: image/jpeg\r\n\r\n".data(using: .utf8)!)
+            body.append(data)
+            body.append("\r\n".data(using: .utf8)!)
+            
+            // Fechar boundary
+            body.append("--\(boundary)--\r\n".data(using: .utf8)!)
+            
+            // Fazer requisição HTTP direta para multipart/form-data
+            let baseURL = "https://ticketplace-api.onrender.com"
+            let apiPath = "/api"
+            guard let url = URL(string: "\(baseURL)\(apiPath)/negotiations/\(negotiationId)/documents") else {
+                throw NetworkError.invalidURL
+            }
+            
+            var request = URLRequest(url: url)
+            request.httpMethod = "POST"
+            request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+            request.setValue("application/json", forHTTPHeaderField: "Accept")
+            request.httpBody = body
+            
+            // Adicionar autenticação
+            if let token = UserDefaults.standard.string(forKey: "authToken") {
+                request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+            }
+            
+            let (responseData, response) = try await URLSession.shared.data(for: request)
+            
+            guard let httpResponse = response as? HTTPURLResponse else {
+                throw NetworkError.unknown("Invalid response")
+            }
+            
+            guard (200...299).contains(httpResponse.statusCode) else {
+                if httpResponse.statusCode == 401 {
+                    throw NetworkError.unauthorized
+                } else if httpResponse.statusCode == 403 {
+                    throw NetworkError.forbidden
+                } else if httpResponse.statusCode == 404 {
+                    throw NetworkError.notFound
+                } else {
+                    throw NetworkError.serverError(httpResponse.statusCode)
+                }
+            }
+            
+            let apiDocument: APINegotiationDocumentResponse = try JSONDecoder().decode(APINegotiationDocumentResponse.self, from: responseData)
+            print("✅ Document uploaded successfully: \(apiDocument.id)")
+            return apiDocument.toNegotiationDocument()
         },
         
         deleteDocument: { negotiationId, documentId in
@@ -1129,6 +793,23 @@ extension NegotiationClient: DependencyKey {
             ) as EmptyResponse
             
             print("✅ Document deleted successfully")
+        },
+        
+        fetchUnreadQuestionsCount: {
+            print("🔔 Fetching unread questions count")
+            
+            struct UnreadCountResponse: Codable {
+                let count: Int
+            }
+            
+            let response: UnreadCountResponse = try await NetworkService.shared.requestSingle(
+                endpoint: "/negotiations/unread-count",
+                method: .GET,
+                requiresAuth: true
+            )
+            
+            print("✅ Unread questions count: \(response.count)")
+            return response.count
         }
     )
 }

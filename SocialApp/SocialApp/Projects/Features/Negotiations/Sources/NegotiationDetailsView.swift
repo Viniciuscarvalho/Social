@@ -40,6 +40,12 @@ public struct NegotiationDetailsView: View {
                         userInfoSection(seller, role: "Vendedor")
                     }
                     
+                    // Seção de Perguntas e Respostas
+                    questionsSection
+                    
+                    // Seção de Documentos
+                    documentsSection
+                    
                     // Botões de ação
                     actionButtons(negotiation)
                 }
@@ -271,6 +277,244 @@ public struct NegotiationDetailsView: View {
                 .fill(AppColors.cardBackground)
         )
         .shadow(color: AppColors.cardShadow.opacity(0.1), radius: 8, x: 0, y: 4)
+    }
+    
+    // MARK: - Questions Section
+    
+    private var questionsSection: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            HStack {
+                Text("Perguntas e Respostas")
+                    .font(.system(size: 18, weight: .bold))
+                    .foregroundColor(AppColors.primaryText)
+                
+                Spacer()
+                
+                if !store.questions.isEmpty {
+                    Text("\(store.questions.count)")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 4)
+                        .background(
+                            Capsule()
+                                .fill(AppColors.primary)
+                        )
+                }
+            }
+            
+            // Seção de perguntas pendentes (apenas para vendedor)
+            if store.isSeller {
+                let unansweredQuestions = store.questions.filter { !$0.isAnswered }
+                if !unansweredQuestions.isEmpty {
+                    unansweredQuestionsSection(unansweredQuestions)
+                }
+            }
+            
+            if store.isLoadingQuestions {
+                ProgressView()
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 20)
+            } else if store.questions.isEmpty {
+                emptyQuestionsState
+            } else {
+                VStack(spacing: 12) {
+                    ForEach(store.questions) { question in
+                        QuestionCard(question: question)
+                            .transition(.opacity.combined(with: .move(edge: .top)))
+                    }
+                }
+            }
+        }
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(AppColors.cardBackground)
+        )
+        .shadow(color: AppColors.cardShadow.opacity(0.1), radius: 8, x: 0, y: 4)
+    }
+    
+    // MARK: - Unanswered Questions Section
+    
+    @State private var selectedQuestionForAnswer: NegotiationQuestion?
+    
+    private func unansweredQuestionsSection(_ questions: [NegotiationQuestion]) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                HStack(spacing: 6) {
+                    Image(systemName: "exclamationmark.circle.fill")
+                        .font(.system(size: 14))
+                        .foregroundColor(.orange)
+                    
+                    Text("Perguntas Pendentes")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundColor(AppColors.primaryText)
+                }
+                
+                Spacer()
+                
+                Text("\(questions.count)")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 4)
+                    .background(
+                        Capsule()
+                            .fill(Color.orange)
+                    )
+            }
+            
+            VStack(spacing: 8) {
+                ForEach(questions) { question in
+                    unansweredQuestionCard(question)
+                }
+            }
+        }
+        .padding(12)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(Color.orange.opacity(0.1))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(Color.orange.opacity(0.3), lineWidth: 1)
+        )
+        .sheet(item: $selectedQuestionForAnswer) { question in
+            AnswerQuestionView(question: question, store: store)
+        }
+    }
+    
+    private func unansweredQuestionCard(_ question: NegotiationQuestion) -> some View {
+        Button {
+            selectedQuestionForAnswer = question
+        } label: {
+            HStack(spacing: 12) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(question.questionText)
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundColor(AppColors.primaryText)
+                        .lineLimit(2)
+                        .multilineTextAlignment(.leading)
+                    
+                    HStack(spacing: 4) {
+                        Image(systemName: "clock")
+                            .font(.system(size: 10))
+                        Text(formatDate(question.createdAt))
+                            .font(.system(size: 11))
+                    }
+                    .foregroundColor(AppColors.tertiaryText)
+                }
+                
+                Spacer()
+                
+                Image(systemName: "arrow.right.circle.fill")
+                    .font(.system(size: 20))
+                    .foregroundColor(AppColors.primary)
+            }
+            .padding(12)
+            .background(
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(AppColors.cardBackground)
+            )
+        }
+        .buttonStyle(PlainButtonStyle())
+    }
+    
+    private func formatDate(_ date: Date) -> String {
+        let formatter = RelativeDateTimeFormatter()
+        formatter.unitsStyle = .abbreviated
+        formatter.locale = Locale(identifier: "pt_BR")
+        
+        let calendar = Calendar.current
+        if calendar.isDateInToday(date) {
+            let timeFormatter = DateFormatter()
+            timeFormatter.locale = Locale(identifier: "pt_BR")
+            timeFormatter.dateFormat = "HH:mm"
+            return "Hoje às \(timeFormatter.string(from: date))"
+        } else if calendar.isDateInYesterday(date) {
+            let timeFormatter = DateFormatter()
+            timeFormatter.locale = Locale(identifier: "pt_BR")
+            timeFormatter.dateFormat = "HH:mm"
+            return "Ontem às \(timeFormatter.string(from: date))"
+        } else {
+            let dateFormatter = DateFormatter()
+            dateFormatter.locale = Locale(identifier: "pt_BR")
+            dateFormatter.dateFormat = "dd/MM/yyyy"
+            return dateFormatter.string(from: date)
+        }
+    }
+    
+    // MARK: - Documents Section
+    
+    private var documentsSection: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            HStack {
+                Text("Documentos")
+                    .font(.system(size: 18, weight: .bold))
+                    .foregroundColor(AppColors.primaryText)
+                
+                Spacer()
+                
+                if !store.documents.isEmpty {
+                    Text("\(store.documents.count)")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 4)
+                        .background(
+                            Capsule()
+                                .fill(AppColors.primary)
+                        )
+                }
+            }
+            
+            if store.isLoadingDocuments {
+                ProgressView()
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 20)
+            } else {
+                DocumentGalleryView(
+                    documents: store.documents,
+                    onDelete: store.isSeller ? { document in
+                        store.send(.deleteDocument(document.id))
+                    } : nil
+                )
+            }
+        }
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(AppColors.cardBackground)
+        )
+        .shadow(color: AppColors.cardShadow.opacity(0.1), radius: 8, x: 0, y: 4)
+    }
+    
+    // MARK: - Empty Questions State
+    
+    private var emptyQuestionsState: some View {
+        VStack(spacing: 12) {
+            Image(systemName: "questionmark.circle")
+                .font(.system(size: 40))
+                .foregroundColor(AppColors.secondaryText.opacity(0.5))
+            
+            Text("Nenhuma pergunta ainda")
+                .font(.system(size: 15, weight: .medium))
+                .foregroundColor(AppColors.secondaryText)
+            
+            if store.isBuyer {
+                Text("Faça perguntas sobre o ingresso para obter mais informações")
+                    .font(.system(size: 13))
+                    .foregroundColor(AppColors.tertiaryText)
+                    .multilineTextAlignment(.center)
+            } else {
+                Text("O comprador ainda não fez perguntas")
+                    .font(.system(size: 13))
+                    .foregroundColor(AppColors.tertiaryText)
+                    .multilineTextAlignment(.center)
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 30)
     }
     
     // MARK: - Action Buttons

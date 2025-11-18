@@ -476,6 +476,13 @@ public struct NegotiationDetailsFeature {
             case let .answerSent(.success(_)):
                 state.isSendingMessage = false
                 print("✅ Resposta enviada")
+                // Atualiza badge global após responder pergunta
+                // Notifica via NotificationCenter para atualizar badge
+                NotificationCenter.default.post(
+                    name: NSNotification.Name("QuestionAnswered"),
+                    object: nil,
+                    userInfo: ["negotiationId": state.negotiationId]
+                )
                 return .none
                 
             case let .answerSent(.failure(error)):

@@ -319,8 +319,3 @@ public struct EmailVerificationView: View {
     }
 }
 
-
-
-
-
-
