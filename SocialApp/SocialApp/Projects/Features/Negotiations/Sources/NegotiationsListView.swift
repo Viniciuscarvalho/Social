@@ -30,9 +30,12 @@ public struct NegotiationsListView: View {
         .refreshable {
             await store.send(.refreshRequested).finish()
         }
-        .alert("Erro", isPresented: $store.showingErrorAlert) {
+        .alert("Erro", isPresented: Binding(
+            get: { store.showingErrorAlert },
+            set: { _ in store.send(.dismissErrorAlert) }
+        )) {
             Button("OK") {
-                store.showingErrorAlert = false
+                store.send(.dismissErrorAlert)
             }
         } message: {
             if let errorMessage = store.errorMessage {

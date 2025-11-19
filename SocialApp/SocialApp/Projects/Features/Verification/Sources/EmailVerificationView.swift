@@ -61,7 +61,10 @@ public struct EmailVerificationView: View {
         .onAppear {
             store.send(.onAppear)
         }
-        .alert("Erro", isPresented: $store.showingErrorAlert) {
+        .alert("Erro", isPresented: Binding(
+            get: { store.showingErrorAlert },
+            set: { _ in store.send(.dismissErrorAlert) }
+        )) {
             Button("OK") {
                 store.send(.dismissErrorAlert)
             }

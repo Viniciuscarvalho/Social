@@ -35,6 +35,7 @@ public struct TicketDetailFeature {
         case checkExistingNegotiation
         case existingNegotiationResponse(Result<Negotiation?, NetworkError>)
         case negotiationCreated(Result<Negotiation, NetworkError>)
+        case dismissNegotiationError
         case delegate(Delegate)
         
         public enum Delegate: Equatable {
@@ -252,6 +253,11 @@ public struct TicketDetailFeature {
                 state.errorMessage = error.userFriendlyMessage
                 state.showingNegotiationError = true
                 print("❌ Erro ao criar negociação: \(error.userFriendlyMessage)")
+                return .none
+                
+            case .dismissNegotiationError:
+                state.showingNegotiationError = false
+                state.errorMessage = nil
                 return .none
                 
             case .delegate:

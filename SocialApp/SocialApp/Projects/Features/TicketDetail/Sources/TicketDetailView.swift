@@ -283,9 +283,12 @@ public struct TicketDetailView: View {
                     .disabled(store.ticketDetail?.status != .available || store.isStartingNegotiation)
                     .padding(.horizontal, 20)
                     .padding(.bottom, 32)
-                    .alert("Erro", isPresented: $store.showingNegotiationError) {
+                    .alert("Erro", isPresented: Binding(
+                        get: { store.showingNegotiationError },
+                        set: { _ in store.send(.dismissNegotiationError) }
+                    )) {
                         Button("OK", role: .cancel) {
-                            store.showingNegotiationError = false
+                            store.send(.dismissNegotiationError)
                         }
                     } message: {
                         if let errorMessage = store.errorMessage {

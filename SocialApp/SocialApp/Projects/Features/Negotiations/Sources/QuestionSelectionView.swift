@@ -180,7 +180,7 @@ public struct QuestionSelectionView: View {
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
-            .background(selectedQuestionIds.contains(question.id) ? Color(red: 0.5, green: 0.3, blue: 0.9).opacity(0.1) : Color.clear)
+            .background(selectedQuestionIds.contains(question.id) ? Color(red: 0.5, green: 0.3, blue: 0.9, opacity: 0.1) : Color.clear)
         }
         .buttonStyle(PlainButtonStyle())
         .disabled(!selectedQuestionIds.contains(question.id) && !canSelectMore)
@@ -267,7 +267,7 @@ public struct QuestionSelectionView: View {
             
             Button {
                 withAnimation {
-                    selectedQuestionIds.remove(question.id)
+                    _ = selectedQuestionIds.remove(question.id)
                 }
             } label: {
                 Image(systemName: "xmark.circle.fill")
@@ -278,7 +278,7 @@ public struct QuestionSelectionView: View {
         .padding(.vertical, 6)
         .background(
             Capsule()
-                .fill(Color(red: 0.5, green: 0.3, blue: 0.9).opacity(0.2))
+                .fill(Color(red: 0.5, green: 0.3, blue: 0.9, opacity: 0.2))
         )
         .foregroundColor(Color(red: 0.5, green: 0.3, blue: 0.9))
     }

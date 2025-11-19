@@ -64,7 +64,10 @@ public struct NegotiationDetailsView: View {
         .sheet(isPresented: $store.showingContactReveal) {
             ContactRevealView(store: store)
         }
-        .alert("Erro", isPresented: $store.showingErrorAlert) {
+        .alert("Erro", isPresented: Binding(
+            get: { store.showingErrorAlert },
+            set: { _ in store.send(.dismissErrorAlert) }
+        )) {
             Button("OK") {
                 store.send(.dismissErrorAlert)
             }
@@ -119,18 +122,6 @@ public struct NegotiationDetailsView: View {
             Text(ticket.name)
                 .font(.system(size: 18, weight: .bold))
                 .foregroundColor(AppColors.primaryText)
-            
-            if let event = ticket.event {
-                HStack {
-                    Image(systemName: "calendar")
-                        .font(.system(size: 14))
-                        .foregroundColor(AppColors.secondaryText)
-                    
-                    Text(event.date, style: .date)
-                        .font(.system(size: 14))
-                        .foregroundColor(AppColors.secondaryText)
-                }
-            }
             
             Divider()
             

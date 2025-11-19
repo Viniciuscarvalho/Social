@@ -32,6 +32,7 @@ public struct NegotiationsListFeature {
         case negotiationsResponse(Result<[Negotiation], NetworkError>)
         case refreshRequested
         case negotiationSelected(String)
+        case dismissErrorAlert
         case delegate(Delegate)
         
         public enum Delegate: Equatable {
@@ -97,6 +98,11 @@ public struct NegotiationsListFeature {
                 return .run { send in
                     await send(.delegate(.negotiationSelected(negotiationId)))
                 }
+                
+            case .dismissErrorAlert:
+                state.showingErrorAlert = false
+                state.errorMessage = nil
+                return .none
                 
             case .delegate:
                 return .none
