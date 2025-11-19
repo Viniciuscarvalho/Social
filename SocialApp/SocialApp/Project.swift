@@ -45,6 +45,7 @@ let project = Project(
                 "./SocialApp/Sources/**",
                 "./Domain/Sources/**",
                 "./Projects/Features/Login/**",
+                "./Projects/Features/Negotiations/**",
                 "./Projects/Features/Home/**",
                 "./Projects/Features/Profile/**",
                 "./Projects/Features/Events/Sources/**",

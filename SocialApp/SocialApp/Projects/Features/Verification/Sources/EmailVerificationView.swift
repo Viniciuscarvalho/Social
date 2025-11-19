@@ -198,19 +198,16 @@ public struct EmailVerificationView: View {
             }
             
             // Hidden text field for input
-            TextField("", text: $store.verificationCode)
+            TextField("", text: Binding(
+                get: { store.verificationCode },
+                set: { newValue in
+                    store.send(.updateVerificationCode(newValue))
+                }
+            ))
                 .keyboardType(.numberPad)
                 .focused($isCodeFieldFocused)
                 .opacity(0)
                 .frame(height: 0)
-                .onChange(of: store.verificationCode) { oldValue, newValue in
-                    // Limitar a 6 dígitos
-                    if newValue.count > 6 {
-                        store.verificationCode = String(newValue.prefix(6))
-                    }
-                    // Apenas números
-                    store.verificationCode = newValue.filter { $0.isNumber }
-                }
             
             // Tap to focus
             Color.clear

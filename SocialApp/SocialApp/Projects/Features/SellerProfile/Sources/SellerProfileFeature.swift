@@ -36,7 +36,7 @@ public struct SellerProfileFeature {
         }
     }
     
-    public enum Action: Equatable {
+    public enum Action {
         case onAppear
         case loadSeller(String)
         case sellerResponse(Result<User, NetworkError>)

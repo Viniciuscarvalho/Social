@@ -214,17 +214,3 @@ public struct AnswerQuestionView: View {
     }
 }
 
-// MARK: - QuestionCategory Color Extension
-
-extension QuestionCategory {
-    var color: Color {
-        switch self {
-        case .authenticity: return .blue
-        case .conditions: return .purple
-        case .delivery: return .orange
-        case .payment: return .green
-        case .other: return .gray
-        }
-    }
-}
-

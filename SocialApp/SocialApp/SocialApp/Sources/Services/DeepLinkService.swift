@@ -227,21 +227,15 @@ public class DeepLinkService {
     public func generateNegotiationMessage(negotiation: Negotiation) -> String {
         var message = "Olá! Vi seu ingresso no SocialApp e gostaria de negociar.\n\n"
         
-        // Evento
-        if let event = negotiation.ticket?.event {
-            message += "📅 Evento: \(event.name)\n"
-            if let eventDate = event.eventDate {
-                let formatter = DateFormatter()
-                formatter.dateFormat = "dd/MM/yyyy"
-                formatter.locale = Locale(identifier: "pt_BR")
-                message += "📆 Data: \(formatter.string(from: eventDate))\n"
-            }
-        }
-        
         // Ingresso
         if let ticket = negotiation.ticket {
-            message += "🎫 Ingresso: \(ticket.name ?? "Ingresso")\n"
+            message += "🎫 Ingresso: \(ticket.name)\n"
             message += "💰 Preço: \(formatPrice(ticket.price, currencyCode: ticket.currencyCode))\n"
+            
+            // Evento - usar eventId para referenciar, já que Ticket não tem event diretamente
+            if !ticket.eventId.isEmpty {
+                message += "📅 Evento ID: \(ticket.eventId)\n"
+            }
         }
         
         // ID da Negociação

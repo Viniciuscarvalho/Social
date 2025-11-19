@@ -90,27 +90,27 @@ public struct ContactRevealView: View {
     private func contactInfoSection(seller: User) -> some View {
         VStack(spacing: 16) {
             // Nome
-            if let name = seller.name, !name.isEmpty {
+            if !seller.name.isEmpty {
                 ContactInfoRow(
                     icon: "person.fill",
                     title: "Nome",
-                    value: name,
+                    value: seller.name,
                     isCopied: copiedField == "name",
                     onCopy: {
-                        copyToClipboard(name, field: "name")
+                        copyToClipboard(seller.name, field: "name")
                     }
                 )
             }
             
             // Email
-            if let email = seller.email, !email.isEmpty {
+            if !seller.email.isEmpty {
                 ContactInfoRow(
                     icon: "envelope.fill",
                     title: "E-mail",
-                    value: email,
+                    value: seller.email,
                     isCopied: copiedField == "email",
                     onCopy: {
-                        copyToClipboard(email, field: "email")
+                        copyToClipboard(seller.email, field: "email")
                     },
                     actionType: .email
                 )
@@ -222,25 +222,11 @@ public struct ContactRevealView: View {
     private func openWhatsAppWithNegotiation(negotiation: Negotiation) {
         guard let seller = store.revealedSeller else { return }
         
-        // Tenta usar telefone se disponível
-        if let phone = seller.phone, !phone.isEmpty {
-            let success = DeepLinkService.shared.openWhatsAppWithNegotiation(
-                phoneNumber: phone,
-                negotiation: negotiation
-            )
-            
-            if !success {
-                // Fallback: copiar mensagem para clipboard
-                let message = DeepLinkService.shared.generateNegotiationMessage(negotiation: negotiation)
-                DeepLinkService.shared.copyToClipboard(message)
-                showingCopiedFeedback = true
-            }
-        } else {
-            // Se não houver telefone, copia a mensagem para clipboard
-            let message = DeepLinkService.shared.generateNegotiationMessage(negotiation: negotiation)
-            DeepLinkService.shared.copyToClipboard(message)
-            showingCopiedFeedback = true
-        }
+        // Como User não tem phone, sempre copia a mensagem para clipboard
+        // O usuário pode usar o email para contato
+        let message = DeepLinkService.shared.generateNegotiationMessage(negotiation: negotiation)
+        DeepLinkService.shared.copyToClipboard(message)
+        showingCopiedFeedback = true
     }
 }
 

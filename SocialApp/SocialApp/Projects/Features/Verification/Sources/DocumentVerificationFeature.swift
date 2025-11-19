@@ -25,7 +25,7 @@ public struct DocumentVerificationFeature {
         Reduce { state, action in
             switch action {
             case .submit:
-                let verification = UserVerification(emailVerified: true, phoneVerified: true, verificationLevel: .verified)
+                let verification = UserVerification(emailVerified: true, phoneVerified: true, verificationLevel: .documentVerified)
                 return .send(.delegate(.verificationSubmitted(verification)))
             case .delegate:
                 return .none

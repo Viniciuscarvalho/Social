@@ -1763,6 +1763,11 @@ public struct Negotiation: Codable, Identifiable, Equatable {
     public var approvedAt: Date?
     public var completedAt: Date?
     public var cancelledAt: Date?
+    public var updatedAt: Date?
+    public var questionsCount: Int?
+    public var answeredQuestionsCount: Int?
+    public var hasUnreadUpdates: Bool?
+    public var lastViewedAt: Date?
     
     // Informações expandidas (podem vir da API)
     public var ticket: Ticket?
@@ -1788,7 +1793,12 @@ public struct Negotiation: Codable, Identifiable, Equatable {
         createdAt: Date = Date(),
         approvedAt: Date? = nil,
         completedAt: Date? = nil,
-        cancelledAt: Date? = nil
+        cancelledAt: Date? = nil,
+        updatedAt: Date? = nil,
+        questionsCount: Int? = nil,
+        answeredQuestionsCount: Int? = nil,
+        hasUnreadUpdates: Bool? = nil,
+        lastViewedAt: Date? = nil
     ) {
         self.id = id
         self.ticketId = ticketId
@@ -1805,6 +1815,11 @@ public struct Negotiation: Codable, Identifiable, Equatable {
         self.approvedAt = approvedAt
         self.completedAt = completedAt
         self.cancelledAt = cancelledAt
+        self.updatedAt = updatedAt
+        self.questionsCount = questionsCount
+        self.answeredQuestionsCount = answeredQuestionsCount
+        self.hasUnreadUpdates = hasUnreadUpdates
+        self.lastViewedAt = lastViewedAt
     }
     
     public var isExpired: Bool {
@@ -1831,6 +1846,11 @@ public struct Negotiation: Codable, Identifiable, Equatable {
         case approvedAt = "approved_at"
         case completedAt = "completed_at"
         case cancelledAt = "cancelled_at"
+        case updatedAt = "updated_at"
+        case questionsCount = "questions_count"
+        case answeredQuestionsCount = "answered_questions_count"
+        case hasUnreadUpdates = "has_unread_updates"
+        case lastViewedAt = "last_viewed_at"
     }
     
     // Computed properties para perguntas e documentos
@@ -1905,9 +1925,26 @@ public enum QuestionCategory: String, Codable, CaseIterable, Equatable {
     }
 }
 
+#if canImport(SwiftUI)
+import SwiftUI
+
+extension QuestionCategory {
+    public var color: Color {
+        switch self {
+        case .authenticity: return .blue
+        case .conditions: return .purple
+        case .delivery: return .orange
+        case .payment: return .green
+        case .other: return .gray
+        }
+    }
+}
+#endif
+
 public struct NegotiationQuestion: Codable, Identifiable, Equatable {
     public var id: String
     public var negotiationId: String
+    public var askedBy: String
     public var questionText: String
     public var category: QuestionCategory
     public var isAnswered: Bool
@@ -1919,6 +1956,7 @@ public struct NegotiationQuestion: Codable, Identifiable, Equatable {
     public init(
         id: String = UUID().uuidString,
         negotiationId: String,
+        askedBy: String = "", // Vem do backend via JWT, valor padrão para compatibilidade
         questionText: String,
         category: QuestionCategory,
         isAnswered: Bool = false,
@@ -1929,6 +1967,7 @@ public struct NegotiationQuestion: Codable, Identifiable, Equatable {
     ) {
         self.id = id
         self.negotiationId = negotiationId
+        self.askedBy = askedBy
         self.questionText = questionText
         self.category = category
         self.isAnswered = isAnswered
@@ -1941,6 +1980,7 @@ public struct NegotiationQuestion: Codable, Identifiable, Equatable {
     enum CodingKeys: String, CodingKey {
         case id, category, answer
         case negotiationId = "negotiation_id"
+        case askedBy = "asked_by"
         case questionText = "question_text"
         case isAnswered = "is_answered"
         case createdAt = "created_at"
@@ -1956,6 +1996,7 @@ public struct NegotiationAnswer: Codable, Identifiable, Equatable {
     public var answerText: String
     public var answeredBy: String
     public var createdAt: Date
+    public var updatedAt: Date?
     
     public init(
         id: String = UUID().uuidString,
@@ -1963,7 +2004,8 @@ public struct NegotiationAnswer: Codable, Identifiable, Equatable {
         negotiationId: String,
         answerText: String,
         answeredBy: String,
-        createdAt: Date = Date()
+        createdAt: Date = Date(),
+        updatedAt: Date? = nil
     ) {
         self.id = id
         self.questionId = questionId
@@ -1971,6 +2013,7 @@ public struct NegotiationAnswer: Codable, Identifiable, Equatable {
         self.answerText = answerText
         self.answeredBy = answeredBy
         self.createdAt = createdAt
+        self.updatedAt = updatedAt
     }
     
     enum CodingKeys: String, CodingKey {
@@ -1979,6 +2022,7 @@ public struct NegotiationAnswer: Codable, Identifiable, Equatable {
         case negotiationId = "negotiation_id"
         case answerText = "answer_text"
         case answeredBy = "answered_by"
+        case updatedAt = "updated_at"
     }
 }
 
@@ -2006,41 +2050,53 @@ public enum DocumentType: String, Codable, Equatable {
 public struct NegotiationDocument: Codable, Identifiable, Equatable {
     public var id: String
     public var negotiationId: String
+    public var uploadedBy: String
     public var documentType: DocumentType
     public var fileUrl: String
     public var thumbnailUrl: String?
     public var status: ValidationStatus
     public var uploadedAt: Date
     public var validatedAt: Date?
+    public var updatedAt: Date?
+    public var isVerified: Bool?
     
     public init(
         id: String = UUID().uuidString,
         negotiationId: String,
+        uploadedBy: String = "", // Vem do backend via JWT, valor padrão para compatibilidade
         documentType: DocumentType,
         fileUrl: String,
         thumbnailUrl: String? = nil,
         status: ValidationStatus = .pending,
         uploadedAt: Date = Date(),
-        validatedAt: Date? = nil
+        validatedAt: Date? = nil,
+        updatedAt: Date? = nil,
+        isVerified: Bool? = nil
     ) {
         self.id = id
         self.negotiationId = negotiationId
+        self.uploadedBy = uploadedBy
         self.documentType = documentType
         self.fileUrl = fileUrl
         self.thumbnailUrl = thumbnailUrl
         self.status = status
         self.uploadedAt = uploadedAt
         self.validatedAt = validatedAt
+        self.updatedAt = updatedAt
+        self.isVerified = isVerified
     }
     
     enum CodingKeys: String, CodingKey {
-        case id, fileUrl, thumbnailUrl, status, uploadedAt, validatedAt
+        case id, status
         case negotiationId = "negotiation_id"
+        case uploadedBy = "uploaded_by"
         case documentType = "document_type"
         case fileUrl = "file_url"
         case thumbnailUrl = "thumbnail_url"
         case uploadedAt = "uploaded_at"
         case validatedAt = "validated_at"
+        case updatedAt = "updated_at"
+        case isVerified = "is_verified"
     }
 }
 
@@ -2094,6 +2150,8 @@ public struct APINegotiationQuestionResponse: Codable {
     let id: String
     let negotiationId: String?
     let negotiation_id: String?
+    let askedBy: String?
+    let asked_by: String?
     let questionText: String?
     let question_text: String?
     let category: String
@@ -2109,6 +2167,10 @@ public struct APINegotiationQuestionResponse: Codable {
     
     var finalNegotiationId: String {
         return negotiationId ?? negotiation_id ?? ""
+    }
+    
+    var finalAskedBy: String {
+        return askedBy ?? asked_by ?? ""
     }
     
     var finalQuestionText: String {
@@ -2155,6 +2217,7 @@ public struct APINegotiationQuestionResponse: Codable {
         return NegotiationQuestion(
             id: id,
             negotiationId: finalNegotiationId,
+            askedBy: finalAskedBy,
             questionText: finalQuestionText,
             category: QuestionCategory(rawValue: category) ?? .other,
             isAnswered: finalIsAnswered,
@@ -2178,6 +2241,8 @@ public struct APINegotiationAnswerResponse: Codable {
     let answered_by: String?
     let createdAt: String?
     let created_at: String?
+    let updatedAt: String?
+    let updated_at: String?
     
     var finalQuestionId: String {
         return questionId ?? question_id ?? ""
@@ -2197,6 +2262,10 @@ public struct APINegotiationAnswerResponse: Codable {
     
     var finalCreatedAt: String? {
         return createdAt ?? created_at
+    }
+    
+    var finalUpdatedAt: String? {
+        return updatedAt ?? updated_at
     }
     
     func toNegotiationAnswer() -> NegotiationAnswer {
@@ -2226,7 +2295,8 @@ public struct APINegotiationAnswerResponse: Codable {
             negotiationId: finalNegotiationId,
             answerText: finalAnswerText,
             answeredBy: finalAnsweredBy,
-            createdAt: parseDate(finalCreatedAt) ?? Date()
+            createdAt: parseDate(finalCreatedAt) ?? Date(),
+            updatedAt: parseDate(finalUpdatedAt)
         )
     }
 }
@@ -2235,6 +2305,8 @@ public struct APINegotiationDocumentResponse: Codable {
     let id: String
     let negotiationId: String?
     let negotiation_id: String?
+    let uploadedBy: String?
+    let uploaded_by: String?
     let documentType: String?
     let document_type: String?
     let fileUrl: String?
@@ -2246,9 +2318,17 @@ public struct APINegotiationDocumentResponse: Codable {
     let uploaded_at: String?
     let validatedAt: String?
     let validated_at: String?
+    let updatedAt: String?
+    let updated_at: String?
+    let isVerified: Bool?
+    let is_verified: Bool?
     
     var finalNegotiationId: String {
         return negotiationId ?? negotiation_id ?? ""
+    }
+    
+    var finalUploadedBy: String {
+        return uploadedBy ?? uploaded_by ?? ""
     }
     
     var finalDocumentType: String {
@@ -2269,6 +2349,14 @@ public struct APINegotiationDocumentResponse: Codable {
     
     var finalValidatedAt: String? {
         return validatedAt ?? validated_at
+    }
+    
+    var finalUpdatedAt: String? {
+        return updatedAt ?? updated_at
+    }
+    
+    var finalIsVerified: Bool? {
+        return isVerified ?? is_verified
     }
     
     func toNegotiationDocument() -> NegotiationDocument {
@@ -2295,12 +2383,15 @@ public struct APINegotiationDocumentResponse: Codable {
         return NegotiationDocument(
             id: id,
             negotiationId: finalNegotiationId,
+            uploadedBy: finalUploadedBy,
             documentType: DocumentType(rawValue: finalDocumentType) ?? .ticketPhoto,
             fileUrl: finalFileUrl,
             thumbnailUrl: finalThumbnailUrl,
             status: ValidationStatus(rawValue: status) ?? .pending,
             uploadedAt: parseDate(finalUploadedAt) ?? Date(),
-            validatedAt: parseDate(finalValidatedAt)
+            validatedAt: parseDate(finalValidatedAt),
+            updatedAt: parseDate(finalUpdatedAt),
+            isVerified: finalIsVerified
         )
     }
 }
@@ -2311,6 +2402,7 @@ public struct UserVerification: Codable, Identifiable, Equatable {
     public var emailVerifiedAt: Date?
     public var phoneVerified: Bool
     public var phoneVerifiedAt: Date?
+    public var phoneNumber: String?
     public var documentType: String?
     public var documentFileUrl: String?
     public var documentVerified: Bool
@@ -2327,6 +2419,7 @@ public struct UserVerification: Codable, Identifiable, Equatable {
         emailVerifiedAt: Date? = nil,
         phoneVerified: Bool = false,
         phoneVerifiedAt: Date? = nil,
+        phoneNumber: String? = nil,
         documentType: String? = nil,
         documentFileUrl: String? = nil,
         documentVerified: Bool = false,
@@ -2342,6 +2435,7 @@ public struct UserVerification: Codable, Identifiable, Equatable {
         self.emailVerifiedAt = emailVerifiedAt
         self.phoneVerified = phoneVerified
         self.phoneVerifiedAt = phoneVerifiedAt
+        self.phoneNumber = phoneNumber
         self.documentType = documentType
         self.documentFileUrl = documentFileUrl
         self.documentVerified = documentVerified
@@ -2363,6 +2457,7 @@ public struct UserVerification: Codable, Identifiable, Equatable {
         case emailVerifiedAt = "email_verified_at"
         case phoneVerified = "phone_verified"
         case phoneVerifiedAt = "phone_verified_at"
+        case phoneNumber = "phone_number"
         case documentType = "document_type"
         case documentFileUrl = "document_file_url"
         case documentVerified = "document_verified"
@@ -2410,7 +2505,7 @@ public struct TicketValidation: Codable, Identifiable, Equatable {
     public var submittedAt: Date?
     public var validatedAt: Date?
     public var validatedBy: String?
-    public var validationScore: Int?
+    public var autoValidationScore: Int?
     public var rejectionReason: String?
     public var adminNotes: String?
     public var createdAt: Date
@@ -2426,7 +2521,7 @@ public struct TicketValidation: Codable, Identifiable, Equatable {
         submittedAt: Date? = nil,
         validatedAt: Date? = nil,
         validatedBy: String? = nil,
-        validationScore: Int? = nil,
+        autoValidationScore: Int? = nil,
         rejectionReason: String? = nil,
         adminNotes: String? = nil,
         createdAt: Date = Date(),
@@ -2439,7 +2534,7 @@ public struct TicketValidation: Codable, Identifiable, Equatable {
         self.submittedAt = submittedAt
         self.validatedAt = validatedAt
         self.validatedBy = validatedBy
-        self.validationScore = validationScore
+        self.autoValidationScore = autoValidationScore
         self.rejectionReason = rejectionReason
         self.adminNotes = adminNotes
         self.createdAt = createdAt
@@ -2453,7 +2548,7 @@ public struct TicketValidation: Codable, Identifiable, Equatable {
         case submittedAt = "submitted_at"
         case validatedAt = "validated_at"
         case validatedBy = "validated_by"
-        case validationScore = "validation_score"
+        case autoValidationScore = "auto_validation_score"
         case rejectionReason = "rejection_reason"
         case adminNotes = "admin_notes"
         case createdAt = "created_at"
@@ -2471,6 +2566,7 @@ public struct ValidationProof: Codable, Identifiable, Equatable {
     public var isVerified: Bool
     public var moderatedAt: Date?
     public var moderatedBy: String?
+    public var moderationNotes: String?
     
     public init(
         id: String = UUID().uuidString,
@@ -2480,7 +2576,8 @@ public struct ValidationProof: Codable, Identifiable, Equatable {
         uploadedAt: Date = Date(),
         isVerified: Bool = false,
         moderatedAt: Date? = nil,
-        moderatedBy: String? = nil
+        moderatedBy: String? = nil,
+        moderationNotes: String? = nil
     ) {
         self.id = id
         self.validationId = validationId
@@ -2490,6 +2587,7 @@ public struct ValidationProof: Codable, Identifiable, Equatable {
         self.isVerified = isVerified
         self.moderatedAt = moderatedAt
         self.moderatedBy = moderatedBy
+        self.moderationNotes = moderationNotes
     }
     
     enum CodingKeys: String, CodingKey {
@@ -2501,6 +2599,7 @@ public struct ValidationProof: Codable, Identifiable, Equatable {
         case isVerified = "is_verified"
         case moderatedAt = "moderated_at"
         case moderatedBy = "moderated_by"
+        case moderationNotes = "moderation_notes"
     }
 }
 
@@ -2595,6 +2694,16 @@ public struct APINegotiationResponse: Codable {
     let completed_at: String?
     let cancelledAt: String?
     let cancelled_at: String?
+    let updatedAt: String?
+    let updated_at: String?
+    let questionsCount: Int?
+    let questions_count: Int?
+    let answeredQuestionsCount: Int?
+    let answered_questions_count: Int?
+    let hasUnreadUpdates: Bool?
+    let has_unread_updates: Bool?
+    let lastViewedAt: String?
+    let last_viewed_at: String?
     let ticket: APITicketResponse?
     let buyer: APIUserResponse?
     let seller: APIUserResponse?
@@ -2651,6 +2760,26 @@ public struct APINegotiationResponse: Codable {
         return cancelledAt ?? cancelled_at
     }
     
+    var finalUpdatedAt: String? {
+        return updatedAt ?? updated_at
+    }
+    
+    var finalQuestionsCount: Int? {
+        return questionsCount ?? questions_count
+    }
+    
+    var finalAnsweredQuestionsCount: Int? {
+        return answeredQuestionsCount ?? answered_questions_count
+    }
+    
+    var finalHasUnreadUpdates: Bool? {
+        return hasUnreadUpdates ?? has_unread_updates
+    }
+    
+    var finalLastViewedAt: String? {
+        return lastViewedAt ?? last_viewed_at
+    }
+    
     func toNegotiation() -> Negotiation {
         let dateFormatter = DateFormatter()
         dateFormatter.locale = Locale(identifier: "en_US_POSIX")
@@ -2687,7 +2816,12 @@ public struct APINegotiationResponse: Codable {
             createdAt: parseDate(finalCreatedAt) ?? Date(),
             approvedAt: parseDate(finalApprovedAt),
             completedAt: parseDate(finalCompletedAt),
-            cancelledAt: parseDate(finalCancelledAt)
+            cancelledAt: parseDate(finalCancelledAt),
+            updatedAt: parseDate(finalUpdatedAt),
+            questionsCount: finalQuestionsCount,
+            answeredQuestionsCount: finalAnsweredQuestionsCount,
+            hasUnreadUpdates: finalHasUnreadUpdates,
+            lastViewedAt: parseDate(finalLastViewedAt)
         )
         
         // Parse expanded objects
@@ -2717,6 +2851,8 @@ public struct APIUserVerificationResponse: Codable {
     let phone_verified: Bool?
     let phoneVerifiedAt: String?
     let phone_verified_at: String?
+    let phoneNumber: String?
+    let phone_number: String?
     let documentType: String?
     let document_type: String?
     let documentFileUrl: String?
@@ -2742,6 +2878,10 @@ public struct APIUserVerificationResponse: Codable {
     
     var finalPhoneVerified: Bool {
         return phoneVerified ?? phone_verified ?? false
+    }
+    
+    var finalPhoneNumber: String? {
+        return phoneNumber ?? phone_number
     }
     
     var finalDocumentVerified: Bool {
@@ -2795,6 +2935,7 @@ public struct APIUserVerificationResponse: Codable {
             emailVerifiedAt: parseDate(emailVerifiedAt ?? email_verified_at),
             phoneVerified: finalPhoneVerified,
             phoneVerifiedAt: parseDate(phoneVerifiedAt ?? phone_verified_at),
+            phoneNumber: finalPhoneNumber,
             documentType: finalDocumentType,
             documentFileUrl: finalDocumentFileUrl,
             documentVerified: finalDocumentVerified,

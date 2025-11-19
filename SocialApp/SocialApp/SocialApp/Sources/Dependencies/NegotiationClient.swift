@@ -59,7 +59,7 @@ public struct NegotiationClient {
     
     /// Cria uma pergunta em uma negociação
     public var createQuestion: @Sendable (String, CreateQuestionRequest) async throws -> NegotiationQuestion = { _, _ in
-        NegotiationQuestion(negotiationId: "", questionText: "", category: .other)
+        NegotiationQuestion(negotiationId: "", questionText: "", category: .other) // askedBy vem do backend via JWT
     }
     
     /// Responde uma pergunta
@@ -80,7 +80,7 @@ public struct NegotiationClient {
     
     /// Faz upload de um documento
     public var uploadDocument: @Sendable (String, Data, String) async throws -> NegotiationDocument = { _, _, _ in
-        NegotiationDocument(negotiationId: "", documentType: .ticketPhoto, fileUrl: "")
+        NegotiationDocument(negotiationId: "", documentType: .ticketPhoto, fileUrl: "") // uploadedBy vem do backend via JWT
     }
     
     /// Remove um documento
@@ -196,7 +196,7 @@ extension NegotiationClient: DependencyKey {
         },
         fetchQuestions: { _ in [] },
         createQuestion: { _, _ in
-            NegotiationQuestion(negotiationId: "test", questionText: "Test", category: .other)
+            NegotiationQuestion(negotiationId: "test", questionText: "Test", category: .other) // askedBy vem do backend via JWT
         },
         answerQuestion: { _, _, _ in
             NegotiationAnswer(questionId: "test", negotiationId: "test", answerText: "Test", answeredBy: "test")
@@ -205,7 +205,7 @@ extension NegotiationClient: DependencyKey {
         fetchUnreadQuestionsCount: { 0 },
         fetchDocuments: { _ in [] },
         uploadDocument: { _, _, _ in
-            NegotiationDocument(negotiationId: "test", documentType: .ticketPhoto, fileUrl: "test")
+            NegotiationDocument(negotiationId: "test", documentType: .ticketPhoto, fileUrl: "test") // uploadedBy vem do backend via JWT
         },
         deleteDocument: { _, _ in },
         fetchUserReviews: { _ in [] },
@@ -439,6 +439,65 @@ extension NegotiationClient: DependencyKey {
             return mockVerification
         },
         
+        fetchQuestions: { negotiationId in
+            print("❓ Fetching questions for negotiation: \(negotiationId)")
+            
+            let apiQuestions: [APINegotiationQuestionResponse] = try await NetworkService.shared.requestArray(
+                endpoint: "/negotiations/\(negotiationId)/questions",
+                method: .GET,
+                requiresAuth: true
+            )
+            
+            let questions = apiQuestions.map { $0.toNegotiationQuestion() }
+            print("✅ Fetched \(questions.count) questions")
+            return questions
+        },
+        
+        createQuestion: { negotiationId, request in
+            print("❓ Creating question for negotiation: \(negotiationId)")
+            print("   - Question: \(request.questionText)")
+            print("   - Category: \(request.category.rawValue)")
+            
+            let apiQuestion: APINegotiationQuestionResponse = try await NetworkService.shared.requestSingle(
+                endpoint: "/negotiations/\(negotiationId)/questions",
+                method: .POST,
+                body: request,
+                requiresAuth: true
+            )
+            
+            print("✅ Question created successfully")
+            return apiQuestion.toNegotiationQuestion()
+        },
+        
+        answerQuestion: { negotiationId, questionId, answerText in
+            print("💬 Answering question: \(questionId)")
+            print("   - Answer: \(answerText.prefix(50))...")
+            
+            let request = AnswerQuestionRequest(answerText: answerText)
+            
+            let apiAnswer: APINegotiationAnswerResponse = try await NetworkService.shared.requestSingle(
+                endpoint: "/negotiations/\(negotiationId)/questions/\(questionId)/answer",
+                method: .POST,
+                body: request,
+                requiresAuth: true
+            )
+            
+            print("✅ Question answered successfully")
+            return apiAnswer.toNegotiationAnswer()
+        },
+        
+        markAsRead: { negotiationId in
+            print("👁️ Marking negotiation as read: \(negotiationId)")
+            
+            try await NetworkService.shared.requestSingle(
+                endpoint: "/negotiations/\(negotiationId)/mark-read",
+                method: .PATCH,
+                requiresAuth: true
+            ) as EmptyResponse
+            
+            print("✅ Negotiation marked as read")
+        },
+        
         fetchUnreadQuestionsCount: {
             print("🔔 Buscando contador de perguntas não respondidas")
             struct UnreadCountResponse: Codable {
@@ -452,6 +511,104 @@ extension NegotiationClient: DependencyKey {
             )
             print("✅ \(response.count) perguntas não respondidas")
             return response.count
+        },
+        
+        fetchDocuments: { negotiationId in
+            print("📄 Fetching documents for negotiation: \(negotiationId)")
+            
+            let apiDocuments: [APINegotiationDocumentResponse] = try await NetworkService.shared.requestArray(
+                endpoint: "/negotiations/\(negotiationId)/documents",
+                method: .GET,
+                requiresAuth: true
+            )
+            
+            let documents = apiDocuments.map { $0.toNegotiationDocument() }
+            print("✅ Fetched \(documents.count) documents")
+            return documents
+        },
+        
+        uploadDocument: { negotiationId, data, documentType in
+            print("📤 Uploading document for negotiation: \(negotiationId)")
+            print("   - Type: \(documentType)")
+            print("   - Size: \(data.count) bytes")
+            
+            // Construir multipart/form-data
+            let boundary = UUID().uuidString
+            var body = Data()
+            
+            // Adicionar negotiation_id
+            body.append("--\(boundary)\r\n".data(using: .utf8)!)
+            body.append("Content-Disposition: form-data; name=\"negotiation_id\"\r\n\r\n".data(using: .utf8)!)
+            body.append(negotiationId.data(using: .utf8)!)
+            body.append("\r\n".data(using: .utf8)!)
+            
+            // Adicionar document_type
+            body.append("--\(boundary)\r\n".data(using: .utf8)!)
+            body.append("Content-Disposition: form-data; name=\"document_type\"\r\n\r\n".data(using: .utf8)!)
+            body.append(documentType.data(using: .utf8)!)
+            body.append("\r\n".data(using: .utf8)!)
+            
+            // Adicionar arquivo
+            body.append("--\(boundary)\r\n".data(using: .utf8)!)
+            body.append("Content-Disposition: form-data; name=\"file\"; filename=\"document.jpg\"\r\n".data(using: .utf8)!)
+            body.append("Content-Type: image/jpeg\r\n\r\n".data(using: .utf8)!)
+            body.append(data)
+            body.append("\r\n".data(using: .utf8)!)
+            
+            // Fechar boundary
+            body.append("--\(boundary)--\r\n".data(using: .utf8)!)
+            
+            // Fazer requisição HTTP direta para multipart/form-data
+            let baseURL = "https://ticketplace-api.onrender.com"
+            let apiPath = "/api"
+            guard let url = URL(string: "\(baseURL)\(apiPath)/negotiations/\(negotiationId)/documents") else {
+                throw NetworkError.invalidURL
+            }
+            
+            var request = URLRequest(url: url)
+            request.httpMethod = "POST"
+            request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+            request.setValue("application/json", forHTTPHeaderField: "Accept")
+            request.httpBody = body
+            
+            // Adicionar autenticação
+            if let token = UserDefaults.standard.string(forKey: "authToken") {
+                request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+            }
+            
+            let (responseData, response) = try await URLSession.shared.data(for: request)
+            
+            guard let httpResponse = response as? HTTPURLResponse else {
+                throw NetworkError.unknown("Invalid response")
+            }
+            
+            guard (200...299).contains(httpResponse.statusCode) else {
+                if httpResponse.statusCode == 401 {
+                    throw NetworkError.unauthorized
+                } else if httpResponse.statusCode == 403 {
+                    throw NetworkError.forbidden
+                } else if httpResponse.statusCode == 404 {
+                    throw NetworkError.notFound
+                } else {
+                    throw NetworkError.serverError(httpResponse.statusCode)
+                }
+            }
+            
+            let apiDocument: APINegotiationDocumentResponse = try JSONDecoder().decode(APINegotiationDocumentResponse.self, from: responseData)
+            print("✅ Document uploaded successfully: \(apiDocument.id)")
+            return apiDocument.toNegotiationDocument()
+        },
+        
+        deleteDocument: { negotiationId, documentId in
+            print("🗑️ Deleting document: \(documentId) from negotiation: \(negotiationId)")
+            
+            try await NetworkService.shared.requestSingle(
+                endpoint: "/negotiations/\(negotiationId)/documents/\(documentId)",
+                method: .DELETE,
+                requiresAuth: true
+            ) as EmptyResponse
+            
+            print("✅ Document deleted successfully")
         },
         
         fetchUserReviews: { userId in
@@ -634,182 +791,6 @@ extension NegotiationClient: DependencyKey {
             
             print("✅ Review submitted successfully")
             return review
-        },
-        
-        // MARK: - Questions and Answers Implementation
-        fetchQuestions: { negotiationId in
-            print("❓ Fetching questions for negotiation: \(negotiationId)")
-            
-            let apiQuestions: [APINegotiationQuestionResponse] = try await NetworkService.shared.requestArray(
-                endpoint: "/negotiations/\(negotiationId)/questions",
-                method: .GET,
-                requiresAuth: true
-            )
-            
-            let questions = apiQuestions.map { $0.toNegotiationQuestion() }
-            print("✅ Fetched \(questions.count) questions")
-            return questions
-        },
-        
-        createQuestion: { negotiationId, request in
-            print("❓ Creating question for negotiation: \(negotiationId)")
-            print("   - Question: \(request.questionText)")
-            print("   - Category: \(request.category.rawValue)")
-            
-            let apiQuestion: APINegotiationQuestionResponse = try await NetworkService.shared.requestSingle(
-                endpoint: "/negotiations/\(negotiationId)/questions",
-                method: .POST,
-                body: request,
-                requiresAuth: true
-            )
-            
-            print("✅ Question created successfully")
-            return apiQuestion.toNegotiationQuestion()
-        },
-        
-        answerQuestion: { negotiationId, questionId, answerText in
-            print("💬 Answering question: \(questionId)")
-            print("   - Answer: \(answerText.prefix(50))...")
-            
-            let request = AnswerQuestionRequest(answerText: answerText)
-            
-            let apiAnswer: APINegotiationAnswerResponse = try await NetworkService.shared.requestSingle(
-                endpoint: "/negotiations/\(negotiationId)/questions/\(questionId)/answer",
-                method: .POST,
-                body: request,
-                requiresAuth: true
-            )
-            
-            print("✅ Question answered successfully")
-            return apiAnswer.toNegotiationAnswer()
-        },
-        
-        markAsRead: { negotiationId in
-            print("👁️ Marking negotiation as read: \(negotiationId)")
-            
-            try await NetworkService.shared.requestSingle(
-                endpoint: "/negotiations/\(negotiationId)/mark-read",
-                method: .PATCH,
-                requiresAuth: true
-            ) as EmptyResponse
-            
-            print("✅ Negotiation marked as read")
-        },
-        
-        // MARK: - Documents Implementation
-        fetchDocuments: { negotiationId in
-            print("📄 Fetching documents for negotiation: \(negotiationId)")
-            
-            let apiDocuments: [APINegotiationDocumentResponse] = try await NetworkService.shared.requestArray(
-                endpoint: "/negotiations/\(negotiationId)/documents",
-                method: .GET,
-                requiresAuth: true
-            )
-            
-            let documents = apiDocuments.map { $0.toNegotiationDocument() }
-            print("✅ Fetched \(documents.count) documents")
-            return documents
-        },
-        
-        uploadDocument: { negotiationId, data, documentType in
-            print("📤 Uploading document for negotiation: \(negotiationId)")
-            print("   - Type: \(documentType)")
-            print("   - Size: \(data.count) bytes")
-            
-            // Construir multipart/form-data
-            let boundary = UUID().uuidString
-            var body = Data()
-            
-            // Adicionar negotiation_id
-            body.append("--\(boundary)\r\n".data(using: .utf8)!)
-            body.append("Content-Disposition: form-data; name=\"negotiation_id\"\r\n\r\n".data(using: .utf8)!)
-            body.append(negotiationId.data(using: .utf8)!)
-            body.append("\r\n".data(using: .utf8)!)
-            
-            // Adicionar document_type
-            body.append("--\(boundary)\r\n".data(using: .utf8)!)
-            body.append("Content-Disposition: form-data; name=\"document_type\"\r\n\r\n".data(using: .utf8)!)
-            body.append(documentType.data(using: .utf8)!)
-            body.append("\r\n".data(using: .utf8)!)
-            
-            // Adicionar arquivo
-            body.append("--\(boundary)\r\n".data(using: .utf8)!)
-            body.append("Content-Disposition: form-data; name=\"file\"; filename=\"document.jpg\"\r\n".data(using: .utf8)!)
-            body.append("Content-Type: image/jpeg\r\n\r\n".data(using: .utf8)!)
-            body.append(data)
-            body.append("\r\n".data(using: .utf8)!)
-            
-            // Fechar boundary
-            body.append("--\(boundary)--\r\n".data(using: .utf8)!)
-            
-            // Fazer requisição HTTP direta para multipart/form-data
-            let baseURL = "https://ticketplace-api.onrender.com"
-            let apiPath = "/api"
-            guard let url = URL(string: "\(baseURL)\(apiPath)/negotiations/\(negotiationId)/documents") else {
-                throw NetworkError.invalidURL
-            }
-            
-            var request = URLRequest(url: url)
-            request.httpMethod = "POST"
-            request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
-            request.setValue("application/json", forHTTPHeaderField: "Accept")
-            request.httpBody = body
-            
-            // Adicionar autenticação
-            if let token = UserDefaults.standard.string(forKey: "authToken") {
-                request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-            }
-            
-            let (responseData, response) = try await URLSession.shared.data(for: request)
-            
-            guard let httpResponse = response as? HTTPURLResponse else {
-                throw NetworkError.unknown("Invalid response")
-            }
-            
-            guard (200...299).contains(httpResponse.statusCode) else {
-                if httpResponse.statusCode == 401 {
-                    throw NetworkError.unauthorized
-                } else if httpResponse.statusCode == 403 {
-                    throw NetworkError.forbidden
-                } else if httpResponse.statusCode == 404 {
-                    throw NetworkError.notFound
-                } else {
-                    throw NetworkError.serverError(httpResponse.statusCode)
-                }
-            }
-            
-            let apiDocument: APINegotiationDocumentResponse = try JSONDecoder().decode(APINegotiationDocumentResponse.self, from: responseData)
-            print("✅ Document uploaded successfully: \(apiDocument.id)")
-            return apiDocument.toNegotiationDocument()
-        },
-        
-        deleteDocument: { negotiationId, documentId in
-            print("🗑️ Deleting document: \(documentId) from negotiation: \(negotiationId)")
-            
-            try await NetworkService.shared.requestSingle(
-                endpoint: "/negotiations/\(negotiationId)/documents/\(documentId)",
-                method: .DELETE,
-                requiresAuth: true
-            ) as EmptyResponse
-            
-            print("✅ Document deleted successfully")
-        },
-        
-        fetchUnreadQuestionsCount: {
-            print("🔔 Fetching unread questions count")
-            
-            struct UnreadCountResponse: Codable {
-                let count: Int
-            }
-            
-            let response: UnreadCountResponse = try await NetworkService.shared.requestSingle(
-                endpoint: "/negotiations/unread-count",
-                method: .GET,
-                requiresAuth: true
-            )
-            
-            print("✅ Unread questions count: \(response.count)")
-            return response.count
         }
     )
 }

@@ -36,6 +36,7 @@ public struct EmailVerificationFeature {
         case verifyCode
         case codeSent
         case updateCountdown(Int)
+        case updateVerificationCode(String)
         case verificationSucceeded(UserVerification)
         case codeVerificationFailed(String)
         case dismissErrorAlert
@@ -79,6 +80,12 @@ public struct EmailVerificationFeature {
                 
             case let .updateCountdown(value):
                 state.countdown = value
+                return .none
+                
+            case let .updateVerificationCode(code):
+                // Limitar a 6 dígitos e apenas números
+                let filteredCode = String(code.filter { $0.isNumber }.prefix(6))
+                state.verificationCode = filteredCode
                 return .none
                 
             case .verifyCode:

@@ -1,17 +1,17 @@
 import Foundation
 
 // Estrutura para armazenar dados do perfil do vendedor em cache
-private struct CachedProfileData {
-    let seller: User
-    let tickets: [TicketWithEvent]
-    let timestamp: Date
+public struct CachedProfileData {
+    public let seller: User
+    public let tickets: [TicketWithEvent]
+    public let timestamp: Date
     
-    var age: TimeInterval {
+    public var age: TimeInterval {
         Date().timeIntervalSince(timestamp)
     }
     
     // Cache válido por 5 minutos
-    var isValid: Bool {
+    public var isValid: Bool {
         age < 300 // 5 minutos
     }
 }

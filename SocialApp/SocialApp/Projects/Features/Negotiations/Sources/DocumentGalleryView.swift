@@ -270,11 +270,9 @@ struct FullScreenDocumentViewer: View {
                             .font(.system(size: 16, weight: .medium))
                             .foregroundColor(.white)
                         
-                        if let uploadedAt = document.uploadedAt {
-                            Text("Enviado em \(uploadedAt.formatted(date: .abbreviated, time: .shortened))")
-                                .font(.system(size: 12))
-                                .foregroundColor(.white.opacity(0.7))
-                        }
+                        Text("Enviado em \(document.uploadedAt.formatted(date: .abbreviated, time: .shortened))")
+                            .font(.system(size: 12))
+                            .foregroundColor(.white.opacity(0.7))
                     }
                     .padding(.bottom, 40)
                 }

@@ -20,7 +20,7 @@ public struct TicketDetailFeature {
         }
     }
     
-    public enum Action: Equatable {
+    public enum Action {
         case onAppear(UUID, Ticket?) // ✅ Agora recebe o ticket opcional
         case loadTicketDetail(UUID)
         case ticketDetailResponse(Result<TicketDetail, NetworkError>)

@@ -2,44 +2,6 @@ import ComposableArchitecture
 import Foundation
 
 @Reducer
-public struct PhoneVerificationFeature {
-    @ObservableState
-    public struct State: Equatable { public init() {} }
-    public enum Action {
-        case delegate(Delegate)
-        public enum Delegate: Equatable {
-            case verificationCompleted(UserVerification)
-            case dismiss
-        }
-    }
-    public init() {}
-    public var body: some ReducerOf<Self> {
-        Reduce { _, action in
-            switch action { case .delegate: return .none }
-        }
-    }
-}
-
-@Reducer
-public struct DocumentVerificationFeature {
-    @ObservableState
-    public struct State: Equatable { public init() {} }
-    public enum Action {
-        case delegate(Delegate)
-        public enum Delegate: Equatable {
-            case verificationSubmitted(UserVerification)
-            case dismiss
-        }
-    }
-    public init() {}
-    public var body: some ReducerOf<Self> {
-        Reduce { _, action in
-            switch action { case .delegate: return .none }
-        }
-    }
-}
-
-@Reducer
 public struct VerificationFeature {
     // MARK: - Verification Type
     public enum VerificationType: Equatable {
