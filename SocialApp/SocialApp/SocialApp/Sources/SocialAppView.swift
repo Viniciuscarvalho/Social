@@ -151,6 +151,31 @@ public struct SocialAppView: View {
             store.send(.tabSelected(.home))
         }
         
+        // Listener para navegação para detalhe do evento a partir de favoritos
+        NotificationCenter.default.addObserver(
+            forName: NSNotification.Name("NavigateToEventDetail"),
+            object: nil,
+            queue: .main
+        ) { notification in
+            if let eventId = notification.userInfo?["eventId"] as? UUID {
+                print("📢 SocialAppView: Navegando para evento favorito: \(eventId.uuidString)")
+                store.send(.homeFeature(.eventSelected(eventId.uuidString)))
+            }
+        }
+        
+        // Listener para navegação para perfil de vendedor
+        NotificationCenter.default.addObserver(
+            forName: NSNotification.Name("NavigateToSellerProfile"),
+            object: nil,
+            queue: .main
+        ) { notification in
+            if let sellerIdString = notification.userInfo?["sellerId"] as? String,
+               let sellerId = UUID(uuidString: sellerIdString) {
+                print("📢 SocialAppView: Navegando para perfil de vendedor: \(sellerIdString)")
+                store.send(.navigateToSellerProfile(sellerId))
+            }
+        }
+        
         // Listener para atualizar badge quando pergunta é respondida
         NotificationCenter.default.addObserver(
             forName: NSNotification.Name("QuestionAnswered"),
@@ -182,7 +207,8 @@ struct MainTabView: View {
     private var isShowingDetail: Bool {
         store.selectedEventId != nil || 
         store.selectedTicketId != nil || 
-        store.selectedSellerId != nil
+        store.selectedSellerId != nil ||
+        store.showingSellersList
     }
     
     var body: some View {
@@ -243,6 +269,13 @@ struct MainTabView: View {
                         store.send(.setShowingPopularEvents(false))
                     }
                 )
+            }
+        }
+        .sheet(isPresented: $store.showingSellersList.sending(\.setShowingSellersList)) {
+            if let sellersListStore = store.scope(state: \.sellersListFeature, action: \.sellersListFeature) {
+                NavigationStack {
+                    SellersListView(store: sellersListStore)
+                }
             }
         }
     }

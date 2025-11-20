@@ -435,50 +435,27 @@ public struct EventDetailView: View {
     
     @ViewBuilder
     private func actionButtons(event: Event) -> some View {
-        VStack(spacing: 12) {
-            // Botão principal - Negociar Ingresso (navega para lista de vendedores)
-            Button {
-                store.send(.viewAvailableTickets)
-            } label: {
-                HStack(spacing: 8) {
-                    Image(systemName: "bubble.left.and.bubble.right.fill")
-                        .font(.system(size: 16))
-                    Text("Negociar Ingresso")
-                        .font(.system(size: 16, weight: .semibold))
-                }
-                .foregroundColor(.white)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 16)
-                .background(
-                    LinearGradient(
-                        colors: [Color.blue, Color.purple],
-                        startPoint: .leading,
-                        endPoint: .trailing
-                    )
-                )
-                .cornerRadius(12)
+        // Botão principal - Negociar Ingresso (navega para lista de vendedores)
+        Button {
+            store.send(.viewAvailableTickets)
+        } label: {
+            HStack(spacing: 8) {
+                Image(systemName: "bubble.left.and.bubble.right.fill")
+                    .font(.system(size: 16))
+                Text("Negociar Ingresso")
+                    .font(.system(size: 16, weight: .semibold))
             }
-            
-            // Botão secundário - Save for later
-            Button {
-                store.send(.toggleFavorite)
-            } label: {
-                HStack(spacing: 8) {
-                    Image(store.isFavorited ? "favorited" : "unfavorited", bundle: Bundle.main)
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                        .frame(width: 20, height: 20)
-                    Text(store.isFavorited ? "Salvo" : "Salvar para depois")
-                        .font(.system(size: 16, weight: .medium))
-                }
-                .foregroundColor(.primary)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 16)
-                .background(
-                    RoundedRectangle(cornerRadius: 12)
-                        .stroke(Color(.systemGray4), lineWidth: 1.5)
+            .foregroundColor(.white)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 16)
+            .background(
+                LinearGradient(
+                    colors: [Color.blue, Color.purple],
+                    startPoint: .leading,
+                    endPoint: .trailing
                 )
-            }
+            )
+            .cornerRadius(12)
         }
     }
     

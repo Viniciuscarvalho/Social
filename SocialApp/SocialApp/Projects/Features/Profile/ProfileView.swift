@@ -23,6 +23,11 @@ public struct ProfileView: View {
                         // Header do perfil (cartão principal)
                         profileHeaderView
                         
+                        // Card de Vendedor (se o usuário tem tickets)
+                        if let user = store.user, user.ticketsCount > 0 {
+                            sellerCardView(user: user)
+                        }
+                        
                         // Menu principal (Tickets, Mais, Logout)
                         menuSection
                         
@@ -61,6 +66,37 @@ public struct ProfileView: View {
             // Quando a modal de MyTickets fecha (newValue = false), recarrega a contagem
             if oldValue && !newValue {
                 store.send(.myTicketsSheetClosed)
+            }
+        }
+        .sheet(isPresented: $store.showingFavorites.sending(\.setShowingFavorites)) {
+            FavoritesViewWrapper(
+                onEventSelected: { eventId in
+                    store.send(.setShowingFavorites(false))
+                    // Notificar SocialAppFeature para navegar para detalhe do evento
+                    // Usar o mesmo padrão que outros lugares do app
+                    if let eventIdString = UUID(uuidString: eventId.uuidString.lowercased()) {
+                        NotificationCenter.default.post(
+                            name: NSNotification.Name("NavigateToEventDetail"),
+                            object: nil,
+                            userInfo: ["eventId": eventIdString]
+                        )
+                    }
+                }
+            )
+        }
+        .sheet(isPresented: $store.showingThemeSelection.sending(\.setShowingThemeSelection)) {
+            NavigationStack {
+                ThemeToggleView()
+                    .navigationTitle("Aparência")
+                    .navigationBarTitleDisplayMode(.inline)
+                    .toolbar {
+                        ToolbarItem(placement: .navigationBarTrailing) {
+                            Button("Concluído") {
+                                store.send(.setShowingThemeSelection(false))
+                            }
+                            .foregroundColor(AppColors.primary)
+                        }
+                    }
             }
         }
     }
@@ -153,6 +189,19 @@ public struct ProfileView: View {
                 store.send(.myTicketsTapped)
             }
             
+            // Favoritos
+            menuRow(
+                icon: "heart.fill",
+                iconTint: Color.pink,
+                title: "Meus Favoritos",
+                subtitle: "Eventos que você favoritou"
+            ) {
+                store.send(.favoritesTapped)
+            }
+            
+            // Seleção de Tema
+            themeSelectionRow
+            
             // Mais (usando ação de suporte existente)
             menuRow(
                 icon: "ellipsis.circle.fill",
@@ -194,6 +243,94 @@ public struct ProfileView: View {
                 )
             }
             .buttonStyle(.plain)
+        }
+    }
+    
+    @ViewBuilder
+    private func sellerCardView(user: User) -> some View {
+        Button(action: {
+            // Navegar para o perfil de vendedor do próprio usuário
+            if let currentUserId = UserDefaults.standard.string(forKey: "currentUserId") {
+                store.send(.navigateToSellerProfile(currentUserId))
+            }
+        }) {
+            HStack(spacing: 16) {
+                // Ícone de vendedor
+                ZStack {
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(AppColors.primary.opacity(0.12))
+                        .frame(width: 48, height: 48)
+                    Image(systemName: "person.badge.shield.checkmark.fill")
+                        .font(.system(size: 20, weight: .semibold))
+                        .foregroundColor(AppColors.primary)
+                }
+                
+                // Informações
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Perfil de Vendedor")
+                        .font(.headline)
+                        .foregroundColor(AppColors.primaryText)
+                    
+                    Text("\(user.ticketsCount) ingresso\(user.ticketsCount == 1 ? "" : "s") disponível\(user.ticketsCount == 1 ? "" : "eis")")
+                        .font(.subheadline)
+                        .foregroundColor(AppColors.secondaryText)
+                }
+                
+                Spacer()
+                
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(AppColors.tertiaryText)
+            }
+            .padding(16)
+            .background(
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(AppColors.cardBackground)
+                    .shadow(color: Color.black.opacity(0.08), radius: 8, x: 0, y: 4)
+            )
+        }
+        .buttonStyle(.plain)
+    }
+    
+    @ViewBuilder
+    private var themeSelectionRow: some View {
+        VStack(spacing: 12) {
+            HStack(spacing: 12) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(AppColors.primary.opacity(0.12))
+                        .frame(width: 36, height: 36)
+                    Image(systemName: "paintbrush.fill")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundColor(AppColors.primary)
+                }
+                
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Aparência")
+                        .font(.body.weight(.semibold))
+                        .foregroundColor(AppColors.primaryText)
+                    Text("Tema: \(themeManager.displayName)")
+                        .font(.caption)
+                        .foregroundColor(AppColors.secondaryText)
+                }
+                
+                Spacer()
+                
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(AppColors.tertiaryText)
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 14)
+            .background(
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(AppColors.cardBackground)
+                    .shadow(color: AppColors.cardShadow.opacity(0.08), radius: 8, x: 0, y: 4)
+            )
+            .contentShape(Rectangle())
+            .onTapGesture {
+                store.send(.themeSelectionTapped)
+            }
         }
     }
     
@@ -480,6 +617,171 @@ struct EditProfileView: View {
             }
         )
         .environment(ThemeManager.shared)
+    }
+}
+
+// MARK: - FavoritesViewWrapper
+
+private struct FavoritesViewWrapper: View {
+    let onEventSelected: (UUID) -> Void
+    @State private var favoritesStore: StoreOf<FavoritesFeature>?
+    
+    var body: some View {
+        Group {
+            if let store = favoritesStore {
+                FavoritesViewCustom(store: store, onEventSelected: onEventSelected)
+            } else {
+                ProgressView()
+                    .onAppear {
+                        favoritesStore = Store(
+                            initialState: FavoritesFeature.State(),
+                            reducer: { FavoritesFeature() }
+                        )
+                    }
+            }
+        }
+    }
+}
+
+// MARK: - FavoritesViewCustom
+
+private struct FavoritesViewCustom: View {
+    @Bindable var store: StoreOf<FavoritesFeature>
+    let onEventSelected: (UUID) -> Void
+    
+    var body: some View {
+        NavigationStack {
+            Group {
+                if store.isLoading {
+                    ProgressView("Carregando favoritos...")
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else if store.favoriteEvents.isEmpty {
+                    emptyStateView
+                } else {
+                    ScrollView {
+                        LazyVStack(spacing: 16) {
+                            ForEach(store.favoriteEvents, id: \.eventId) { favorite in
+                                FavoriteEventCardCustom(favorite: favorite) {
+                                    if let eventId = UUID(uuidString: favorite.eventId) {
+                                        onEventSelected(eventId)
+                                    }
+                                } onRemove: {
+                                    store.send(.removeFromFavorites(favorite.eventId))
+                                }
+                            }
+                        }
+                        .padding()
+                    }
+                }
+            }
+            .navigationTitle("Favoritos")
+            .navigationBarTitleDisplayMode(.large)
+            .refreshable {
+                store.send(.loadFavorites)
+            }
+        }
+        .onAppear {
+            store.send(.onAppear)
+        }
+    }
+    
+    private var emptyStateView: some View {
+        VStack(spacing: 24) {
+            Spacer()
+            
+            ZStack {
+                Circle()
+                    .fill(Color.pink.opacity(0.1))
+                    .frame(width: 100, height: 100)
+                
+                Image(systemName: "heart.fill")
+                    .font(.system(size: 50))
+                    .foregroundColor(.pink)
+            }
+            
+            VStack(spacing: 8) {
+                Text("Nenhum favorito ainda")
+                    .font(.system(size: 20, weight: .bold))
+                    .foregroundColor(AppColors.primaryText)
+                
+                Text("Comece a favoritar eventos que você gosta")
+                    .font(.system(size: 15))
+                    .foregroundColor(AppColors.secondaryText)
+                    .multilineTextAlignment(.center)
+            }
+            
+            Spacer()
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding(40)
+    }
+}
+
+// MARK: - FavoriteEventCardCustom
+
+private struct FavoriteEventCardCustom: View {
+    let favorite: FavoriteEvent
+    let action: () -> Void
+    let onRemove: () -> Void
+    
+    var body: some View {
+        HStack(spacing: 12) {
+            AsyncImage(url: URL(string: favorite.eventImageURL ?? "")) { image in
+                image
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+            } placeholder: {
+                Rectangle()
+                    .fill(AppColors.tertiaryBackground)
+            }
+            .frame(width: 80, height: 80)
+            .cornerRadius(12)
+            
+            VStack(alignment: .leading, spacing: 6) {
+                Text(favorite.eventName)
+                    .adaptiveHeadline()
+                    .lineLimit(2)
+                
+                Text(favorite.eventLocation)
+                    .adaptiveSubheadline()
+                
+                if let eventDate = favorite.eventDate {
+                    Text(eventDate, style: .date)
+                        .font(.caption)
+                        .foregroundColor(AppColors.primary)
+                } else {
+                    Text("Data a definir")
+                        .adaptiveCaption()
+                }
+                
+                Text("Favoritado em \(favorite.favoriteDate.formatted(date: .abbreviated, time: .omitted))")
+                    .font(.caption2)
+                    .foregroundColor(AppColors.tertiaryText)
+            }
+            
+            Spacer()
+            
+            VStack(alignment: .trailing, spacing: 8) {
+                Text("R$ \(favorite.eventPrice, specifier: "%.2f")")
+                    .font(.headline)
+                    .foregroundColor(AppColors.primary)
+                
+                Button(action: onRemove) {
+                    Image(systemName: "heart.fill")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundColor(AppColors.favoriteRed)
+                        .padding(8)
+                        .background(AppColors.favoriteRed.opacity(0.1))
+                        .clipShape(Circle())
+                }
+            }
+        }
+        .padding()
+        .adaptiveCardStyle()
+        .contentShape(Rectangle())
+        .onTapGesture {
+            action()
+        }
     }
 }
 

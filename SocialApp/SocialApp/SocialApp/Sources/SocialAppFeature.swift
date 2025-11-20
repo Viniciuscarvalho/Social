@@ -7,7 +7,7 @@ import SwiftUI
 @Reducer
 public struct SocialAppFeature {
     @ObservableState
-    public struct State: Equatable {
+    public struct State {
         // Auth state
         public var auth = AuthFeature.State()
         
@@ -24,6 +24,7 @@ public struct SocialAppFeature {
         public var sellerProfileFeature = SellerProfileFeature.State()
         public var ticketDetailFeature = TicketDetailFeature.State()
         public var eventDetailFeature: EventDetailFeature.State?
+        public var sellersListFeature: SellersListFeature.State?
         public var searchFeature = SearchFeature.State()
         public var navigationPath = NavigationPath()
         
@@ -34,6 +35,7 @@ public struct SocialAppFeature {
         public var showingAddTicket = false
         public var showingRecommendedEvents = false
         public var showingPopularEvents = false
+        public var showingSellersList = false
         
         // Badge state
         public var unreadQuestionsCount: Int = 0
@@ -87,6 +89,7 @@ public struct SocialAppFeature {
         case sellerProfileFeature(SellerProfileFeature.Action)
         case ticketDetailFeature(TicketDetailFeature.Action)
         case eventDetailFeature(EventDetailFeature.Action)
+        case sellersListFeature(SellersListFeature.Action)
         case searchFeature(SearchFeature.Action)
         
         // Navigation actions
@@ -104,6 +107,10 @@ public struct SocialAppFeature {
         case addTicketTapped
         case setShowingAddTicket(Bool)
         case setAddTicketEventId(UUID?)
+        
+        // Sellers list navigation
+        case showSellersList(UUID, Event?)
+        case setShowingSellersList(Bool)
         
         // Recommended events navigation
         case showRecommendedEvents
@@ -165,6 +172,10 @@ public struct SocialAppFeature {
         // Por último, o .ifLet para features opcionais
         .ifLet(\.eventDetailFeature, action: \.eventDetailFeature) {
             EventDetailFeature()
+        }
+        
+        .ifLet(\.sellersListFeature, action: \.sellersListFeature) {
+            SellersListFeature()
         }
     }
     
@@ -432,6 +443,18 @@ public struct SocialAppFeature {
             state.showingPopularEvents = isShowing
             return .none
             
+        case let .showSellersList(eventId, event):
+            state.showingSellersList = true
+            state.sellersListFeature = SellersListFeature.State(eventId: eventId, event: event)
+            return .none
+            
+        case let .setShowingSellersList(isShowing):
+            state.showingSellersList = isShowing
+            if !isShowing {
+                state.sellersListFeature = nil
+            }
+            return .none
+            
             // MARK: - Navigation Actions
         case .navigateToEventDetail:
             // Handled in .homeFeature(.eventSelected) and .favoritesFeature(.eventSelected)
@@ -660,10 +683,11 @@ public struct SocialAppFeature {
             return .none
             
         case .eventDetailFeature(.viewAvailableTickets):
-            // Quando o usuário clica em "Ver Tickets Disponíveis" no detalhe do evento
-            if let eventId = state.selectedEventId {
+            // Quando o usuário clica em "Negociar Ingresso" no detalhe do evento
+            if let eventId = state.selectedEventId,
+               let event = state.eventDetailFeature?.event {
                 return .run { send in
-                    await send(.navigateToEventTickets(eventId))
+                    await send(.showSellersList(eventId, event))
                 }
             }
             return .none
@@ -696,6 +720,28 @@ public struct SocialAppFeature {
             state.selectedEventId = eventId
             state.eventDetailFeature = EventDetailFeature.State(eventId: eventId, event: nil)
             
+            return .none
+            
+        case let .sellersListFeature(.sellerTapped(sellerId)):
+            // Navegar para perfil do vendedor
+            if let sellerUUID = UUID(uuidString: sellerId) {
+                state.showingSellersList = false
+                state.sellersListFeature = nil
+                state.selectedSellerId = sellerUUID
+            }
+            return .none
+            
+        case let .sellersListFeature(.startNegotiation(sellerId, ticketId)):
+            // Iniciar negociação - será tratado pelo TicketDetailFeature ou NegotiationsFeature
+            state.showingSellersList = false
+            state.sellersListFeature = nil
+            // Navegar para detalhe do ticket para iniciar negociação
+            if let ticketUUID = UUID(uuidString: ticketId) {
+                state.selectedTicketId = ticketUUID
+            }
+            return .none
+            
+        case .sellersListFeature:
             return .none
             
         case .searchFeature:

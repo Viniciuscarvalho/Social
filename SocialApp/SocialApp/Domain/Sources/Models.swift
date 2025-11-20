@@ -1414,6 +1414,88 @@ public struct APIUserResponse: Codable {
     }
 }
 
+// MARK: - Sellers API Models
+
+/// Resposta da API para listar vendedores por evento
+/// Endpoint: GET /api/v1/events/{eventId}/sellers
+public struct APISellersByEventResponse: Codable {
+    public let sellers: [APISellerSummary]?
+    
+    public init(sellers: [APISellerSummary]?) {
+        self.sellers = sellers
+    }
+}
+
+/// Resumo de vendedor com informações agregadas de tickets
+public struct APISellerSummary: Codable {
+    public let id: String
+    public let name: String
+    public let photo: String?
+    public let profile_image_url: String? // Para compatibilidade com snake_case
+    public let ticketsCount: Int?
+    public let tickets_count: Int? // Para compatibilidade com snake_case
+    public let minPrice: Double?
+    public let min_price: Double? // Para compatibilidade com snake_case
+    public let maxPrice: Double?
+    public let max_price: Double? // Para compatibilidade com snake_case
+    public let isVerified: Bool?
+    public let is_verified: Bool? // Para compatibilidade com snake_case
+    
+    // Computed properties
+    public var finalPhoto: String? {
+        return photo ?? profile_image_url
+    }
+    
+    public var finalTicketsCount: Int {
+        return ticketsCount ?? tickets_count ?? 0
+    }
+    
+    public var finalMinPrice: Double {
+        return minPrice ?? min_price ?? 0.0
+    }
+    
+    public var finalMaxPrice: Double {
+        return maxPrice ?? max_price ?? 0.0
+    }
+    
+    public var finalIsVerified: Bool {
+        return isVerified ?? is_verified ?? false
+    }
+}
+
+/// Resposta da API para listar ingressos por vendedor
+/// Endpoint: GET /api/v1/sellers/{sellerId}/tickets
+public struct APITicketsBySellerResponse: Codable {
+    public let tickets: [APITicketResponse]?
+    
+    public init(tickets: [APITicketResponse]?) {
+        self.tickets = tickets
+    }
+}
+
+// MARK: - Seller with Tickets Info
+
+/// Modelo de domínio que agrupa um vendedor com seus ingressos
+public struct SellerWithTickets: Identifiable, Equatable {
+    public let id: String
+    public let seller: User
+    public let tickets: [Ticket]
+    public let minPrice: Double
+    public let maxPrice: Double
+    public let ticketsCount: Int
+    
+    public init(seller: User, tickets: [Ticket]) {
+        self.id = seller.id
+        self.seller = seller
+        self.tickets = tickets
+        self.ticketsCount = tickets.count
+        
+        let prices = tickets.map { $0.price }
+        self.minPrice = prices.min() ?? 0.0
+        self.maxPrice = prices.max() ?? 0.0
+    }
+}
+
 // MARK: - Request Models
 
 // Purchase Ticket Request - apenas precisa do ID na URL, sem body

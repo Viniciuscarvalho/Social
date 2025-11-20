@@ -12,6 +12,8 @@ public struct ProfileFeature {
         public var showingEditProfile = false
         public var showingImagePicker = false
         public var showingMyTickets = false
+        public var showingFavorites = false
+        public var showingThemeSelection = false
         public var pushNotifications = true
         
         public init(user: User? = nil) {
@@ -31,6 +33,9 @@ public struct ProfileFeature {
         case changeProfileImageTapped
         case myTicketsTapped
         case myTicketsSheetClosed
+        case favoritesTapped
+        case themeSelectionTapped
+        case navigateToSellerProfile(String) // sellerId
         case supportTapped
         case privacySettingsTapped
         case signOutTapped
@@ -40,6 +45,8 @@ public struct ProfileFeature {
         case setShowingEditProfile(Bool)
         case setShowingImagePicker(Bool)
         case setShowingMyTickets(Bool)
+        case setShowingFavorites(Bool)
+        case setShowingThemeSelection(Bool)
         
         // Profile update
         case updateProfile(User)
@@ -110,6 +117,23 @@ public struct ProfileFeature {
                 state.showingMyTickets = true
                 return .none
                 
+            case .favoritesTapped:
+                state.showingFavorites = true
+                return .none
+                
+            case .themeSelectionTapped:
+                state.showingThemeSelection = true
+                return .none
+                
+            case let .navigateToSellerProfile(sellerId):
+                // Notificar SocialAppFeature para navegar para perfil do vendedor
+                NotificationCenter.default.post(
+                    name: NSNotification.Name("NavigateToSellerProfile"),
+                    object: nil,
+                    userInfo: ["sellerId": sellerId]
+                )
+                return .none
+                
             case .myTicketsSheetClosed:
                 return .run { send in
                     await send(.loadTicketsCount)
@@ -156,6 +180,14 @@ public struct ProfileFeature {
                 
             case let .setShowingMyTickets(showing):
                 state.showingMyTickets = showing
+                return .none
+                
+            case let .setShowingFavorites(showing):
+                state.showingFavorites = showing
+                return .none
+                
+            case let .setShowingThemeSelection(showing):
+                state.showingThemeSelection = showing
                 return .none
                 
             case let .updateProfile(user):

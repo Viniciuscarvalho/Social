@@ -15,6 +15,9 @@ public struct TicketsClient {
     public var fetchMyTicketsWithPagination: () async throws -> (tickets: [Ticket], total: Int)
     public var fetchMyTicketsCount: () async throws -> Int
     public var deleteTicket: (String) async throws -> Void
+    /// Busca vendedores que possuem ingressos disponíveis para um evento específico
+    /// Endpoint otimizado: GET /api/v1/events/{eventId}/sellers
+    public var fetchSellersByEvent: (UUID) async throws -> [SellerWithTickets]
 }
 
 extension TicketsClient: DependencyKey {
@@ -76,43 +79,51 @@ extension TicketsClient: DependencyKey {
             },
             fetchTicketsBySeller: { sellerId in
                 print("🎫 fetchTicketsBySeller - Iniciando busca para sellerId: \(sellerId)")
+                
+                // Nível 1: Tentar endpoint otimizado primeiro: GET /api/v1/sellers/{sellerId}/tickets
                 do {
-                    // Nível 1: Tentar com query parameter sellerId
-                    print("📡 Nível 1: Tentando GET /tickets?sellerId=\(sellerId)")
-                    let queryItems = [URLQueryItem(name: "sellerId", value: sellerId)]
-                    let apiTickets: [APITicketResponse] = try await NetworkService.shared.requestArray(
-                        endpoint: "/tickets",
+                    print("📡 Nível 1: Tentando endpoint otimizado GET /sellers/\(sellerId)/tickets")
+                    let response: APITicketsBySellerResponse = try await NetworkService.shared.requestSingle(
+                        endpoint: "/sellers/\(sellerId)/tickets",
                         method: .GET,
-                        queryItems: queryItems
+                        requiresAuth: false
                     )
-                    let allTickets = apiTickets.map { $0.toTicket() }
-                    print("📦 Nível 1: Recebidos \(allTickets.count) tickets da API")
                     
-                    // CRÍTICO: Filtrar por sellerId E status disponível
-                    let sellerTickets = allTickets.filter { 
-                        $0.sellerId == sellerId && $0.status == .available 
+                    guard let apiTickets = response.tickets, !apiTickets.isEmpty else {
+                        print("⚠️ Endpoint otimizado retornou vazio, usando fallback")
+                        throw NetworkError.notFound
                     }
+                    
+                    let allTickets = apiTickets.map { $0.toTicket() }
+                    print("📦 Nível 1: Recebidos \(allTickets.count) tickets da API otimizada")
+                    
+                    // Filtrar apenas tickets disponíveis (o endpoint já deve retornar apenas available, mas garantimos)
+                    let sellerTickets = allTickets.filter { $0.status == .available }
                     print("✅ Nível 1: \(sellerTickets.count) tickets disponíveis do vendedor \(sellerId)")
                     
                     if !sellerTickets.isEmpty {
                         return sellerTickets
                     }
                     
-                    print("⚠️ Nível 1: Nenhum ticket encontrado com filtro, tentando próximo nível...")
+                    print("⚠️ Nível 1: Nenhum ticket disponível encontrado, tentando fallback...")
                     throw NetworkError.notFound
                     
                 } catch {
-                    print("❌ Nível 1 falhou: \(error)")
-                    // Nível 2: Se falhar, busca todos e filtra localmente
+                    print("❌ Nível 1 (endpoint otimizado) falhou: \(error.localizedDescription)")
+                    
+                    // Nível 2: Fallback - Tentar com query parameter sellerId
                     do {
-                        print("📡 Nível 2: Tentando GET /tickets (todos) e filtrando localmente")
+                        print("📡 Nível 2: Tentando GET /tickets?sellerId=\(sellerId)")
+                        let queryItems = [URLQueryItem(name: "sellerId", value: sellerId)]
                         let apiTickets: [APITicketResponse] = try await NetworkService.shared.requestArray(
                             endpoint: "/tickets",
-                            method: .GET
+                            method: .GET,
+                            queryItems: queryItems
                         )
                         let allTickets = apiTickets.map { $0.toTicket() }
-                        print("📦 Nível 2: Recebidos \(allTickets.count) tickets totais")
+                        print("📦 Nível 2: Recebidos \(allTickets.count) tickets da API")
                         
+                        // CRÍTICO: Filtrar por sellerId E status disponível
                         let sellerTickets = allTickets.filter { 
                             $0.sellerId == sellerId && $0.status == .available 
                         }
@@ -122,19 +133,45 @@ extension TicketsClient: DependencyKey {
                             return sellerTickets
                         }
                         
-                        print("⚠️ Nível 2: Nenhum ticket encontrado, tentando fallback JSON...")
+                        print("⚠️ Nível 2: Nenhum ticket encontrado, tentando próximo nível...")
                         throw NetworkError.notFound
                         
                     } catch {
-                        print("❌ Nível 2 falhou: \(error)")
-                        // Nível 3: Fallback final para JSON local
-                        print("📁 Nível 3: Carregando tickets.json e filtrando")
-                        let tickets = try await loadTicketsFromJSON()
-                        let sellerTickets = tickets.filter { 
-                            $0.sellerId == sellerId && $0.status == .available 
+                        print("❌ Nível 2 falhou: \(error.localizedDescription)")
+                        
+                        // Nível 3: Se falhar, busca todos e filtra localmente
+                        do {
+                            print("📡 Nível 3: Tentando GET /tickets (todos) e filtrando localmente")
+                            let apiTickets: [APITicketResponse] = try await NetworkService.shared.requestArray(
+                                endpoint: "/tickets",
+                                method: .GET
+                            )
+                            let allTickets = apiTickets.map { $0.toTicket() }
+                            print("📦 Nível 3: Recebidos \(allTickets.count) tickets totais")
+                            
+                            let sellerTickets = allTickets.filter { 
+                                $0.sellerId == sellerId && $0.status == .available 
+                            }
+                            print("✅ Nível 3: \(sellerTickets.count) tickets disponíveis do vendedor \(sellerId)")
+                            
+                            if !sellerTickets.isEmpty {
+                                return sellerTickets
+                            }
+                            
+                            print("⚠️ Nível 3: Nenhum ticket encontrado, tentando fallback JSON...")
+                            throw NetworkError.notFound
+                            
+                        } catch {
+                            print("❌ Nível 3 falhou: \(error.localizedDescription)")
+                            // Nível 4: Fallback final para JSON local
+                            print("📁 Nível 4: Carregando tickets.json e filtrando")
+                            let tickets = try await loadTicketsFromJSON()
+                            let sellerTickets = tickets.filter { 
+                                $0.sellerId == sellerId && $0.status == .available 
+                            }
+                            print("✅ Nível 4: \(sellerTickets.count) tickets disponíveis do vendedor no JSON local")
+                            return sellerTickets
                         }
-                        print("✅ Nível 3: \(sellerTickets.count) tickets disponíveis do vendedor no JSON local")
-                        return sellerTickets
                     }
                 }
             },
@@ -356,6 +393,9 @@ extension TicketsClient: DependencyKey {
                 } catch {
                     throw NetworkError.unknown("Erro inesperado ao deletar ingresso: \(error.localizedDescription)")
                 }
+            },
+            fetchSellersByEvent: { eventId in
+                return try await Self.fetchSellersByEventImpl(eventId: eventId)
             }
         )
     }
@@ -408,6 +448,108 @@ extension TicketsClient: DependencyKey {
         return filteredTickets
     }
     
+    /// Implementação de fetchSellersByEvent que pode usar dependências
+    private static func fetchSellersByEventImpl(eventId: UUID) async throws -> [SellerWithTickets] {
+        print("🛒 Buscando vendedores para evento: \(eventId)")
+        
+        // Tentar endpoint otimizado primeiro: GET /api/v1/events/{eventId}/sellers
+        do {
+            let response: APISellersByEventResponse = try await NetworkService.shared.requestSingle(
+                endpoint: "/events/\(eventId.uuidString)/sellers",
+                method: .GET,
+                requiresAuth: false
+            )
+            
+            guard let sellers = response.sellers, !sellers.isEmpty else {
+                print("⚠️ Endpoint otimizado retornou vazio, usando fallback")
+                throw NetworkError.notFound
+            }
+            
+            print("✅ Endpoint otimizado retornou \(sellers.count) vendedores")
+            
+            // Converter APISellerSummary para SellerWithTickets
+            // Como o endpoint otimizado não retorna tickets completos, precisamos buscar os tickets
+            var sellersWithTickets: [SellerWithTickets] = []
+            let ticketsClient = Self.liveValue
+            let userClient = UserClient.liveValue
+            
+            for sellerSummary in sellers {
+                // Buscar tickets do vendedor para o evento
+                let sellerTickets = try await ticketsClient.fetchTicketsByEvent(eventId)
+                let availableTickets = sellerTickets.filter { 
+                    $0.sellerId == sellerSummary.id && $0.status == .available 
+                }
+                
+                if !availableTickets.isEmpty {
+                    // Buscar perfil completo do vendedor
+                    do {
+                        let seller = try await userClient.getUserProfile(sellerSummary.id)
+                        let sellerWithTickets = SellerWithTickets(seller: seller, tickets: availableTickets)
+                        sellersWithTickets.append(sellerWithTickets)
+                    } catch {
+                        // Se não conseguir buscar perfil, criar um básico
+                        var basicSeller = User(
+                            name: sellerSummary.name,
+                            title: sellerSummary.finalIsVerified ? "Vendedor Verificado" : nil,
+                            profileImageURL: sellerSummary.finalPhoto,
+                            email: nil
+                        )
+                        basicSeller.id = sellerSummary.id
+                        basicSeller.isVerified = sellerSummary.finalIsVerified
+                        basicSeller.ticketsCount = sellerSummary.finalTicketsCount
+                        
+                        let sellerWithTickets = SellerWithTickets(seller: basicSeller, tickets: availableTickets)
+                        sellersWithTickets.append(sellerWithTickets)
+                    }
+                }
+            }
+            
+            // Ordenar por preço mínimo
+            sellersWithTickets.sort { $0.minPrice < $1.minPrice }
+            return sellersWithTickets
+            
+        } catch {
+            // Fallback: usar método atual (buscar tickets e agrupar)
+            print("⚠️ Endpoint otimizado não disponível, usando fallback: \(error.localizedDescription)")
+            return try await Self.fallbackFetchSellersByEvent(eventId: eventId)
+        }
+    }
+    
+    private static func fallbackFetchSellersByEvent(eventId: UUID) async throws -> [SellerWithTickets] {
+        let ticketsClient = Self.liveValue
+        let userClient = UserClient.liveValue
+        
+        // Buscar tickets do evento
+        let tickets = try await ticketsClient.fetchTicketsByEvent(eventId)
+        let availableTickets = tickets.filter { $0.status == .available }
+        
+        // Agrupar tickets por vendedor
+        var sellersMap: [String: [Ticket]] = [:]
+        for ticket in availableTickets {
+            if sellersMap[ticket.sellerId] == nil {
+                sellersMap[ticket.sellerId] = []
+            }
+            sellersMap[ticket.sellerId]?.append(ticket)
+        }
+        
+        // Buscar informações dos vendedores
+        var sellersWithTickets: [SellerWithTickets] = []
+        for (sellerId, sellerTickets) in sellersMap {
+            do {
+                let seller = try await userClient.getUserProfile(sellerId)
+                let sellerWithTickets = SellerWithTickets(seller: seller, tickets: sellerTickets)
+                sellersWithTickets.append(sellerWithTickets)
+            } catch {
+                // Continuar mesmo se um vendedor falhar
+                continue
+            }
+        }
+        
+        // Ordenar por preço mínimo
+        sellersWithTickets.sort { $0.minPrice < $1.minPrice }
+        return sellersWithTickets
+    }
+    
     public static let testValue = TicketsClient(
         fetchTickets: { SharedMockData.sampleTickets },
         fetchAvailableTickets: { SharedMockData.sampleTickets },
@@ -443,7 +585,20 @@ extension TicketsClient: DependencyKey {
             return (tickets: tickets, total: 3)
         },
         fetchMyTicketsCount: { 3 },
-        deleteTicket: { _ in }
+        deleteTicket: { _ in },
+        fetchSellersByEvent: { _ in
+            // Mock para testes
+            var mockSeller = User(
+                name: "Vendedor Teste",
+                title: "Vendedor Verificado",
+                profileImageURL: "https://via.placeholder.com/120",
+                email: "vendedor@teste.com"
+            )
+            mockSeller.id = "TEST_SELLER_ID"
+            mockSeller.isVerified = true
+            let mockTickets = Array(SharedMockData.sampleTickets.prefix(2))
+            return [SellerWithTickets(seller: mockSeller, tickets: mockTickets)]
+        }
     )
 }
 
