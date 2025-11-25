@@ -389,6 +389,9 @@ struct MainTabView: View {
                     .toolbar(.hidden, for: .tabBar)
                 }
             }
+            .navigationDestination(item: $store.selectedSellerId.sending(\.dismissSellerNavigation)) { sellerId in
+                sellerProfileDestination(sellerId: sellerId)
+            }
         }
     }
     
@@ -445,6 +448,9 @@ struct MainTabView: View {
                     )
                 )
                 .padding(.bottom, 120)
+            }
+            .navigationDestination(item: $store.selectedSellerId.sending(\.dismissSellerNavigation)) { sellerId in
+                sellerProfileDestination(sellerId: sellerId)
             }
         }
     }

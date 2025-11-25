@@ -171,3 +171,4 @@ Este documento descreve os ajustes necessários nas telas de perfil do usuário,
 3. A lista de ingressos do vendedor deve permitir filtros ou ordenação?
 4. Existe limite de vendedores/ingressos a serem exibidos por vez ou deve haver paginação?
 
+

@@ -303,3 +303,4 @@ ORDER BY min_price ASC
 - **2024-01-XX**: Método `fetchSellersByEvent` implementado no cliente iOS
 - **2024-01-XX**: Estratégia de fallback implementada
 
+

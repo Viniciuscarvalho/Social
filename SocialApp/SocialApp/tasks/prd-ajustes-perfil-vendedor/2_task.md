@@ -79,3 +79,4 @@ Referência: Seção "SellerProfileFeature (ajustes)" e "Endpoints de API" na te
 <dependencies>api_endpoints</dependencies>
 </task_context>
 
+

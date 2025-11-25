@@ -70,3 +70,4 @@ Referência: Seção "ProfileFeature (ajustes)" na techspec.md
 <dependencies>theme_manager</dependencies>
 </task_context>
 
+

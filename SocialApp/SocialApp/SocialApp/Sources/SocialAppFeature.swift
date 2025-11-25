@@ -5,7 +5,7 @@ import SwiftUI
 // (This ensures all features are available for the app state)
 
 @Reducer
-public struct SocialAppFeature {
+public struct SocialAppFeature { 
     @ObservableState
     public struct State {
         // Auth state
@@ -185,12 +185,8 @@ public struct SocialAppFeature {
             // MARK: - App Lifecycle
         case .onAppear:
             // O AuthFeature já faz checkAuthStatus() no init do State
-            // Então não precisa disparar onAppear novamente
-            // Atualiza badge quando app aparece
-            return .run { send in
-                await send(.updateBadgeCount)
-                await send(.startBadgePolling)
-            }
+            // Badge será atualizado apenas quando necessário (ao clicar em negociações)
+            return .none
             
         case .updateBadgeCount:
             return .run { send in
@@ -644,6 +640,16 @@ public struct SocialAppFeature {
             print("✅ Navegando para negociação existente: \(negotiationId)")
             return .none
             
+        case let .ticketDetailFeature(.delegate(.navigateToSellerProfile(sellerId))):
+            // Navega para o perfil do vendedor
+            if let sellerUUID = UUID(uuidString: sellerId) {
+                state.selectedSellerId = sellerUUID
+                print("✅ Navegando para perfil do vendedor: \(sellerId)")
+            } else {
+                print("❌ Erro ao converter sellerId para UUID: \(sellerId)")
+            }
+            return .none
+            
         case .ticketDetailFeature:
             return .none
             
@@ -673,7 +679,24 @@ public struct SocialAppFeature {
             }
             return .none
             
+        case let .profileFeature(.navigateToSellerProfile(sellerId)):
+            // Navega para o perfil do vendedor a partir do Profile
+            if let sellerUUID = UUID(uuidString: sellerId) {
+                state.selectedSellerId = sellerUUID
+                print("✅ Navegando para perfil do vendedor a partir do Profile: \(sellerId)")
+            } else {
+                print("❌ Erro ao converter sellerId para UUID: \(sellerId)")
+            }
+            return .none
+            
         case .profileFeature:
+            return .none
+            
+        case let .sellerProfileFeature(.delegate(.navigateToNegotiations(sellerId))):
+            // Navegar para a aba de negociações e filtrar por vendedor
+            print("💬 Navegando para negociações com vendedor: \(sellerId)")
+            state.selectedTab = .negotiations
+            // TODO: Filtrar negociações por sellerId se necessário
             return .none
             
         case .sellerProfileFeature:

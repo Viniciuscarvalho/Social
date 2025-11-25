@@ -71,17 +71,6 @@ public struct TicketDetailView: View {
                         }
                         
                         Spacer()
-                        
-                        Button {
-                            // TODO: Implementar favoritar
-                        } label: {
-                            Image(systemName: "heart")
-                                .font(.system(size: 16, weight: .semibold))
-                                .foregroundColor(.primary)
-                                .frame(width: 40, height: 40)
-                                .background(Color(.systemGray6))
-                                .clipShape(RoundedRectangle(cornerRadius: 8))
-                        }
                     }
                     .padding(.horizontal, 20)
                     .padding(.top, 16)
@@ -192,63 +181,68 @@ public struct TicketDetailView: View {
                     .padding(.bottom, 24)
                     
                     // Card do Vendedor
-                    VStack(alignment: .leading, spacing: 16) {
-                        HStack(spacing: 12) {
-                            // Imagem do vendedor
-                            AsyncImage(url: URL(string: ticketDetail.seller.profileImageURL ?? "")) { image in
-                                image
-                                    .resizable()
-                                    .aspectRatio(contentMode: .fill)
-                            } placeholder: {
-                                Rectangle()
-                                    .fill(Color(.systemGray5))
-                                    .overlay(
-                                        Image(systemName: "person.fill")
-                                            .font(.system(size: 24))
-                                            .foregroundColor(.gray)
-                                    )
-                            }
-                            .frame(width: 60, height: 60)
-                            .clipShape(RoundedRectangle(cornerRadius: 12))
-                            
-                            VStack(alignment: .leading, spacing: 6) {
-                                HStack(spacing: 6) {
-                                    Text(ticketDetail.seller.name)
-                                        .font(.system(size: 16, weight: .bold))
-                                        .foregroundColor(.primary)
-                                    
-                                    if ticketDetail.seller.isVerified {
-                                        ZStack {
-                                            Circle()
-                                                .fill(Color.green)
-                                                .frame(width: 18, height: 18)
-                                            Image(systemName: "checkmark")
-                                                .font(.system(size: 10, weight: .bold))
-                                                .foregroundColor(.white)
+                    Button {
+                        store.send(.navigateToSellerProfile(ticketDetail.seller.id))
+                    } label: {
+                        VStack(alignment: .leading, spacing: 16) {
+                            HStack(spacing: 12) {
+                                // Imagem do vendedor
+                                AsyncImage(url: URL(string: ticketDetail.seller.profileImageURL ?? "")) { image in
+                                    image
+                                        .resizable()
+                                        .aspectRatio(contentMode: .fill)
+                                } placeholder: {
+                                    Rectangle()
+                                        .fill(Color(.systemGray5))
+                                        .overlay(
+                                            Image(systemName: "person.fill")
+                                                .font(.system(size: 24))
+                                                .foregroundColor(.gray)
+                                        )
+                                }
+                                .frame(width: 60, height: 60)
+                                .clipShape(RoundedRectangle(cornerRadius: 12))
+                                
+                                VStack(alignment: .leading, spacing: 6) {
+                                    HStack(spacing: 6) {
+                                        Text(ticketDetail.seller.name)
+                                            .font(.system(size: 16, weight: .bold))
+                                            .foregroundColor(.primary)
+                                        
+                                        if ticketDetail.seller.isVerified {
+                                            ZStack {
+                                                Circle()
+                                                    .fill(Color.green)
+                                                    .frame(width: 18, height: 18)
+                                                Image(systemName: "checkmark")
+                                                    .font(.system(size: 10, weight: .bold))
+                                                    .foregroundColor(.white)
+                                            }
                                         }
+                                    }
+                                    
+                                    HStack(spacing: 4) {
+                                        Image(systemName: "star.fill")
+                                            .font(.system(size: 12))
+                                            .foregroundColor(.orange)
+                                        Text("4.8 (124 avaliações)")
+                                            .font(.system(size: 13))
+                                            .foregroundColor(.secondary)
                                     }
                                 }
                                 
-                                HStack(spacing: 4) {
-                                    Image(systemName: "star.fill")
-                                        .font(.system(size: 12))
-                                        .foregroundColor(.orange)
-                                    Text("4.8 (124 avaliações)")
-                                        .font(.system(size: 13))
+                                Spacer()
+                                
+                                Button {
+                                    // TODO: Implementar chat
+                                } label: {
+                                    Image(systemName: "bubble.left.and.bubble.right.fill")
+                                        .font(.system(size: 18))
                                         .foregroundColor(.secondary)
                                 }
                             }
-                            
-                            Spacer()
-                            
-                            Button {
-                                // TODO: Implementar chat
-                            } label: {
-                                Image(systemName: "bubble.left.and.bubble.right.fill")
-                                    .font(.system(size: 18))
-                                    .foregroundColor(.secondary)
-                            }
                         }
+                        
                     }
                     .padding(16)
                     .background(Color(.systemBackground))

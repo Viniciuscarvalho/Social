@@ -303,3 +303,4 @@ Conforme `.cursor/rules/code-standards.md`:
 - Endpoints de API para vendedores e ingressos
 - Contratos de API/documentação
 
+

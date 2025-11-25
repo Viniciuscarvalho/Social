@@ -51,6 +51,11 @@ public struct SellerProfileFeature {
         case cacheLoaded(User, [TicketWithEvent])
         case syncTicketDeleted(String) // Sincronização: ticket foi deletado
         case syncTicketUpdated(Ticket) // Sincronização: ticket foi atualizado
+        case delegate(Delegate)
+        
+        public enum Delegate: Equatable {
+            case navigateToNegotiations(String) // sellerId
+        }
     }
     
     @Dependency(\.userClient) var userClient
@@ -295,7 +300,15 @@ public struct SellerProfileFeature {
                 return .none
                 
             case .negotiateTapped:
-                print("💬 Negociar tapped")
+                guard let sellerId = state.sellerId else {
+                    print("❌ SellerProfile: sellerId não disponível para negociação")
+                    return .none
+                }
+                print("💬 Negociar tapped - enviando delegate para navegar às negociações com: \(sellerId)")
+                return .send(.delegate(.navigateToNegotiations(sellerId)))
+                
+            case .delegate:
+                // Handled by parent
                 return .none
                 
             case let .syncTicketDeleted(ticketId):

@@ -30,6 +30,7 @@ public struct TicketDetailFeature {
         case validationResponse(Result<Bool, NetworkError>)
         case loadSellerProfile(UUID)
         case sellerProfile(SellerProfileFeature.Action)
+        case navigateToSellerProfile(String) // Navegar para perfil do vendedor
         case negotiateTapped // Ação para iniciar negociação
         case startNegotiation
         case checkExistingNegotiation
@@ -41,6 +42,7 @@ public struct TicketDetailFeature {
         public enum Delegate: Equatable {
             case negotiationStarted(String) // negotiationId
             case navigateToExistingNegotiation(String) // negotiationId
+            case navigateToSellerProfile(String) // sellerId
         }
     }
     
@@ -162,6 +164,11 @@ public struct TicketDetailFeature {
                 // As ações do SellerProfileFeature serão tratadas pelo Scope
                 return .none
                 
+            case let .navigateToSellerProfile(sellerId):
+                // Envia delegate para o parent SocialAppFeature tratar a navegação
+                print("🔄 TicketDetailFeature: Navegando para perfil do vendedor \(sellerId)")
+                return .send(.delegate(.navigateToSellerProfile(sellerId)))
+                
             case .negotiateTapped:
                 // Verifica condições antes de iniciar negociação
                 guard let ticketDetail = state.ticketDetail else {
@@ -224,6 +231,22 @@ public struct TicketDetailFeature {
                 guard let ticketDetail = state.ticketDetail,
                       let ticketId = state.currentTicketId else {
                     state.errorMessage = "Ticket não encontrado"
+                    state.showingNegotiationError = true
+                    return .none
+                }
+                
+                // Validação crítica: não pode negociar o próprio ingresso
+                let currentUserId = UserDefaults.standard.string(forKey: "currentUserId")
+                let sellerId = ticketDetail.seller.id
+                
+                print("🔍 Validando negociação:")
+                print("   - Current User ID: \(currentUserId ?? "nil")")
+                print("   - Seller ID: \(sellerId)")
+                print("   - Ticket ID: \(ticketId.uuidString)")
+                
+                if currentUserId == sellerId {
+                    print("❌ ERRO: Usuário tentando negociar próprio ingresso")
+                    state.errorMessage = "Você não pode negociar seu próprio ingresso"
                     state.showingNegotiationError = true
                     return .none
                 }

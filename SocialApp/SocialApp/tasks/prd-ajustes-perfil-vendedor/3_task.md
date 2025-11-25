@@ -67,3 +67,4 @@ Referência: Seção "EventDetailFeature (ajustes)" na techspec.md
 <dependencies>none</dependencies>
 </task_context>
 
+

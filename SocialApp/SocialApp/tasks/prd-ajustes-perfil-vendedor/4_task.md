@@ -85,3 +85,4 @@ Referência: Seção "SellersClient (novo ou ajuste)" e "Endpoints de API" na te
 <dependencies>api_endpoints,event_detail</dependencies>
 </task_context>
 
+

@@ -297,6 +297,15 @@ extension NegotiationClient: DependencyKey {
         
         createNegotiation: { request in
             print("💼 Criando negociação para ticket: \(request.ticketId)")
+            
+            // Log detalhado de debug
+            let currentUserId = UserDefaults.standard.string(forKey: "currentUserId")
+            let token = UserDefaults.standard.string(forKey: "authToken")
+            print("📋 Debug Info:")
+            print("   - Current User ID: \(currentUserId ?? "nil")")
+            print("   - Token presente: \(token != nil)")
+            print("   - Ticket ID: \(request.ticketId)")
+            
             let negotiation: APINegotiationResponse = try await NetworkService.shared.requestSingle(
                 endpoint: "/negotiations",
                 method: .POST,
