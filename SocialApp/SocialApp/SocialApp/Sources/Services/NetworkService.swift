@@ -181,8 +181,31 @@ final class NetworkService {
                 UserDefaults.standard.removeObject(forKey: "currentUserId")
                 throw NetworkError.unauthorized
             case 403:
+                // Tentar extrair mensagem de erro do body se disponível
+                if !data.isEmpty {
+                    if let jsonString = String(data: data, encoding: .utf8) {
+                        print("❌ Erro 403 - Response body completo:")
+                        print("   \(jsonString)")
+                        
+                        // Tentar decodificar como objeto de erro genérico
+                        if let errorDict = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
+                            print("   📋 Erro decodificado:")
+                            for (key, value) in errorDict {
+                                print("      \(key): \(value)")
+                            }
+                        }
+                    } else {
+                        print("❌ Erro 403 - Response body não é texto válido (tamanho: \(data.count) bytes)")
+                    }
+                } else {
+                    print("❌ Erro 403 - Response body vazio")
+                }
                 throw NetworkError.forbidden
             case 404:
+                // Log detalhado para 404 também
+                if !data.isEmpty, let jsonString = String(data: data, encoding: .utf8) {
+                    print("❌ Erro 404 - Response body: \(jsonString)")
+                }
                 throw NetworkError.notFound
             case 500...599:
                 throw NetworkError.serverError(httpResponse.statusCode)

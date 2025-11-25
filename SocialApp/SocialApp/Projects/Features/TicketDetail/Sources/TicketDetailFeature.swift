@@ -36,6 +36,7 @@ public struct TicketDetailFeature {
         case checkExistingNegotiation
         case existingNegotiationResponse(Result<Negotiation?, NetworkError>)
         case negotiationCreated(Result<Negotiation, NetworkError>)
+        case verificationCheckFailed(String) // Falha na verificação do usuário
         case dismissNegotiationError
         case delegate(Delegate)
         
@@ -173,6 +174,7 @@ public struct TicketDetailFeature {
                 // Verifica condições antes de iniciar negociação
                 guard let ticketDetail = state.ticketDetail else {
                     state.errorMessage = "Ticket não encontrado"
+                    state.showingNegotiationError = true
                     return .none
                 }
                 
@@ -183,10 +185,92 @@ public struct TicketDetailFeature {
                     return .none
                 }
                 
+                // 🔍 VALIDAÇÃO CRÍTICA: Não pode negociar próprio ingresso
+                let currentUserId = UserDefaults.standard.string(forKey: "currentUserId")
+                let sellerId = ticketDetail.seller.id
+                
+                print("🔍 [negotiateTapped] Validando antes de iniciar negociação:")
+                print("   ✅ Current User ID: \(currentUserId ?? "nil")")
+                print("   ✅ Seller ID: \(sellerId)")
+                print("   ✅ Ticket ID: \(ticketDetail.ticketId)")
+                print("   ✅ Status: \(ticketDetail.status.rawValue)")
+                
+                if let userId = currentUserId, userId == sellerId {
+                    print("❌ [negotiateTapped] BLOQUEADO: Usuário tentando negociar próprio ingresso!")
+                    print("   - User e Seller são iguais: \(userId)")
+                    state.errorMessage = "Você não pode negociar seu próprio ingresso"
+                    state.showingNegotiationError = true
+                    return .none
+                }
+                
+                // 🔍 VALIDAÇÃO DE VERIFICAÇÃO DO USUÁRIO
+                if let userData = UserDefaults.standard.data(forKey: "currentUser"),
+                   let user = try? JSONDecoder().decode(User.self, from: userData) {
+                    if let verification = user.verification {
+                        if !verification.canNegotiate {
+                            print("❌ [negotiateTapped] BLOQUEADO: Usuário não verificado!")
+                            print("   - Verification Level: \(verification.verificationLevel.rawValue)")
+                            print("   - Email Verified: \(verification.emailVerified)")
+                            print("   - Phone Verified: \(verification.phoneVerified)")
+                            let requiredLevel = verification.verificationLevel.level < 1 ? "email" : "telefone"
+                            state.errorMessage = "Você precisa verificar seu \(requiredLevel) para iniciar negociações"
+                            state.showingNegotiationError = true
+                            return .none
+                        }
+                        print("✅ [negotiateTapped] Verificação do usuário OK: \(verification.verificationLevel.rawValue)")
+                    } else {
+                        print("⚠️ [negotiateTapped] Verificação do usuário não encontrada - buscando...")
+                        // Buscar verificação atualizada
+                        return .run { send in
+                            do {
+                                let updatedUser = try await userClient.getCurrentUser()
+                                // Salvar usuário atualizado com verificação
+                                if let encoded = try? JSONEncoder().encode(updatedUser) {
+                                    UserDefaults.standard.set(encoded, forKey: "currentUser")
+                                }
+                                if let verification = updatedUser.verification, !verification.canNegotiate {
+                                    await send(.verificationCheckFailed("Você precisa verificar seu email para iniciar negociações"))
+                                } else {
+                                    await send(.checkExistingNegotiation)
+                                }
+                            } catch {
+                                print("❌ Erro ao buscar verificação: \(error)")
+                                await send(.verificationCheckFailed("Não foi possível verificar seu perfil. Tente novamente."))
+                            }
+                        }
+                    }
+                } else {
+                    print("⚠️ [negotiateTapped] Dados do usuário não encontrados - buscando...")
+                    return .run { send in
+                        do {
+                            let updatedUser = try await userClient.getCurrentUser()
+                            // Salvar usuário atualizado com verificação
+                            if let encoded = try? JSONEncoder().encode(updatedUser) {
+                                UserDefaults.standard.set(encoded, forKey: "currentUser")
+                            }
+                            if let verification = updatedUser.verification, !verification.canNegotiate {
+                                await send(.verificationCheckFailed("Você precisa verificar seu email para iniciar negociações"))
+                            } else {
+                                await send(.checkExistingNegotiation)
+                            }
+                        } catch {
+                            print("❌ Erro ao buscar verificação: \(error)")
+                            await send(.verificationCheckFailed("Não foi possível verificar seu perfil. Tente novamente."))
+                        }
+                    }
+                }
+                
+                print("✅ [negotiateTapped] Validação passou - prosseguindo com negociação")
+                
                 // Verifica se pode iniciar negociação
                 return .run { send in
                     await send(.checkExistingNegotiation)
                 }
+                
+            case let .verificationCheckFailed(message):
+                state.errorMessage = message
+                state.showingNegotiationError = true
+                return .none
                 
             case .checkExistingNegotiation:
                 guard let ticketId = state.currentTicketId else {

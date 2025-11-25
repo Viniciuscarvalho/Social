@@ -15,6 +15,7 @@ public struct User: Codable, Identifiable, Equatable {
     public var tickets: [Ticket]
     public var createdAt: Date
     public var interests: [String]?
+    public var verification: UserVerification?
     
     public init(
         name: String,
@@ -41,7 +42,7 @@ public struct User: Codable, Identifiable, Equatable {
     }
     
     enum CodingKeys: String, CodingKey {
-        case id, name, title, email, bio, tickets, interests
+        case id, name, title, email, bio, tickets, interests, verification
         case profileImageURL = "profileImageUrl"
         case followersCount = "followersCount"
         case followingCount = "followingCount"
@@ -1387,6 +1388,7 @@ public struct APIUserResponse: Codable {
     let tickets: [APITicketResponse]?
     let createdAt: String?
     let created_at: String? // Para compatibilidade com snake_case
+    let verification: APIUserVerificationResponse?
     
     // Computed properties para conversão
     var finalProfileImageURL: String? {
@@ -1672,6 +1674,11 @@ extension APIUserResponse {
         // Converte os tickets se existirem
         if let apiTickets = self.tickets {
             user.tickets = apiTickets.map { $0.toTicket() }
+        }
+        
+        // Converte a verificação se existir
+        if let apiVerification = self.verification {
+            user.verification = apiVerification.toUserVerification()
         }
         
         // Parse da data de criação

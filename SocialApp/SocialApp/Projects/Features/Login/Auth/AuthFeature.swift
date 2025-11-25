@@ -143,7 +143,17 @@ public struct AuthFeature {
               state.isFirstLaunch = false
               state.authToken = response.token
               state.currentUserId = user.id
-              return .none
+              
+              // Buscar verificação do usuário após login bem-sucedido
+              return .run { send in
+                  do {
+                      let updatedUser = try await userClient.getCurrentUser()
+                      await send(.userProfileResponse(.success(updatedUser)))
+                  } catch {
+                      print("⚠️ Não foi possível buscar verificação do usuário: \(error)")
+                      // Não bloqueia o login se falhar
+                  }
+              }
 
             case let .authResponse(.failure(error)):
               state.isLoading = false

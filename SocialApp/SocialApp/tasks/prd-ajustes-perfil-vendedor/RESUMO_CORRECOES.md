@@ -338,3 +338,7 @@ O cliente iOS está:
 
 **Próxima ação necessária**: Investigação no backend para identificar qual validação está causando o erro 403.
 
+
+
+
+
