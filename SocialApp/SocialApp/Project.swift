@@ -50,6 +50,7 @@ let project = Project(
                 "./Projects/Features/Profile/**",
                 "./Projects/Features/Events/Sources/**",
                 "./Projects/Features/TicketsList/Sources/**", 
+                "./Projects/Features/SellersList/Sources/**",
                 "./Projects/Features/SellerProfile/Sources/**",
                 "./Projects/Features/TicketDetail/Sources/**",
                 "./Projects/Features/Verification/Sources/**"
