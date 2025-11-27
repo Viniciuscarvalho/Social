@@ -615,12 +615,29 @@ public struct SocialAppFeature {
         case .homeFeature:
             return .none
             
+        case let .ticketsListFeature(.delegate(.navigateToTicketDetail(ticketId))):
+            // Navega para detalhe do ticket usando delegate pattern
+            state.selectedTicketId = ticketId
+            print("✅ Navegando para detalhe do ticket a partir do TicketsList: \(ticketId)")
+            return .none
+        
         case .ticketsListFeature:
             return .none
             
         case .addTicket:
             return .none
             
+        case let .negotiationsListFeature(.delegate(.negotiationSelected(negotiationId))):
+            // Navega para detalhe da negociação usando delegate pattern
+            state.selectedNegotiationId = negotiationId
+            print("✅ Navegando para detalhe da negociação a partir do NegotiationsList: \(negotiationId)")
+            return .none
+        
+        case let .negotiationsListFeature(.delegate(.negotiationRead(negotiationId))):
+            // Atualiza badge quando negociação é lida
+            // O badge será atualizado automaticamente quando a lista recarregar
+            return .none
+        
         case .negotiationsListFeature:
             return .none
             
@@ -679,14 +696,20 @@ public struct SocialAppFeature {
             }
             return .none
             
-        case let .profileFeature(.navigateToSellerProfile(sellerId)):
-            // Navega para o perfil do vendedor a partir do Profile
+        case let .profileFeature(.delegate(.navigateToSellerProfile(sellerId))):
+            // Navega para o perfil do vendedor a partir do Profile usando delegate pattern
             if let sellerUUID = UUID(uuidString: sellerId) {
                 state.selectedSellerId = sellerUUID
                 print("✅ Navegando para perfil do vendedor a partir do Profile: \(sellerId)")
             } else {
                 print("❌ Erro ao converter sellerId para UUID: \(sellerId)")
             }
+            return .none
+        
+        case let .profileFeature(.delegate(.navigateToEventDetail(eventId))):
+            // Navega para detalhe do evento a partir do Profile usando delegate pattern
+            state.selectedEventId = eventId
+            print("✅ Navegando para detalhe do evento a partir do Profile: \(eventId)")
             return .none
             
         case .profileFeature:
@@ -745,28 +768,34 @@ public struct SocialAppFeature {
             
             return .none
             
-        case let .sellersListFeature(.sellerTapped(sellerId)):
-            // Navegar para perfil do vendedor
+        case let .sellersListFeature(.delegate(.navigateToSellerProfile(sellerId))):
+            // Navega para perfil do vendedor usando delegate pattern
             if let sellerUUID = UUID(uuidString: sellerId) {
-                state.showingSellersList = false
-                state.sellersListFeature = nil
                 state.selectedSellerId = sellerUUID
+                print("✅ Navegando para perfil do vendedor a partir do SellersList: \(sellerId)")
             }
             return .none
-            
-        case let .sellersListFeature(.startNegotiation(sellerId, ticketId)):
-            // Iniciar negociação - será tratado pelo TicketDetailFeature ou NegotiationsFeature
+        
+        case let .sellersListFeature(.delegate(.navigateToNegotiation(sellerId, ticketId))):
+            // Iniciar negociação usando delegate pattern
             state.showingSellersList = false
             state.sellersListFeature = nil
             // Navegar para detalhe do ticket para iniciar negociação
             if let ticketUUID = UUID(uuidString: ticketId) {
                 state.selectedTicketId = ticketUUID
             }
+            print("✅ Navegando para negociação a partir do SellersList: sellerId=\(sellerId), ticketId=\(ticketId)")
             return .none
-            
+        
         case .sellersListFeature:
             return .none
             
+        case let .searchFeature(.delegate(.navigateToEventDetail(eventId))):
+            // Navega para detalhe do evento usando delegate pattern
+            state.selectedEventId = eventId
+            print("✅ Navegando para detalhe do evento a partir do Search: \(eventId)")
+            return .none
+        
         case .searchFeature:
             return .none
         }

@@ -13,6 +13,15 @@ public struct SellersListFeature {
         public var isLoading: Bool = false
         public var errorMessage: String?
         
+        // MARK: - Derived State
+        public var hasSellers: Bool {
+            !sellers.isEmpty
+        }
+        
+        public var hasEvent: Bool {
+            event != nil
+        }
+        
         public init(eventId: UUID, event: Event? = nil) {
             self.eventId = eventId
             self.event = event
@@ -20,11 +29,29 @@ public struct SellersListFeature {
     }
     
     public enum Action: Equatable {
+        // MARK: - Lifecycle
         case onAppear
+        case onDisappear
+        
+        // MARK: - Data Loading
         case loadSellers
         case sellersResponse(Result<[SellerWithTickets], NetworkError>)
+        
+        // MARK: - User Interactions
         case sellerTapped(String) // sellerId
         case startNegotiation(String, String) // sellerId, ticketId
+        
+        // MARK: - Navigation
+        case delegate(Delegate)
+        
+        // MARK: - Error Handling
+        case dismissError
+        
+        // MARK: - Delegate
+        public enum Delegate: Equatable {
+            case navigateToSellerProfile(String)
+            case navigateToNegotiation(String, String) // sellerId, ticketId
+        }
     }
     
     @Dependency(\.ticketsClient) var ticketsClient
@@ -74,12 +101,24 @@ public struct SellersListFeature {
                 print("❌ Erro ao carregar vendedores: \(error.userFriendlyMessage)")
                 return .none
                 
-            case .sellerTapped:
-                // Navegação será tratada pelo parent
-                return .none
+            case let .sellerTapped(sellerId):
+                return .run { send in
+                    await send(.delegate(.navigateToSellerProfile(sellerId)))
+                }
                 
-            case .startNegotiation:
-                // Negociação será tratada pelo parent
+            case let .startNegotiation(sellerId, ticketId):
+                return .run { send in
+                    await send(.delegate(.navigateToNegotiation(sellerId, ticketId)))
+                }
+            
+            case .onDisappear:
+                return .none
+            
+            case .delegate:
+                return .none
+            
+            case .dismissError:
+                state.errorMessage = nil
                 return .none
             }
         }

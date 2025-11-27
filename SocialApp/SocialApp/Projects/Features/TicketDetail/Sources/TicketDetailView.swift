@@ -1,5 +1,6 @@
 import ComposableArchitecture
 import SwiftUI
+import DesignSystem
 
 public struct TicketDetailView: View {
     @Bindable var store: StoreOf<TicketDetailFeature>
@@ -37,22 +38,18 @@ public struct TicketDetailView: View {
             print("🎫 TicketDetailView apareceu para ticket: \(ticketId)")
             store.send(.onAppear(ticketId, ticket)) // ✅ Passa o ticket se tiver
         }
+        .onDisappear {
+            store.send(.onDisappear)
+        }
     }
     
     private var loadingView: some View {
-        VStack(spacing: 20) {
-            ProgressView()
-                .scaleEffect(1.5)
-            Text("Carregando detalhes...")
-                .font(.headline)
-                .foregroundColor(.secondary)
-        }
-        .frame(maxWidth: .infinity, minHeight: 200)
+        DSFullScreenLoading(message: "Carregando detalhes...")
     }
     
     private func ticketContentView(_ ticketDetail: TicketDetail) -> some View {
         ZStack(alignment: .top) {
-            Color(.systemBackground)
+            DSGradients.backgroundMain
                 .ignoresSafeArea()
             
             ScrollView {
@@ -63,193 +60,192 @@ public struct TicketDetailView: View {
                             dismiss()
                         } label: {
                             Image(systemName: "arrow.left")
-                                .font(.system(size: 16, weight: .semibold))
-                                .foregroundColor(.primary)
+                                .font(DSTypography.body(weight: .semibold))
+                                .foregroundColor(DSColors.textPrimary)
                                 .frame(width: 40, height: 40)
-                                .background(Color(.systemGray6))
-                                .clipShape(RoundedRectangle(cornerRadius: 8))
+                                .background(DSColors.backgroundSecondary)
+                                .dsCornerRadius(DSRadius.small)
                         }
+                        .dsTapFeedback()
                         
                         Spacer()
                     }
-                    .padding(.horizontal, 20)
-                    .padding(.top, 16)
-                    .padding(.bottom, 24)
+                    .padding(.horizontal, DSSpacing.m)
+                    .padding(.top, DSSpacing.m)
+                    .padding(.bottom, DSSpacing.xl)
                     
                     // Título do evento
-                    VStack(alignment: .leading, spacing: 16) {
+                    VStack(alignment: .leading, spacing: DSSpacing.m) {
                         Text(ticketDetail.event.name)
-                            .font(.system(size: 24, weight: .bold))
-                            .foregroundColor(.primary)
+                            .font(DSTypography.title1(weight: .bold))
+                            .foregroundColor(DSColors.textPrimary)
                             .lineLimit(2)
                         
                         // Informações do evento
-                        VStack(alignment: .leading, spacing: 12) {
-                            HStack(spacing: 8) {
+                        VStack(alignment: .leading, spacing: DSSpacing.sm) {
+                            HStack(spacing: DSSpacing.xs) {
                                 Image(systemName: "location.fill")
                                     .font(.system(size: 14))
-                                    .foregroundColor(AppColors.primary)
-                                VStack(alignment: .leading, spacing: 2) {
+                                    .foregroundColor(DSColors.primary)
+                                VStack(alignment: .leading, spacing: DSSpacing.xxs) {
                                     Text(ticketDetail.event.location.name)
-                                        .font(.system(size: 14, weight: .medium))
-                                        .foregroundColor(.primary)
+                                        .font(DSTypography.footnote(weight: .medium))
+                                        .foregroundColor(DSColors.textPrimary)
                                     Text("\(ticketDetail.event.location.city), \(ticketDetail.event.location.state)")
-                                        .font(.system(size: 13))
-                                        .foregroundColor(.secondary)
+                                        .font(DSTypography.caption1())
+                                        .foregroundColor(DSColors.textSecondary)
                                 }
                             }
                             
-                            HStack(spacing: 8) {
+                            HStack(spacing: DSSpacing.xs) {
                                 Image(systemName: "calendar")
                                     .font(.system(size: 14))
-                                    .foregroundColor(AppColors.primary)
+                                    .foregroundColor(DSColors.primary)
                                 Text(ticketDetail.event.dateFormatted)
-                                    .font(.system(size: 14, weight: .medium))
-                                    .foregroundColor(.primary)
+                                    .font(DSTypography.footnote(weight: .medium))
+                                    .foregroundColor(DSColors.textPrimary)
                             }
                             
-                            HStack(spacing: 8) {
+                            HStack(spacing: DSSpacing.xs) {
                                 Image(systemName: "clock")
                                     .font(.system(size: 14))
-                                    .foregroundColor(AppColors.primary)
+                                    .foregroundColor(DSColors.primary)
                                 Text(ticketDetail.event.timeRange)
-                                    .font(.system(size: 14, weight: .medium))
-                                    .foregroundColor(.primary)
+                                    .font(DSTypography.footnote(weight: .medium))
+                                    .foregroundColor(DSColors.textPrimary)
                             }
                         }
                     }
-                    .padding(.horizontal, 20)
-                    .padding(.bottom, 24)
+                    .padding(.horizontal, DSSpacing.m)
+                    .padding(.bottom, DSSpacing.xl)
                     
                     // Informações do Ticket
-                    VStack(alignment: .leading, spacing: 16) {
+                    VStack(alignment: .leading, spacing: DSSpacing.m) {
                         Text("Informações do Ticket")
-                            .font(.system(size: 18, weight: .bold))
-                            .foregroundColor(.primary)
-                            .padding(.horizontal, 20)
+                            .font(DSTypography.title3(weight: .bold))
+                            .foregroundColor(DSColors.textPrimary)
+                            .padding(.horizontal, DSSpacing.m)
                         
-                        VStack(spacing: 0) {
-                            // Tipo de Ingresso
-                            ticketInfoRow(
-                                title: "Tipo de Ingresso",
-                                value: ticketDetail.ticketType.displayName,
-                                icon: ticketTypeIcon(ticketDetail.ticketType),
-                                iconColor: ticketTypeColor(ticketDetail.ticketType)
-                            )
-                            
-                            Divider()
-                                .padding(.horizontal, 20)
-                            
-                            // Quantidade
-                            ticketInfoRow(
-                                title: "Quantidade",
-                                value: "\(ticketDetail.quantity) disponíveis"
-                            )
-                            
-                            Divider()
-                                .padding(.horizontal, 20)
-                            
-                            // Validade
-                            ticketInfoRow(
-                                title: "Validade",
-                                value: formatDate(ticketDetail.validUntil)
-                            )
-                            
-                            Divider()
-                                .padding(.horizontal, 20)
-                            
-                            // Preço
-                            HStack {
-                                Text("Preço")
-                                    .font(.system(size: 16, weight: .bold))
-                                    .foregroundColor(.primary)
+                        DSCard {
+                            VStack(spacing: 0) {
+                                // Tipo de Ingresso
+                                ticketInfoRow(
+                                    title: "Tipo de Ingresso",
+                                    value: ticketDetail.ticketType.displayName,
+                                    icon: ticketTypeIcon(ticketDetail.ticketType),
+                                    iconColor: ticketTypeColor(ticketDetail.ticketType)
+                                )
                                 
-                                Spacer()
+                                Divider()
+                                    .padding(.horizontal, DSSpacing.m)
                                 
-                                Text("R$ \(String(format: "%.0f", ticketDetail.price))")
-                                    .font(.system(size: 24, weight: .bold))
-                                    .foregroundColor(AppColors.primary)
+                                // Quantidade
+                                ticketInfoRow(
+                                    title: "Quantidade",
+                                    value: "\(ticketDetail.quantity) disponíveis"
+                                )
+                                
+                                Divider()
+                                    .padding(.horizontal, DSSpacing.m)
+                                
+                                // Validade
+                                ticketInfoRow(
+                                    title: "Validade",
+                                    value: formatDate(ticketDetail.validUntil)
+                                )
+                                
+                                Divider()
+                                    .padding(.horizontal, DSSpacing.m)
+                                
+                                // Preço
+                                HStack {
+                                    Text("Preço")
+                                        .font(DSTypography.body(weight: .bold))
+                                        .foregroundColor(DSColors.textPrimary)
+                                    
+                                    Spacer()
+                                    
+                                    Text("R$ \(String(format: "%.0f", ticketDetail.price))")
+                                        .font(DSTypography.title2(weight: .bold))
+                                        .foregroundColor(DSColors.primary)
+                                }
+                                .padding(.horizontal, DSSpacing.m)
+                                .padding(.vertical, DSSpacing.m)
                             }
-                            .padding(.horizontal, 20)
-                            .padding(.vertical, 16)
                         }
-                        .background(Color(.systemBackground))
-                        .cornerRadius(12)
-                        .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 2)
                     }
-                    .padding(.horizontal, 20)
-                    .padding(.bottom, 24)
+                    .padding(.horizontal, DSSpacing.m)
+                    .padding(.bottom, DSSpacing.xl)
                     
                     // Card do Vendedor
-                    Button {
-                        store.send(.navigateToSellerProfile(ticketDetail.seller.id))
-                    } label: {
-                        VStack(alignment: .leading, spacing: 16) {
-                            HStack(spacing: 12) {
-                                // Imagem do vendedor
-                                AsyncImage(url: URL(string: ticketDetail.seller.profileImageURL ?? "")) { image in
-                                    image
-                                        .resizable()
-                                        .aspectRatio(contentMode: .fill)
-                                } placeholder: {
-                                    Rectangle()
-                                        .fill(Color(.systemGray5))
-                                        .overlay(
-                                            Image(systemName: "person.fill")
-                                                .font(.system(size: 24))
-                                                .foregroundColor(.gray)
-                                        )
-                                }
-                                .frame(width: 60, height: 60)
-                                .clipShape(RoundedRectangle(cornerRadius: 12))
-                                
-                                VStack(alignment: .leading, spacing: 6) {
-                                    HStack(spacing: 6) {
-                                        Text(ticketDetail.seller.name)
-                                            .font(.system(size: 16, weight: .bold))
-                                            .foregroundColor(.primary)
-                                        
-                                        if ticketDetail.seller.isVerified {
-                                            ZStack {
-                                                Circle()
-                                                    .fill(Color.green)
-                                                    .frame(width: 18, height: 18)
-                                                Image(systemName: "checkmark")
-                                                    .font(.system(size: 10, weight: .bold))
-                                                    .foregroundColor(.white)
+                    DSCard {
+                        Button {
+                            store.send(.navigateToSellerProfile(ticketDetail.seller.id))
+                        } label: {
+                            VStack(alignment: .leading, spacing: DSSpacing.m) {
+                                HStack(spacing: DSSpacing.sm) {
+                                    // Imagem do vendedor
+                                    AsyncImage(url: URL(string: ticketDetail.seller.profileImageURL ?? "")) { image in
+                                        image
+                                            .resizable()
+                                            .aspectRatio(contentMode: .fill)
+                                    } placeholder: {
+                                        Rectangle()
+                                            .fill(DSColors.backgroundSecondary)
+                                            .overlay(
+                                                Image(systemName: "person.fill")
+                                                    .font(.system(size: 24))
+                                                    .foregroundColor(DSColors.textSecondary)
+                                            )
+                                    }
+                                    .frame(width: 60, height: 60)
+                                    .dsCornerRadius(DSRadius.medium)
+                                    
+                                    VStack(alignment: .leading, spacing: DSSpacing.xs) {
+                                        HStack(spacing: DSSpacing.xs) {
+                                            Text(ticketDetail.seller.name)
+                                                .font(DSTypography.body(weight: .bold))
+                                                .foregroundColor(DSColors.textPrimary)
+                                            
+                                            if ticketDetail.seller.isVerified {
+                                                ZStack {
+                                                    Circle()
+                                                        .fill(DSColors.success)
+                                                        .frame(width: 18, height: 18)
+                                                    Image(systemName: "checkmark")
+                                                        .font(.system(size: 10, weight: .bold))
+                                                        .foregroundColor(.white)
+                                                }
                                             }
+                                        }
+                                        
+                                        HStack(spacing: DSSpacing.xxs) {
+                                            Image(systemName: "star.fill")
+                                                .font(.system(size: 12))
+                                                .foregroundColor(.orange)
+                                            Text("4.8 (124 avaliações)")
+                                                .font(DSTypography.caption1())
+                                                .foregroundColor(DSColors.textSecondary)
                                         }
                                     }
                                     
-                                    HStack(spacing: 4) {
-                                        Image(systemName: "star.fill")
-                                            .font(.system(size: 12))
-                                            .foregroundColor(.orange)
-                                        Text("4.8 (124 avaliações)")
-                                            .font(.system(size: 13))
-                                            .foregroundColor(.secondary)
+                                    Spacer()
+                                    
+                                    Button {
+                                        // TODO: Implementar chat
+                                    } label: {
+                                        Image(systemName: "bubble.left.and.bubble.right.fill")
+                                            .font(.system(size: 18))
+                                            .foregroundColor(DSColors.textSecondary)
                                     }
-                                }
-                                
-                                Spacer()
-                                
-                                Button {
-                                    // TODO: Implementar chat
-                                } label: {
-                                    Image(systemName: "bubble.left.and.bubble.right.fill")
-                                        .font(.system(size: 18))
-                                        .foregroundColor(.secondary)
+                                    .dsTapFeedback()
                                 }
                             }
                         }
-                        
+                        .buttonStyle(.plain)
                     }
-                    .padding(16)
-                    .background(Color(.systemBackground))
-                    .cornerRadius(12)
-                    .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 2)
-                    .padding(.horizontal, 20)
-                    .padding(.bottom, 24)
+                    .padding(.horizontal, DSSpacing.m)
+                    .padding(.bottom, DSSpacing.xl)
                     
                     // Botão Negociar
                     Button(action: {
@@ -262,21 +258,22 @@ public struct TicketDetailView: View {
                                     .scaleEffect(0.9)
                             } else {
                                 Text("Iniciar Negociação")
-                                    .font(.system(size: 16, weight: .semibold))
+                                    .font(DSTypography.body(weight: .semibold))
                             }
                         }
                         .foregroundColor(.white)
                         .frame(maxWidth: .infinity)
-                        .padding(.vertical, 16)
+                        .padding(.vertical, DSSpacing.m)
                         .background(
-                            (store.ticketDetail?.status == .available && !store.isStartingNegotiation) ?
-                            AppColors.primary : Color.gray
+                            store.canNegotiate && !store.isStartingNegotiation ?
+                            DSColors.primary : DSColors.textTertiary
                         )
-                        .cornerRadius(12)
+                        .dsCornerRadius(DSRadius.medium)
                     }
-                    .disabled(store.ticketDetail?.status != .available || store.isStartingNegotiation)
-                    .padding(.horizontal, 20)
-                    .padding(.bottom, 32)
+                    .disabled(!store.canNegotiate || store.isStartingNegotiation)
+                    .padding(.horizontal, DSSpacing.m)
+                    .padding(.bottom, DSSpacing.xxl)
+                    .dsTapFeedback()
                     .alert("Erro", isPresented: Binding(
                         get: { store.showingNegotiationError },
                         set: { _ in store.send(.dismissNegotiationError) }
@@ -305,28 +302,28 @@ public struct TicketDetailView: View {
             }
             
             Text(title)
-                .font(.system(size: 14))
-                .foregroundColor(.secondary)
+                .font(DSTypography.footnote())
+                .foregroundColor(DSColors.textSecondary)
             
             Spacer()
             
             if let icon = icon, let iconColor = iconColor {
-                HStack(spacing: 4) {
+                HStack(spacing: DSSpacing.xxs) {
                     Image(systemName: icon)
                         .font(.system(size: 14))
                         .foregroundColor(iconColor)
                     Text(value)
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundColor(.primary)
+                        .font(DSTypography.footnote(weight: .medium))
+                        .foregroundColor(DSColors.textPrimary)
                 }
             } else {
                 Text(value)
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundColor(.primary)
+                    .font(DSTypography.footnote(weight: .medium))
+                    .foregroundColor(DSColors.textPrimary)
             }
         }
-        .padding(.horizontal, 20)
-        .padding(.vertical, 16)
+        .padding(.horizontal, DSSpacing.m)
+        .padding(.vertical, DSSpacing.m)
     }
     
     private func ticketTypeIcon(_ type: TicketType) -> String {
@@ -373,22 +370,15 @@ public struct TicketDetailView: View {
     }
     
     private var errorView: some View {
-        VStack(spacing: 20) {
-            Image(systemName: "exclamationmark.triangle")
-                .font(.system(size: 60))
-                .foregroundColor(.orange)
-            
-            Text("Erro ao carregar detalhes")
-                .font(.title2)
-                .fontWeight(.semibold)
-            
-            if let errorMessage = store.errorMessage {
-                Text(errorMessage)
-                    .font(.body)
-                    .foregroundColor(.secondary)
-                    .multilineTextAlignment(.center)
+        DSErrorState(
+            title: "Erro ao carregar detalhes",
+            message: store.errorMessage ?? "Ocorreu um erro ao carregar os detalhes do ingresso.",
+            retryAction: {
+                if let ticketId = store.currentTicketId {
+                    store.send(.loadTicketDetail(ticketId))
+                }
             }
-        }
+        )
     }
     
 }

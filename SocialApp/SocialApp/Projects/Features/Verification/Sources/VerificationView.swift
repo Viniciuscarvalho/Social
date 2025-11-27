@@ -1,6 +1,7 @@
 import SwiftUI
 import ComposableArchitecture
 import Foundation
+import DesignSystem
 
 // Importar as views de verificação que estão definidas nos arquivos de Feature
 // PhoneVerificationView está em PhoneVerificationFeature.swift
@@ -17,15 +18,8 @@ public struct VerificationView: View {
     public var body: some View {
         ZStack {
             // Background
-            LinearGradient(
-                colors: [
-                    Color(red: 0.1, green: 0.1, blue: 0.2),
-                    Color(red: 0.05, green: 0.05, blue: 0.15)
-                ],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-            .ignoresSafeArea()
+            DSGradients.backgroundMain
+                .ignoresSafeArea()
             
             VStack(spacing: 0) {
                 // Header
@@ -71,6 +65,9 @@ public struct VerificationView: View {
         .onAppear {
             store.send(.onAppear)
         }
+        .onDisappear {
+            store.send(.onDisappear)
+        }
         .alert("Erro", isPresented: .constant(store.showingErrorAlert)) {
             Button("OK") {
                 store.send(.dismissErrorAlert)
@@ -90,18 +87,19 @@ public struct VerificationView: View {
                 store.send(.dismiss)
             } label: {
                 Image(systemName: "chevron.left")
-                    .font(.system(size: 18, weight: .semibold))
-                    .foregroundColor(.white)
+                    .font(DSTypography.headline)
+                    .foregroundColor(DSColors.textPrimary)
                     .frame(width: 40, height: 40)
-                    .background(Color.white.opacity(0.1))
+                    .background(DSColors.backgroundSecondary.opacity(0.5))
                     .clipShape(Circle())
             }
+            .dsTapFeedback()
             
             Spacer()
             
             Text("Verificação da Conta")
-                .font(.system(size: 18, weight: .semibold))
-                .foregroundColor(.white)
+                .font(DSTypography.headline(weight: .semibold))
+                .foregroundColor(DSColors.textPrimary)
             
             Spacer()
             
@@ -110,33 +108,28 @@ public struct VerificationView: View {
                 store.send(.dismiss)
             } label: {
                 Image(systemName: "xmark")
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundColor(.white.opacity(0.6))
+                    .font(DSTypography.body(weight: .semibold))
+                    .foregroundColor(DSColors.textSecondary)
                     .frame(width: 40, height: 40)
             }
+            .dsTapFeedback()
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 12)
+        .padding(.horizontal, DSSpacing.m)
+        .padding(.vertical, DSSpacing.sm)
     }
     
     // MARK: - Progress Section
     
     private var progressSection: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: DSSpacing.sm) {
             // Progress bar
             GeometryReader { geometry in
                 ZStack(alignment: .leading) {
-                    RoundedRectangle(cornerRadius: 4)
-                        .fill(Color.white.opacity(0.2))
+                    RoundedRectangle(cornerRadius: DSRadius.xs)
+                        .fill(DSColors.backgroundSecondary)
                     
-                    RoundedRectangle(cornerRadius: 4)
-                        .fill(
-                            LinearGradient(
-                                colors: [Color.blue, Color.purple],
-                                startPoint: .leading,
-                                endPoint: .trailing
-                            )
-                        )
+                    RoundedRectangle(cornerRadius: DSRadius.xs)
+                        .fill(DSGradients.primary)
                         .frame(width: geometry.size.width * store.progress)
                 }
                 .frame(height: 8)
@@ -146,24 +139,24 @@ public struct VerificationView: View {
             // Progress text
             HStack {
                 Text("Etapa \(store.currentStepNumber) de \(store.totalSteps)")
-                    .font(.system(size: 13, weight: .medium))
-                    .foregroundColor(.white.opacity(0.7))
+                    .font(DSTypography.caption1(weight: .medium))
+                    .foregroundColor(DSColors.textSecondary)
                 
                 Spacer()
                 
                 Text(store.progressPercentage)
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundColor(.white)
+                    .font(DSTypography.caption1(weight: .semibold))
+                    .foregroundColor(DSColors.textPrimary)
             }
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 12)
+        .padding(.horizontal, DSSpacing.m)
+        .padding(.vertical, DSSpacing.sm)
     }
     
     // MARK: - Navigation Buttons Section
     
     private var navigationButtonsSection: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: DSSpacing.sm) {
             // Previous button (disabled on first visible step)
             let isFirstStep = store.visibleSteps.firstIndex(of: store.currentStep) == 0
             
@@ -174,37 +167,39 @@ public struct VerificationView: View {
                     Image(systemName: "chevron.left")
                     Text("Anterior")
                 }
-                .font(.system(size: 14, weight: .semibold))
-                .foregroundColor(isFirstStep ? .white.opacity(0.3) : .white)
+                .font(DSTypography.footnote(weight: .semibold))
+                .foregroundColor(isFirstStep ? DSColors.textTertiary : DSColors.textPrimary)
                 .frame(maxWidth: .infinity)
                 .frame(height: 48)
                 .background(
-                    RoundedRectangle(cornerRadius: 12)
+                    RoundedRectangle(cornerRadius: DSRadius.medium)
                         .stroke(
-                            isFirstStep ? Color.white.opacity(0.1) : Color.white.opacity(0.3),
+                            isFirstStep ? DSColors.border : DSColors.primary,
                             lineWidth: 1
                         )
                 )
             }
             .disabled(isFirstStep)
+            .dsTapFeedback()
             
             // Skip button
             Button {
                 store.send(.skipStep)
             } label: {
                 Text("Pular")
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundColor(.white.opacity(0.7))
+                    .font(DSTypography.footnote(weight: .semibold))
+                    .foregroundColor(DSColors.textSecondary)
                     .frame(maxWidth: .infinity)
                     .frame(height: 48)
                     .background(
-                        RoundedRectangle(cornerRadius: 12)
-                            .stroke(Color.white.opacity(0.2), lineWidth: 1)
+                        RoundedRectangle(cornerRadius: DSRadius.medium)
+                            .stroke(DSColors.border, lineWidth: 1)
                     )
             }
+            .dsTapFeedback()
         }
-        .padding(.horizontal, 16)
-        .padding(.bottom, 20)
+        .padding(.horizontal, DSSpacing.m)
+        .padding(.bottom, DSSpacing.l)
     }
 }
 

@@ -52,7 +52,7 @@ struct TicketMediaStepView: View {
                             .font(.headline)
                     } icon: {
                         Image(systemName: "photo.on.rectangle")
-                            .foregroundColor(AppColors.primary)
+                            .foregroundColor(DSColors.primary)
                     }
                     
                     if store.selectedImageUrls.isEmpty {
@@ -64,7 +64,7 @@ struct TicketMediaStepView: View {
                             VStack(spacing: 16) {
                                 Image(systemName: "photo.on.rectangle.angled")
                                     .font(.system(size: 50))
-                                    .foregroundColor(AppColors.primary.opacity(0.6))
+                                    .foregroundColor(DSColors.primary.opacity(0.6))
                                 
                                 VStack(spacing: 8) {
                                     Text("Adicionar Fotos")
@@ -82,7 +82,7 @@ struct TicketMediaStepView: View {
                             .overlay(
                                 RoundedRectangle(cornerRadius: 12)
                                     .strokeBorder(style: StrokeStyle(lineWidth: 2, dash: [8]))
-                                    .foregroundColor(AppColors.primary.opacity(0.3))
+                                    .foregroundColor(DSColors.primary.opacity(0.3))
                             )
                         }
                         .onChange(of: selectedItems) { _, newItems in
@@ -132,10 +132,10 @@ struct TicketMediaStepView: View {
                                         Text("Adicionar Mais Fotos")
                                     }
                                     .font(.subheadline)
-                                    .foregroundColor(AppColors.primary)
+                                    .foregroundColor(DSColors.primary)
                                     .frame(maxWidth: .infinity)
                                     .padding()
-                                    .background(AppColors.primary.opacity(0.1))
+                                    .background(DSColors.primary.opacity(0.1))
                                     .cornerRadius(12)
                                 }
                                 .onChange(of: selectedItems) { _, newItems in

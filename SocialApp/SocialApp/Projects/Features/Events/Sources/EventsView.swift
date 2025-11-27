@@ -1,5 +1,6 @@
 import ComposableArchitecture
 import SwiftUI
+import DesignSystem
 
 public struct EventsView: View {
     @Bindable var store: StoreOf<EventsFeature>
@@ -9,36 +10,43 @@ public struct EventsView: View {
     }
     
     public var body: some View {
-        ZStack(alignment: .top) {
-            ScrollView {
-                VStack(spacing: 24) {
-                    // Espaçamento para o header fixo
-                    Spacer()
-                        .frame(height: 100)
-                    
-                    // Seção Popular
-                    if !store.popularEvents.isEmpty {
-                        popularSection
-                    }
-                    
-                    // Seção de Categorias
-                    categoriesSection
-                }
-                .padding(.vertical, 16)
-            }
+        ZStack {
+            DSGradients.backgroundMain
+                .ignoresSafeArea()
             
-            // Header fixo no topo
-            VStack(spacing: 0) {
-                headerSection
-                    .padding(.horizontal, 16)
-                    .padding(.top, 8)
-                    .padding(.bottom, 16)
-                    .background(
-                        Color(.systemBackground)
-                            .shadow(color: .black.opacity(0.05), radius: 2, x: 0, y: 1)
-                    )
+            ZStack(alignment: .top) {
+                ScrollView {
+                    VStack(spacing: DSSpacing.xl) {
+                        // Espaçamento para o header fixo
+                        Spacer()
+                            .frame(height: 100)
+                        
+                        // Seção Popular
+                        if store.hasPopularEvents {
+                            popularSection
+                        }
+                        
+                        // Seção de Categorias
+                        if store.hasCategories {
+                            categoriesSection
+                        }
+                    }
+                    .padding(.vertical, DSSpacing.m)
+                }
                 
-                Spacer()
+                // Header fixo no topo
+                VStack(spacing: 0) {
+                    headerSection
+                        .padding(.horizontal, DSSpacing.m)
+                        .padding(.top, DSSpacing.xs)
+                        .padding(.bottom, DSSpacing.m)
+                        .background(
+                            DSColors.background
+                                .shadow(color: .black.opacity(0.05), radius: 2, x: 0, y: 1)
+                        )
+                    
+                    Spacer()
+                }
             }
         }
         .navigationBarHidden(true)
@@ -48,6 +56,9 @@ public struct EventsView: View {
         .onAppear {
             store.send(.onAppear)
         }
+        .onDisappear {
+            store.send(.onDisappear)
+        }
         .sheet(isPresented: $store.showFilterSheet.sending(\.showFilterSheetChanged)) {
             FilterSheetView(
                 filterState: store.filterState,
@@ -55,20 +66,21 @@ public struct EventsView: View {
                     store.send(.filterApplied(filterState))
                 }
             )
+            .dsSlideFromBottomTransition()
         }
     }
     
     private var headerSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: DSSpacing.xs) {
             HStack {
-                VStack(alignment: .leading, spacing: 2) {
+                VStack(alignment: .leading, spacing: DSSpacing.xxs) {
                     Text(currentDateTime())
-                        .font(.system(size: 11))
-                        .foregroundColor(.secondary)
+                        .font(DSTypography.caption1())
+                        .foregroundColor(DSColors.textSecondary)
                     
                     Text("Explore eventos")
-                        .font(.system(size: 28, weight: .bold))
-                        .foregroundColor(.primary)
+                        .font(DSTypography.title1(weight: .bold))
+                        .foregroundColor(DSColors.textPrimary)
                 }
                 
                 Spacer()
@@ -80,13 +92,7 @@ public struct EventsView: View {
                         .aspectRatio(contentMode: .fill)
                 } placeholder: {
                     Circle()
-                        .fill(
-                            LinearGradient(
-                                colors: [Color.blue.opacity(0.6), Color.purple.opacity(0.6)],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                        )
+                        .fill(DSGradients.primary)
                         .overlay(
                             Image(systemName: "person.fill")
                                 .font(.system(size: 18))
@@ -101,48 +107,49 @@ public struct EventsView: View {
     
     @ViewBuilder
     private var popularSection: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: DSSpacing.m) {
             HStack {
                 Text("POPULAR")
-                    .font(.system(size: 12, weight: .bold))
-                    .foregroundColor(.secondary)
+                    .font(DSTypography.caption1(weight: .bold))
+                    .foregroundColor(DSColors.textSecondary)
                     .tracking(1)
                 
                 Spacer()
             }
-            .padding(.horizontal, 16)
+            .padding(.horizontal, DSSpacing.m)
             
             ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 16) {
-                    ForEach(store.popularEvents) { event in
+                HStack(spacing: DSSpacing.m) {
+                    ForEach(Array(store.popularEvents.enumerated()), id: \.element.id) { index, event in
                         ExploreEventCard(event: event) {
                             if let eventId = UUID(uuidString: event.id) {
                                 store.send(.eventSelected(eventId))
                             }
                         }
+                        .dsEnterAnimation(isVisible: true, delay: Double(index) * 0.1)
                     }
                 }
-                .padding(.horizontal, 16)
+                .padding(.horizontal, DSSpacing.m)
             }
         }
     }
     
     @ViewBuilder
     private var categoriesSection: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: DSSpacing.m) {
             HStack {
                 Text("CATEGORIES")
-                    .font(.system(size: 12, weight: .bold))
-                    .foregroundColor(.secondary)
+                    .font(DSTypography.caption1(weight: .bold))
+                    .foregroundColor(DSColors.textSecondary)
                     .tracking(1)
                 
                 Spacer()
             }
-            .padding(.horizontal, 16)
+            .padding(.horizontal, DSSpacing.m)
             
             ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 12) {
-                    ForEach(EventCategory.allCases, id: \.self) { category in
+                HStack(spacing: DSSpacing.sm) {
+                    ForEach(Array(EventCategory.allCases.enumerated()), id: \.element) { index, category in
                         let count = store.categoryCounts[category] ?? 0
                         CategoryPill(
                             category: category,
@@ -154,9 +161,10 @@ public struct EventsView: View {
                             ))
                         }
                         .frame(width: 140)
+                        .dsEnterAnimation(isVisible: true, delay: Double(index) * 0.05)
                     }
                 }
-                .padding(.horizontal, 16)
+                .padding(.horizontal, DSSpacing.m)
             }
         }
     }

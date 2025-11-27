@@ -15,31 +15,62 @@ public struct TicketDetailFeature {
         public var isStartingNegotiation: Bool = false
         public var showingNegotiationError: Bool = false
         
+        // MARK: - Derived State
+        public var hasTicketDetail: Bool {
+            ticketDetail != nil
+        }
+        
+        public var canNegotiate: Bool {
+            guard let ticketDetail = ticketDetail else { return false }
+            return ticketDetail.status == .available
+        }
+        
+        public var canPurchase: Bool {
+            guard let ticketDetail = ticketDetail else { return false }
+            return ticketDetail.status == .available && !isPurchasing
+        }
+        
         public init(ticket: Ticket? = nil) {
             self.ticket = ticket
         }
     }
     
-    public enum Action {
+    public enum Action: Equatable {
+        // MARK: - Lifecycle
         case onAppear(UUID, Ticket?) // ✅ Agora recebe o ticket opcional
+        case onDisappear
+        
+        // MARK: - Data Loading
         case loadTicketDetail(UUID)
         case ticketDetailResponse(Result<TicketDetail, NetworkError>)
+        case loadSellerProfile(UUID)
+        
+        // MARK: - Ticket Actions
         case purchaseTicket(UUID)
         case purchaseResponse(Result<TicketDetail, NetworkError>)
         case validateTicket
         case validationResponse(Result<Bool, NetworkError>)
-        case loadSellerProfile(UUID)
-        case sellerProfile(SellerProfileFeature.Action)
-        case navigateToSellerProfile(String) // Navegar para perfil do vendedor
-        case negotiateTapped // Ação para iniciar negociação
+        
+        // MARK: - Negotiation
+        case negotiateTapped
         case startNegotiation
         case checkExistingNegotiation
         case existingNegotiationResponse(Result<Negotiation?, NetworkError>)
         case negotiationCreated(Result<Negotiation, NetworkError>)
-        case verificationCheckFailed(String) // Falha na verificação do usuário
+        case verificationCheckFailed(String)
         case dismissNegotiationError
+        
+        // MARK: - Child Feature Actions
+        case sellerProfile(SellerProfileFeature.Action)
+        
+        // MARK: - Navigation
+        case navigateToSellerProfile(String)
         case delegate(Delegate)
         
+        // MARK: - Error Handling
+        case dismissError
+        
+        // MARK: - Delegate
         public enum Delegate: Equatable {
             case negotiationStarted(String) // negotiationId
             case navigateToExistingNegotiation(String) // negotiationId
@@ -367,7 +398,14 @@ public struct TicketDetailFeature {
                 state.errorMessage = nil
                 return .none
                 
+            case .onDisappear:
+                return .none
+            
             case .delegate:
+                return .none
+            
+            case .dismissError:
+                state.errorMessage = nil
                 return .none
             }
         }

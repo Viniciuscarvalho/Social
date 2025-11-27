@@ -131,23 +131,29 @@ public struct AddTicketFeature {
     }
     
     public enum Action: BindableAction, Equatable {
-        case binding(BindingAction<State>)
+        // MARK: - Lifecycle
         case onAppear
+        case onDisappear
+        case binding(BindingAction<State>)
+        
+        // MARK: - Data Loading
         case loadEvents
         case eventsLoaded([Event])
         case eventsLoadFailed(String)
         
-        // Step Navigation
+        // MARK: - Step Navigation
         case nextStep
         case previousStep
         case goToStep(TicketCreationStep)
         
-        // Publishing
+        // MARK: - Publishing
         case publishTicket
         case publishTicketResponse(Result<Ticket, APIError>)
         case dismissSuccess
         case closeAfterSuccess
         case setSelectedEventId(UUID?)
+        
+        // MARK: - Error Handling
         case clearError
     }
     
@@ -368,6 +374,9 @@ public struct AddTicketFeature {
                 
             case .clearError:
                 state.errorMessage = nil
+                return .none
+            
+            case .onDisappear:
                 return .none
             }
         }

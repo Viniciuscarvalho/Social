@@ -1,5 +1,7 @@
 import ComposableArchitecture
 import Foundation
+import Domain
+import Data
 
 @DependencyClient
 public struct NegotiationClient {

@@ -1,5 +1,6 @@
 import SwiftUI
 import ComposableArchitecture
+import DesignSystem
 
 // MARK: - Ticket Review & Publish View (Etapa 5)
 
@@ -35,7 +36,7 @@ struct TicketReviewPublishView: View {
                             
                             HStack(spacing: 12) {
                                 Image(systemName: "calendar")
-                                    .foregroundColor(AppColors.primary)
+                                    .foregroundColor(DSColors.primary)
                                 
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text(selectedEvent.name)
@@ -126,7 +127,7 @@ struct TicketReviewPublishView: View {
                         VStack(alignment: .leading, spacing: 12) {
                             HStack {
                                 Image(systemName: "photo")
-                                    .foregroundColor(AppColors.primary)
+                                    .foregroundColor(DSColors.primary)
                                 
                                 Text("Fotos")
                                     .font(.headline)
@@ -164,7 +165,7 @@ struct TicketReviewPublishView: View {
                                 Text(formatCurrency(priceValue * Double(store.quantity), currency: store.currencyCode))
                                     .font(.title2)
                                     .fontWeight(.bold)
-                                    .foregroundColor(AppColors.primary)
+                                    .foregroundColor(DSColors.primary)
                                 
                                 Text("\(store.quantity) × \(formatCurrency(priceValue, currency: store.currencyCode))")
                                     .font(.caption)
@@ -173,7 +174,7 @@ struct TicketReviewPublishView: View {
                         }
                     }
                     .padding()
-                    .background(AppColors.primary.opacity(0.1))
+                    .background(DSColors.primary.opacity(0.1))
                     .cornerRadius(12)
                 }
                 
@@ -193,7 +194,7 @@ struct TicketReviewPublishView: View {
                     }
                     .frame(maxWidth: .infinity)
                     .padding()
-                    .background(store.isFormValid && !store.isPublishing ? AppColors.primary : Color.gray)
+                    .background(store.isFormValid && !store.isPublishing ? DSColors.primary : DSColors.textTertiary)
                     .foregroundColor(.white)
                     .cornerRadius(12)
                 }

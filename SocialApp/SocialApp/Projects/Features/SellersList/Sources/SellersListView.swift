@@ -1,5 +1,6 @@
 import ComposableArchitecture
 import SwiftUI
+import DesignSystem
 
 public struct SellersListView: View {
     @Bindable var store: StoreOf<SellersListFeature>
@@ -11,12 +12,12 @@ public struct SellersListView: View {
     
     public var body: some View {
         ZStack {
-            AppColors.backgroundGradient
+            DSGradients.backgroundMain
                 .ignoresSafeArea()
             
             if store.isLoading {
                 loadingView
-            } else if store.sellers.isEmpty {
+            } else if !store.hasSellers {
                 emptyStateView
             } else {
                 sellersListView
@@ -31,17 +32,21 @@ public struct SellersListView: View {
                     dismiss()
                 } label: {
                     Image(systemName: "chevron.left")
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundColor(.primary)
+                        .font(DSTypography.body(weight: .semibold))
+                        .foregroundColor(DSColors.textPrimary)
                 }
+                .dsTapFeedback()
             }
         }
         .onAppear {
             store.send(.onAppear)
         }
+        .onDisappear {
+            store.send(.onDisappear)
+        }
         .alert("Erro", isPresented: .constant(store.errorMessage != nil)) {
             Button("OK") {
-                store.send(.sellersResponse(.failure(NetworkError.unknown(""))))
+                store.send(.dismissError)
             }
         } message: {
             Text(store.errorMessage ?? "")
@@ -51,39 +56,17 @@ public struct SellersListView: View {
     // MARK: - Loading View
     
     private var loadingView: some View {
-        VStack(spacing: 20) {
-            ProgressView()
-                .scaleEffect(1.5)
-            Text("Carregando vendedores...")
-                .font(.headline)
-                .foregroundColor(AppColors.secondaryText)
-        }
+        DSFullScreenLoading(message: "Carregando vendedores...")
     }
     
     // MARK: - Empty State
     
     private var emptyStateView: some View {
-        VStack(spacing: 24) {
-            Spacer()
-            
-            Image(systemName: "person.3.fill")
-                .font(.system(size: 60))
-                .foregroundColor(AppColors.secondaryText.opacity(0.5))
-            
-            VStack(spacing: 8) {
-                Text("Nenhum vendedor encontrado")
-                    .font(.system(size: 20, weight: .bold))
-                    .foregroundColor(AppColors.primaryText)
-                
-                Text("Não há vendedores com ingressos disponíveis para este evento no momento")
-                    .font(.system(size: 15))
-                    .foregroundColor(AppColors.secondaryText)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 40)
-            }
-            
-            Spacer()
-        }
+        DSEmptyState(
+            icon: "person.3.fill",
+            title: "Nenhum vendedor encontrado",
+            message: "Não há vendedores com ingressos disponíveis para este evento no momento"
+        )
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
     
@@ -91,12 +74,13 @@ public struct SellersListView: View {
     
     private var sellersListView: some View {
         ScrollView {
-            LazyVStack(spacing: 16) {
+            LazyVStack(spacing: DSSpacing.m) {
                 if let event = store.event {
                     eventHeaderView(event: event)
+                        .dsEnterAnimation(isVisible: true, delay: 0)
                 }
                 
-                ForEach(store.sellers) { sellerWithTickets in
+                ForEach(Array(store.sellers.enumerated()), id: \.element.seller.id) { index, sellerWithTickets in
                     SellerCard(
                         sellerWithTickets: sellerWithTickets,
                         onSellerTapped: {
@@ -109,31 +93,28 @@ public struct SellersListView: View {
                             }
                         }
                     )
+                    .dsEnterAnimation(isVisible: true, delay: Double(index) * 0.05)
                 }
             }
-            .padding()
+            .padding(DSSpacing.m)
         }
     }
     
     // MARK: - Event Header
     
     private func eventHeaderView(event: Event) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Ingressos disponíveis para:")
-                .font(.subheadline)
-                .foregroundColor(AppColors.secondaryText)
-            
-            Text(event.name)
-                .font(.title2)
-                .fontWeight(.bold)
-                .foregroundColor(AppColors.primaryText)
+        DSCard {
+            VStack(alignment: .leading, spacing: DSSpacing.sm) {
+                Text("Ingressos disponíveis para:")
+                    .font(DSTypography.footnote())
+                    .foregroundColor(DSColors.textSecondary)
+                
+                Text(event.name)
+                    .font(DSTypography.title2(weight: .bold))
+                    .foregroundColor(DSColors.textPrimary)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding()
-        .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(AppColors.cardBackground)
-        )
     }
 }
 
@@ -156,13 +137,7 @@ private struct SellerCard: View {
                             .aspectRatio(contentMode: .fill)
                     } placeholder: {
                         Circle()
-                            .fill(
-                                LinearGradient(
-                                    colors: [Color.blue.opacity(0.6), Color.purple.opacity(0.6)],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                )
-                            )
+                            .fill(DSGradients.primary)
                             .overlay(
                                 Image(systemName: "person.fill")
                                     .font(.system(size: 24))
@@ -173,49 +148,49 @@ private struct SellerCard: View {
                     .clipShape(Circle())
                     
                     // Informações do vendedor
-                    VStack(alignment: .leading, spacing: 6) {
-                        HStack(spacing: 6) {
+                    VStack(alignment: .leading, spacing: DSSpacing.xs) {
+                        HStack(spacing: DSSpacing.xs) {
                             Text(sellerWithTickets.seller.name)
-                                .font(.system(size: 16, weight: .semibold))
-                                .foregroundColor(AppColors.primaryText)
+                                .font(DSTypography.body(weight: .semibold))
+                                .foregroundColor(DSColors.textPrimary)
                             
                             if sellerWithTickets.seller.isVerified {
                                 Image(systemName: "checkmark.seal.fill")
                                     .font(.system(size: 14))
-                                    .foregroundColor(.blue)
+                                    .foregroundColor(DSColors.primary)
                             }
                             
                             if sellerWithTickets.seller.isCertified {
                                 Image(systemName: "checkmark.circle.fill")
                                     .font(.system(size: 14))
-                                    .foregroundColor(.green)
+                                    .foregroundColor(DSColors.success)
                             }
                         }
                         
                         // Preço
                         if sellerWithTickets.minPrice == sellerWithTickets.maxPrice {
                             Text("R$ \(Int(sellerWithTickets.minPrice))")
-                                .font(.system(size: 15, weight: .bold))
-                                .foregroundColor(AppColors.primary)
+                                .font(DSTypography.body(weight: .bold))
+                                .foregroundColor(DSColors.primary)
                         } else {
                             Text("R$ \(Int(sellerWithTickets.minPrice)) - R$ \(Int(sellerWithTickets.maxPrice))")
-                                .font(.system(size: 15, weight: .bold))
-                                .foregroundColor(AppColors.primary)
+                                .font(DSTypography.body(weight: .bold))
+                                .foregroundColor(DSColors.primary)
                         }
                         
                         // Quantidade de ingressos
                         Text("\(sellerWithTickets.ticketsCount) ingresso\(sellerWithTickets.ticketsCount == 1 ? "" : "s") disponível\(sellerWithTickets.ticketsCount == 1 ? "" : "eis")")
-                            .font(.system(size: 13))
-                            .foregroundColor(AppColors.secondaryText)
+                            .font(DSTypography.footnote())
+                            .foregroundColor(DSColors.textSecondary)
                     }
                     
                     Spacer()
                     
                     Image(systemName: "chevron.right")
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundColor(AppColors.tertiaryText)
+                        .font(DSTypography.footnote(weight: .semibold))
+                        .foregroundColor(DSColors.textTertiary)
                 }
-                .padding()
+                .padding(DSSpacing.m)
             }
             .buttonStyle(PlainButtonStyle())
             
@@ -228,26 +203,21 @@ private struct SellerCard: View {
                     Image(systemName: "bubble.left.and.bubble.right.fill")
                         .font(.system(size: 14))
                     Text("Negociar")
-                        .font(.system(size: 15, weight: .semibold))
+                        .font(DSTypography.body(weight: .semibold))
                 }
                 .foregroundColor(.white)
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 12)
-                .background(
-                    LinearGradient(
-                        colors: [Color.blue, Color.purple],
-                        startPoint: .leading,
-                        endPoint: .trailing
-                    )
-                )
-                .cornerRadius(8)
+                .padding(.vertical, DSSpacing.sm)
+                .background(DSGradients.primary)
+                .dsCornerRadius(DSRadius.small)
             }
-            .padding()
+            .padding(DSSpacing.m)
+            .dsTapFeedback()
         }
         .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(AppColors.cardBackground)
-                .shadow(color: AppColors.cardShadow.opacity(0.08), radius: 8, x: 0, y: 4)
+            RoundedRectangle(cornerRadius: DSRadius.large)
+                .fill(DSColors.cardBackground)
+                .shadow(color: .black.opacity(0.08), radius: 8, x: 0, y: 4)
         )
     }
 }

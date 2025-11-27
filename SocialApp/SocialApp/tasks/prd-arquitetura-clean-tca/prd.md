@@ -67,3 +67,4 @@ Isso deve reduzir acoplamento entre camadas, remover lógica excessiva das Views
 - Prioridade de migração por contexto (começar por Profile/Users, Events/Tickets ou Negotiations).
 
 
+

@@ -1,4 +1,5 @@
 import SwiftUI
+import DesignSystem
 
 /// Componente reutilizável para exibir categorias com ícone e contador
 public struct CategoryPill: View {
@@ -21,41 +22,42 @@ public struct CategoryPill: View {
     
     public var body: some View {
         Button(action: action) {
-            HStack(spacing: 8) {
+            HStack(spacing: DSSpacing.xs) {
                 // Ícone da categoria em círculo
                 ZStack {
                     Circle()
-                        .fill(isSelected ? Color.blue : Color(.systemGray5))
+                        .fill(isSelected ? DSColors.primary : DSColors.backgroundSecondary)
                         .frame(width: 40, height: 40)
                     
                     Text(iconForCategory(category))
                         .font(.system(size: 20))
                 }
                 
-                VStack(alignment: .leading, spacing: 2) {
+                VStack(alignment: .leading, spacing: DSSpacing.xxs) {
                     Text(category?.displayName ?? String(localized: "commons.categories.all"))
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundColor(isSelected ? .primary : .secondary)
+                        .font(DSTypography.footnote(weight: .semibold))
+                        .foregroundColor(isSelected ? DSColors.textPrimary : DSColors.textSecondary)
                     
                     Text("\(count) eventos")
-                        .font(.system(size: 11))
-                        .foregroundColor(.secondary)
+                        .font(DSTypography.caption1())
+                        .foregroundColor(DSColors.textSecondary)
                 }
                 
                 Spacer()
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 10)
+            .padding(.horizontal, DSSpacing.sm)
+            .padding(.vertical, DSSpacing.xs)
             .background(
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(isSelected ? Color.blue.opacity(0.1) : Color(.systemBackground))
+                RoundedRectangle(cornerRadius: DSRadius.medium)
+                    .fill(isSelected ? DSColors.primary.opacity(0.1) : DSColors.background)
             )
             .overlay(
-                RoundedRectangle(cornerRadius: 12)
-                    .stroke(isSelected ? Color.blue : Color(.systemGray4), lineWidth: 1)
+                RoundedRectangle(cornerRadius: DSRadius.medium)
+                    .stroke(isSelected ? DSColors.primary : DSColors.border, lineWidth: 1)
             )
         }
         .buttonStyle(.plain)
+        .dsTapFeedback()
     }
     
     private func iconForCategory(_ category: EventCategory?) -> String {
@@ -102,22 +104,23 @@ public struct CategoryFilterPill: View {
     
     public var body: some View {
         Button(action: action) {
-            HStack(spacing: 6) {
+            HStack(spacing: DSSpacing.xs) {
                 Text(iconForCategory(category))
                     .font(.system(size: 16))
                 
                 Text(category.displayName)
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundColor(isSelected ? .white : .primary)
+                    .font(DSTypography.footnote(weight: .medium))
+                    .foregroundColor(isSelected ? .white : DSColors.textPrimary)
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 10)
+            .padding(.horizontal, DSSpacing.m)
+            .padding(.vertical, DSSpacing.xs)
             .background(
-                RoundedRectangle(cornerRadius: 20)
-                    .fill(isSelected ? Color.blue : Color(.systemGray6))
+                RoundedRectangle(cornerRadius: DSRadius.buttonSmall)
+                    .fill(isSelected ? DSColors.primary : DSColors.backgroundSecondary)
             )
         }
         .buttonStyle(.plain)
+        .dsTapFeedback()
     }
     
     private func iconForCategory(_ category: EventCategory) -> String {

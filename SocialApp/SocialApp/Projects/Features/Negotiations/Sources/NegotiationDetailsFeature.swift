@@ -76,44 +76,58 @@ public struct NegotiationDetailsFeature {
         }
     }
     
-    public enum Action: BindableAction {
+    public enum Action: BindableAction, Equatable {
+        // MARK: - Lifecycle
         case onAppear
+        case onDisappear
         case binding(BindingAction<State>)
+        
+        // MARK: - Data Loading
         case loadNegotiation
         case negotiationResponse(Result<Negotiation, NetworkError>)
-        case approveNegotiation
-        case rejectNegotiation
-        case showRejectSheet
-        case hideRejectSheet
-        case cancelNegotiation
-        case updateResponse(Result<Negotiation, NetworkError>)
-        case revealContact
-        case revealContactResponse(Result<User, NetworkError>)
-        case hideContactReveal
-        case dismissErrorAlert
-        
-        // Perguntas e respostas
         case loadQuestions
         case questionsResponse(Result<[NegotiationQuestion], NetworkError>)
         case loadDocuments
         case documentsResponse(Result<[NegotiationDocument], NetworkError>)
+        
+        // MARK: - Negotiation Actions
+        case approveNegotiation
+        case rejectNegotiation
+        case cancelNegotiation
+        case updateResponse(Result<Negotiation, NetworkError>)
+        
+        // MARK: - Contact Reveal
+        case revealContact
+        case revealContactResponse(Result<User, NetworkError>)
+        case hideContactReveal
+        
+        // MARK: - Questions and Answers
         case sendMessage(String) // Envia pergunta ou resposta
         case messageSent(Result<NegotiationQuestion, NetworkError>)
         case answerQuestion(String, String) // questionId, answerText
         case answerSent(Result<NegotiationAnswer, NetworkError>)
         case markAsRead
         case markAsReadResponse(Result<Void, NetworkError>)
-        case showQuestionSelection
-        case hideQuestionSelection
-        case showDocumentUpload
-        case hideDocumentUpload
+        
+        // MARK: - Documents
         case uploadDocument(Data, DocumentType) // imageData, documentType
         case documentUploaded(Result<NegotiationDocument, NetworkError>)
         case deleteDocument(String) // documentId
         case documentDeleted(Result<Void, NetworkError>)
         
+        // MARK: - UI State
+        case showRejectSheet
+        case hideRejectSheet
+        case showQuestionSelection
+        case hideQuestionSelection
+        case showDocumentUpload
+        case hideDocumentUpload
+        case dismissErrorAlert
+        
+        // MARK: - Navigation
         case delegate(Delegate)
         
+        // MARK: - Delegate
         public enum Delegate: Equatable {
             case negotiationUpdated(Negotiation)
             case negotiationRead(String) // negotiationId
@@ -615,6 +629,9 @@ public struct NegotiationDetailsFeature {
                 print("❌ Erro ao deletar documento: \(error.userFriendlyMessage)")
                 return .none
                 
+            case .onDisappear:
+                return .none
+            
             case .binding:
                 return .none
                 

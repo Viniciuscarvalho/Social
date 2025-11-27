@@ -1,5 +1,6 @@
 import SwiftUI
 import ComposableArchitecture
+import DesignSystem
 
 struct MyTicketsView: View {
     @Bindable var store: StoreOf<MyTicketsFeature>
@@ -20,7 +21,7 @@ struct MyTicketsView: View {
                     .padding(.bottom, 16)
                 
                 ZStack {
-                    AppColors.background
+                    DSGradients.backgroundMain
                         .ignoresSafeArea()
                     
                     if store.isLoading {
@@ -39,7 +40,7 @@ struct MyTicketsView: View {
                     Button("Fechar") {
                         dismiss()
                     }
-                    .foregroundColor(AppColors.primaryText)
+                    .foregroundColor(DSColors.textPrimary)
                 }
             }
             .onAppear {
@@ -67,7 +68,7 @@ struct MyTicketsView: View {
                 .scaleEffect(1.5)
             Text("Carregando seus ingressos...")
                 .font(.headline)
-                .foregroundColor(AppColors.secondaryText)
+                .foregroundColor(DSColors.textSecondary)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
@@ -92,13 +93,13 @@ struct MyTicketsView: View {
                      ? String(localized: "empty_state.tickets.no_upcoming.title")
                      : String(localized: "empty_state.tickets.no_past.title"))
                     .font(.system(size: 20, weight: .bold))
-                    .foregroundColor(AppColors.primaryText)
+                    .foregroundColor(DSColors.textPrimary)
                 
                 Text(store.selectedTab == .upcoming
                      ? String(localized: "empty_state.tickets.no_upcoming.message")
                      : String(localized: "empty_state.tickets.no_past.message"))
                     .font(.system(size: 15))
-                    .foregroundColor(AppColors.secondaryText)
+                    .foregroundColor(DSColors.textSecondary)
                     .multilineTextAlignment(.center)
             }
             
@@ -116,7 +117,7 @@ struct MyTicketsView: View {
                     .foregroundColor(.white)
                     .frame(maxWidth: .infinity)
                     .padding()
-                    .background(AppColors.primary)
+                    .background(DSColors.primary)
                     .cornerRadius(12)
             }
             .padding(.horizontal, 40)
@@ -245,18 +246,18 @@ struct MyTicketCard: View {
                         HStack(spacing: 8) {
                             Text(ticket.name)
                                 .font(.headline)
-                                .foregroundColor(AppColors.primaryText)
+                                .foregroundColor(DSColors.textPrimary)
                                 .multilineTextAlignment(.leading)
                             
                             // Ownership indicator
                             if isOwner {
                                 Image(systemName: "person.crop.circle.fill")
                                     .font(.caption)
-                                    .foregroundColor(AppColors.accentGreen)
+                                    .foregroundColor(DSColors.success)
                             } else {
                                 Image(systemName: "exclamationmark.triangle.fill")
                                     .font(.caption)
-                                    .foregroundColor(AppColors.warning)
+                                    .foregroundColor(DSColors.warning)
                             }
                         }
                         
@@ -266,7 +267,7 @@ struct MyTicketCard: View {
                                 .frame(width: 8, height: 8)
                             Text(ticket.status.displayName)
                                 .font(.caption)
-                                .foregroundColor(AppColors.secondaryText)
+                                .foregroundColor(DSColors.textSecondary)
                         }
                     }
                     
@@ -280,7 +281,7 @@ struct MyTicketCard: View {
                         
                         Text(ticket.ticketType.displayName)
                             .font(.caption)
-                            .foregroundColor(AppColors.secondaryText)
+                            .foregroundColor(DSColors.textSecondary)
                     }
                 }
                 
@@ -288,21 +289,21 @@ struct MyTicketCard: View {
                 HStack(spacing: 8) {
                     Image(systemName: "calendar")
                         .font(.caption)
-                        .foregroundColor(AppColors.secondaryText)
+                        .foregroundColor(DSColors.textSecondary)
                     
                     Text("Válido até: \(ticket.validUntil, style: .date)")
                         .font(.caption)
-                        .foregroundColor(AppColors.secondaryText)
+                        .foregroundColor(DSColors.textSecondary)
                     
                     Spacer()
                     
                     Image(systemName: "clock")
                         .font(.caption)
-                        .foregroundColor(AppColors.secondaryText)
+                        .foregroundColor(DSColors.textSecondary)
                     
                     Text("Criado em: \(ticket.createdAt, style: .date)")
                         .font(.caption)
-                        .foregroundColor(AppColors.secondaryText)
+                        .foregroundColor(DSColors.textSecondary)
                 }
                 
                 // Actions based on status and ownership

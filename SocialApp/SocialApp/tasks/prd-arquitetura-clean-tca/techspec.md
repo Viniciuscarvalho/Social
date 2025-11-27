@@ -141,3 +141,4 @@ Fluxo de dados em alto nível:
 - `SocialApp/Sources/ThemeApp/*` (tema atual, a ser movido para DesignSystem).
 
 
+

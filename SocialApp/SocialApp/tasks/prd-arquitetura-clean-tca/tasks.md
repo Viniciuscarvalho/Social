@@ -4,19 +4,20 @@
 
 - [ ] 1.0 Definir PRD e Tech Spec da Arquitetura (S)
 - [ ] 2.0 Desenhar Módulos/Targets e Dependências (S)
-- [ ] 3.0 Refatorar Domain em Modelos de Negócio Puros (M)
-- [ ] 4.0 Criar Camada Data (DTOs, Mappers, Clients) (M/L)
-- [ ] 5.0 Organizar Presentation (Features TCA, Views, Stores) (M/L)
-- [ ] 6.0 Design System – Fundamentos (Tokens, Tema, Tipografia) (M)
-- [ ] 7.0 Design System – Componentes Base e Layout (M/L)
-- [ ] 8.0 Design System – Animações e Microinterações (M)
-- [ ] 9.0 Padronizar Navegação Global e Fluxos entre Features (M)
-- [ ] 10.0 Migração Incremental por Contexto e Limpeza de Legado (L)
-- [ ] 11.0 Testes, QA e Documentação Final (M)
+- [x] 3.0 Refatorar Domain em Modelos de Negócio Puros (M)
+- [x] 4.0 Criar Camada Data (DTOs, Mappers, Clients) (M/L)
+- [x] 5.0 Organizar Presentation (Features TCA, Views, Stores) (M/L)
+- [x] 6.0 Design System – Fundamentos (Tokens, Tema, Tipografia) (M)
+- [x] 7.0 Design System – Componentes Base e Layout (M/L)
+- [x] 8.0 Design System – Animações e Microinterações (M)
+- [x] 9.0 Padronizar Navegação Global e Fluxos entre Features (M)
+- [x] 10.0 Migração Incremental por Contexto e Limpeza de Legado (L) - Estrutura e Planejamento
+- [x] 11.0 Testes, QA e Documentação Final (M)
 
 ## Notas sobre tamanho
 - S - Small
 - M - Medium
 - L - Large
+
 
 

@@ -1,0 +1,131 @@
+import ComposableArchitecture
+import SwiftUI
+import DesignSystem
+
+struct OnboardingView: View {
+  let onComplete: () -> Void
+
+  @State private var currentPage = 0
+
+  private let pages: [OnboardingPage] = [
+    OnboardingPage(
+      icon: "ticket.fill",
+      title: String(localized: "onboarding.page1.title"),
+      subtitle: String(localized: "onboarding.page1.subtitle"),
+      primaryColor: .blue
+    ),
+    OnboardingPage(
+      icon: "calendar.badge.plus",
+      title: String(localized: "onboarding.page2.title"),
+      subtitle: String(localized: "onboarding.page2.subtitle"),
+      primaryColor: .purple
+    ),
+    OnboardingPage(
+      icon: "person.3.fill",
+      title: String(localized: "onboarding.page3.title"),
+      subtitle: String(localized: "onboarding.page3.subtitle"),
+      primaryColor: .green
+    )
+  ]
+
+  var body: some View {
+    ZStack {
+      Color(.systemBackground)
+        .ignoresSafeArea()
+
+      VStack(spacing: 0) {
+        HStack {
+          Spacer()
+          Button(action: {
+            onComplete()
+          }) {
+            Text(String(localized: "onboarding.skip"))
+              .font(.system(size: 16, weight: .medium))
+              .foregroundColor(DSColors.primary)
+              .padding(.horizontal, 20)
+              .padding(.vertical, 12)
+          }
+        }
+        .padding(.top, 16)
+
+        TabView(selection: $currentPage) {
+          ForEach(0..<pages.count, id: \.self) { index in
+            OnboardingPageView(page: pages[index])
+              .tag(index)
+          }
+        }
+        .tabViewStyle(.page(indexDisplayMode: .always))
+        .indexViewStyle(.page(backgroundDisplayMode: .always))
+
+        VStack(spacing: 12) {
+          Button(action: {
+            if currentPage < pages.count - 1 {
+              withAnimation {
+                currentPage += 1
+              }
+            } else {
+              onComplete()
+            }
+          }) {
+            Text(currentPage == pages.count - 1 ? String(localized: "onboarding.getStarted") : String(localized: "onboarding.next"))
+              .font(.system(size: 16, weight: .semibold))
+              .foregroundColor(.white)
+              .frame(maxWidth: .infinity)
+              .frame(height: 50)
+              .background(DSColors.primary)
+              .cornerRadius(12)
+          }
+        }
+        .padding(.horizontal, 20)
+        .padding(.bottom, 32)
+      }
+    }
+  }
+}
+
+// MARK: - Onboarding Page Model
+
+struct OnboardingPage {
+  let icon: String
+  let title: String
+  let subtitle: String
+  let primaryColor: Color
+}
+
+// MARK: - Onboarding Page View
+
+struct OnboardingPageView: View {
+  let page: OnboardingPage
+
+  var body: some View {
+    VStack(spacing: 30) {
+      Spacer()
+
+      Image(systemName: page.icon)
+        .resizable()
+        .aspectRatio(contentMode: .fit)
+        .frame(height: 200)
+        .foregroundColor(page.primaryColor)
+
+      VStack(spacing: 16) {
+        Text(page.title)
+          .font(.system(size: 28, weight: .bold))
+          .foregroundColor(.primary)
+          .multilineTextAlignment(.center)
+
+        Text(page.subtitle)
+          .font(.system(size: 16))
+          .foregroundColor(.secondary)
+          .multilineTextAlignment(.center)
+          .padding(.horizontal, 32)
+      }
+
+      Spacer()
+    }
+    .padding(.horizontal, 20)
+  }
+}
+
+#Preview {
+  OnboardingView(onComplete: {})
+}

@@ -1,5 +1,6 @@
 import ComposableArchitecture
 import SwiftUI
+import DesignSystem
 
 public struct FavoritesView: View {
     @Bindable var store: StoreOf<FavoritesFeature>
@@ -12,14 +13,13 @@ public struct FavoritesView: View {
         NavigationStack {
             Group {
                 if store.isLoading {
-                    ProgressView("Carregando favoritos...")
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                } else if store.favoriteEvents.isEmpty {
+                    DSFullScreenLoading(message: "Carregando favoritos...")
+                } else if !store.hasFavorites {
                     emptyStateView
                 } else {
                     ScrollView {
-                        LazyVStack(spacing: 16) {
-                            ForEach(store.favoriteEvents, id: \.eventId) { favorite in
+                        LazyVStack(spacing: DSSpacing.m) {
+                            ForEach(Array(store.favoriteEvents.enumerated()), id: \.element.eventId) { index, favorite in
                                 FavoriteEventCard(favorite: favorite) {
                                     if let eventId = UUID(uuidString: favorite.eventId) {
                                         store.send(.eventSelected(eventId))
@@ -27,9 +27,10 @@ public struct FavoritesView: View {
                                 } onRemove: {
                                     store.send(.removeFromFavorites(favorite.eventId))
                                 }
+                                .dsEnterAnimation(isVisible: true, delay: Double(index) * 0.05)
                             }
                         }
-                        .padding()
+                        .padding(DSSpacing.m)
                     }
                 }
             }
@@ -42,52 +43,23 @@ public struct FavoritesView: View {
         .onAppear {
             store.send(.onAppear)
         }
+        .onDisappear {
+            store.send(.onDisappear)
+        }
     }
     
     // MARK: - Empty State View
     
     private var emptyStateView: some View {
-        VStack(spacing: 24) {
-            Spacer()
-            
-            ZStack {
-                Circle()
-                    .fill(Color.pink.opacity(0.1))
-                    .frame(width: 100, height: 100)
-                
-                Image(systemName: "heart.fill")
-                    .font(.system(size: 50))
-                    .foregroundColor(.pink)
-            }
-            
-            VStack(spacing: 8) {
-                Text(String(localized: "empty_state.favorites.title"))
-                    .font(.system(size: 20, weight: .bold))
-                    .foregroundColor(AppColors.primaryText)
-                
-                Text(String(localized: "empty_state.favorites.message"))
-                    .font(.system(size: 15))
-                    .foregroundColor(AppColors.secondaryText)
-                    .multilineTextAlignment(.center)
-            }
-            
-            Spacer()
-            
-            Button(action: {
+        DSEmptyState(
+            icon: "heart.fill",
+            title: String(localized: "empty_state.favorites.title"),
+            message: String(localized: "empty_state.favorites.message"),
+            actionTitle: String(localized: "empty_state.favorites.add_button"),
+            action: {
                 store.send(.navigateToEvents)
-            }) {
-                Text(String(localized: "empty_state.favorites.add_button"))
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(AppColors.primary)
-                    .cornerRadius(12)
             }
-            .padding(.horizontal, 40)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .padding(40)
+        )
     }
 }
 
@@ -104,54 +76,58 @@ struct FavoriteEventCard: View {
                     .aspectRatio(contentMode: .fill)
             } placeholder: {
                 Rectangle()
-                    .fill(AppColors.tertiaryBackground)
+                    .fill(DSColors.backgroundTertiary)
             }
             .frame(width: 80, height: 80)
-            .cornerRadius(12)
+            .dsCornerRadius(DSRadius.medium)
             
-            VStack(alignment: .leading, spacing: 6) {
+            VStack(alignment: .leading, spacing: DSSpacing.xs) {
                 Text(favorite.eventName)
-                    .adaptiveHeadline()
+                    .font(DSTypography.headline())
+                    .foregroundColor(DSColors.textPrimary)
                     .lineLimit(2)
                 
                 Text(favorite.eventLocation)
-                    .adaptiveSubheadline()
+                    .font(DSTypography.subheadline())
+                    .foregroundColor(DSColors.textSecondary)
                 
                 if let eventDate = favorite.eventDate {
                     Text(eventDate, style: .date)
-                        .font(.caption)
-                        .foregroundColor(AppColors.primary)
+                        .font(DSTypography.caption1())
+                        .foregroundColor(DSColors.primary)
                 } else {
                     Text("Data a definir")
-                        .adaptiveCaption()
+                        .font(DSTypography.caption1())
+                        .foregroundColor(DSColors.textTertiary)
                 }
                 
                 Text("Favoritado em \(favorite.favoriteDate.formatted(date: .abbreviated, time: .omitted))")
-                    .font(.caption2)
-                    .foregroundColor(AppColors.tertiaryText)
+                    .font(DSTypography.caption2())
+                    .foregroundColor(DSColors.textTertiary)
             }
             
             Spacer()
             
-            VStack(alignment: .trailing, spacing: 8) {
+            VStack(alignment: .trailing, spacing: DSSpacing.xs) {
                 Text("R$ \(favorite.eventPrice, specifier: "%.2f")")
-                    .font(.headline)
-                    .foregroundColor(AppColors.primary)
+                    .font(DSTypography.headline())
+                    .foregroundColor(DSColors.primary)
                 
                 Button(action: onRemove) {
-                    Image("favorited", bundle: Bundle.main)
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                        .frame(width: 20, height: 20)
-                        .foregroundColor(AppColors.favoriteRed)
-                        .padding(8)
-                        .background(AppColors.favoriteRed.opacity(0.1))
+                    Image(systemName: "heart.fill")
+                        .font(.system(size: 16))
+                        .foregroundColor(DSColors.error)
+                        .padding(DSSpacing.xs)
+                        .background(DSColors.error.opacity(0.1))
                         .clipShape(Circle())
                 }
+                .dsTapFeedback()
             }
         }
-        .padding()
-        .adaptiveCardStyle()
+        .padding(DSSpacing.m)
+        .background(DSColors.cardBackground)
+        .dsCornerRadius(DSRadius.medium)
+        .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 2)
         .contentShape(Rectangle())
         .onTapGesture {
             action()

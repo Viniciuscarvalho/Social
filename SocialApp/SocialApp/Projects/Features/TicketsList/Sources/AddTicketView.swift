@@ -1,5 +1,6 @@
 import ComposableArchitecture
 import SwiftUI
+import DesignSystem
 
 // MARK: - Add Ticket View (Multi-Step Flow)
 
@@ -48,7 +49,7 @@ struct AddTicketView: View {
                     navigationButtons
                 }
             }
-            .background(AppColors.background)
+            .background(DSGradients.backgroundMain)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
@@ -62,6 +63,9 @@ struct AddTicketView: View {
             }
             .onAppear {
                 store.send(.onAppear)
+            }
+            .onDisappear {
+                store.send(.onDisappear)
             }
             .onChange(of: store.publishSuccess) { _, success in
                 // Não fechar automaticamente - deixar usuário ver a tela de sucesso
@@ -107,9 +111,10 @@ struct AddTicketView: View {
                     }
                     .frame(maxWidth: .infinity)
                     .padding()
-                    .background(store.isCurrentStepValid ? AppColors.primary : Color.gray)
+                    .background(store.isCurrentStepValid ? DSColors.primary : DSColors.textTertiary)
                     .foregroundColor(.white)
-                    .cornerRadius(12)
+                    .dsCornerRadius(DSRadius.medium)
+                    .dsTapFeedback()
                 }
                 .disabled(!store.isCurrentStepValid)
             }
@@ -147,17 +152,17 @@ struct AddTicketView: View {
                 
                 Image(systemName: "calendar")
                     .font(.system(size: 50))
-                    .foregroundColor(AppColors.primary)
+                    .foregroundColor(DSColors.primary)
             }
             
-            VStack(spacing: 8) {
+            VStack(spacing: DSSpacing.xs) {
                 Text(String(localized: "empty_state.announce_ticket.title"))
-                    .font(.system(size: 28, weight: .bold))
-                    .foregroundColor(AppColors.primaryText)
+                    .font(DSTypography.title1(weight: .bold))
+                    .foregroundColor(DSColors.textPrimary)
                 
                 Text(String(localized: "empty_state.announce_ticket.message"))
-                    .font(.system(size: 16))
-                    .foregroundColor(AppColors.secondaryText)
+                    .font(DSTypography.body())
+                    .foregroundColor(DSColors.textSecondary)
                     .multilineTextAlignment(.center)
             }
             
@@ -167,18 +172,19 @@ struct AddTicketView: View {
                 store.send(.nextStep) // Vai para .details
             }) {
                 Text(String(localized: "empty_state.announce_ticket.button"))
-                    .font(.system(size: 16, weight: .semibold))
+                    .font(DSTypography.body(weight: .semibold))
                     .foregroundColor(.white)
                     .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(AppColors.primary)
-                    .cornerRadius(12)
+                    .padding(DSSpacing.m)
+                    .background(DSColors.primary)
+                    .dsCornerRadius(DSRadius.medium)
+                    .dsTapFeedback()
             }
-            .padding(.horizontal, 40)
+            .padding(.horizontal, DSSpacing.xxl)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .padding(40)
-        .background(AppColors.background)
+        .padding(DSSpacing.xxl)
+        .background(DSGradients.backgroundMain)
     }
     
     // MARK: - Success Step View
@@ -221,7 +227,7 @@ struct StepProgressView: View {
                     if step == currentStep {
                         Text(step.title)
                             .font(.caption2)
-                            .foregroundColor(AppColors.primary)
+                            .foregroundColor(DSColors.primary)
                     }
                 }
                 

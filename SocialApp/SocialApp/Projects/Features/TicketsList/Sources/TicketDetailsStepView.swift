@@ -1,5 +1,6 @@
 import SwiftUI
 import ComposableArchitecture
+import DesignSystem
 
 // MARK: - Ticket Details Step View (Etapa 1)
 
@@ -29,7 +30,7 @@ struct TicketDetailsStepView: View {
                             .font(.headline)
                     } icon: {
                         Image(systemName: "calendar")
-                            .foregroundColor(AppColors.primary)
+                            .foregroundColor(DSColors.primary)
                     }
                     
                     if store.isLoadingEvents {
@@ -110,7 +111,7 @@ struct TicketDetailsStepView: View {
                             .font(.headline)
                     } icon: {
                         Image(systemName: "ticket")
-                            .foregroundColor(AppColors.primary)
+                            .foregroundColor(DSColors.primary)
                     }
                     
                     TextField("Ex: Ingresso VIP - Pista Premium", text: $store.ticketName)
@@ -137,7 +138,7 @@ struct TicketDetailsStepView: View {
                             .font(.headline)
                     } icon: {
                         Image(systemName: "star")
-                            .foregroundColor(AppColors.primary)
+                            .foregroundColor(DSColors.primary)
                     }
                     
                     Picker("Tipo", selection: $store.ticketType) {
@@ -155,7 +156,7 @@ struct TicketDetailsStepView: View {
                             .font(.headline)
                     } icon: {
                         Image(systemName: "text.alignleft")
-                            .foregroundColor(AppColors.primary)
+                            .foregroundColor(DSColors.primary)
                     }
                     
                     ZStack(alignment: .topLeading) {

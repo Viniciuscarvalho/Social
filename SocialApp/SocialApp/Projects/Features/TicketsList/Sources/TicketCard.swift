@@ -1,4 +1,5 @@
 import SwiftUI
+import DesignSystem
 
 public struct TicketCard: View {
     let ticket: Ticket
@@ -12,55 +13,53 @@ public struct TicketCard: View {
     }
     
     public var body: some View {
-        Button(action: onTap) {
-            HStack(spacing: 16) {
-                // Ícone colorido à esquerda
-                ZStack {
-                    RoundedRectangle(cornerRadius: 12)
-                        .fill(ticketTypeBackgroundColor(ticket.ticketType))
-                        .frame(width: 56, height: 56)
-                    
-                    Image(systemName: ticketTypeIcon(ticket.ticketType))
-                        .font(.system(size: 24, weight: .medium))
-                        .foregroundColor(ticketTypeColor(ticket.ticketType))
-                }
-                
-                // Informações no meio
-                VStack(alignment: .leading, spacing: 6) {
-                    Text(ticket.name)
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundColor(.primary)
-                        .lineLimit(2)
-                    
-                    // Descrição baseada no tipo de ticket
-                    Text(ticketDescription(for: ticket.ticketType))
-                        .font(.system(size: 13))
-                        .foregroundColor(.secondary)
-                        .lineLimit(1)
-                    
-                    HStack(spacing: 4) {
-                        Image(systemName: "calendar")
-                            .font(.system(size: 11))
-                            .foregroundColor(.secondary)
-                        Text("Valid until \(formatShortDate(ticket.validUntil))")
-                            .font(.system(size: 11))
-                            .foregroundColor(.secondary)
+        DSCard {
+            Button(action: onTap) {
+                HStack(spacing: DSSpacing.m) {
+                    // Ícone colorido à esquerda
+                    ZStack {
+                        RoundedRectangle(cornerRadius: DSRadius.small)
+                            .fill(ticketTypeBackgroundColor(ticket.ticketType))
+                            .frame(width: 56, height: 56)
+                        
+                        Image(systemName: ticketTypeIcon(ticket.ticketType))
+                            .font(.system(size: 24, weight: .medium))
+                            .foregroundColor(ticketTypeColor(ticket.ticketType))
                     }
+                    
+                    // Informações no meio
+                    VStack(alignment: .leading, spacing: DSSpacing.xs) {
+                        Text(ticket.name)
+                            .font(DSTypography.body(weight: .semibold))
+                            .foregroundColor(DSColors.textPrimary)
+                            .lineLimit(2)
+                        
+                        // Descrição baseada no tipo de ticket
+                        Text(ticketDescription(for: ticket.ticketType))
+                            .font(DSTypography.footnote())
+                            .foregroundColor(DSColors.textSecondary)
+                            .lineLimit(1)
+                        
+                        HStack(spacing: DSSpacing.xxs) {
+                            Image(systemName: "calendar")
+                                .font(.system(size: 11))
+                                .foregroundColor(DSColors.textSecondary)
+                            Text("Valid until \(formatShortDate(ticket.validUntil))")
+                                .font(DSTypography.caption1())
+                                .foregroundColor(DSColors.textSecondary)
+                        }
+                    }
+                    
+                    Spacer()
+                    
+                    // Preço à direita
+                    Text("$\(Int(ticket.price))")
+                        .font(DSTypography.headline(weight: .bold))
+                        .foregroundColor(DSColors.primary)
                 }
-                
-                Spacer()
-                
-                // Preço à direita
-                Text("$\(Int(ticket.price))")
-                    .font(.system(size: 18, weight: .bold))
-                    .foregroundColor(AppColors.primary)
             }
-            .padding(16)
-            .background(Color(.systemBackground))
-            .cornerRadius(16)
-            .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 2)
+            .buttonStyle(.plain)
         }
-        .buttonStyle(PlainButtonStyle())
         .swipeActions(edge: .trailing) {
             if let onDelete = onDelete {
                 Button(role: .destructive) {

@@ -10,17 +10,30 @@ public struct FavoritesFeature {
         public var isLoading: Bool = false
         public var errorMessage: String?
         
+        // MARK: - Derived State
+        public var hasFavorites: Bool {
+            !favoriteEvents.isEmpty
+        }
+        
         public init() {}
     }
     
     public enum Action: Equatable {
+        // MARK: - Lifecycle
         case onAppear
+        case onDisappear
+        
+        // MARK: - Data Loading
         case loadFavorites
         case favoritesLoaded([FavoriteEvent])
+        
+        // MARK: - User Interactions
         case addToFavorites(Event)
         case removeFromFavorites(String) // eventId
         case favoriteToggled(Event)
         case eventSelected(UUID)
+        
+        // MARK: - Navigation
         case navigateToEvents
     }
     
@@ -78,6 +91,9 @@ public struct FavoritesFeature {
                 return .none
                 
             case .navigateToEvents:
+                return .none
+            
+            case .onDisappear:
                 return .none
             }
         }

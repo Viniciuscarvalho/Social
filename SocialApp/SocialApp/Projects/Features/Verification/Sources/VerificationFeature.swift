@@ -103,30 +103,34 @@ public struct VerificationFeature {
     }
     
     // MARK: - Actions
-    public enum Action {
-        // Lifecycle
+    public enum Action: Equatable {
+        // MARK: - Lifecycle
         case onAppear
+        case onDisappear
         case dismiss
         
-        // Navigation
+        // MARK: - Navigation
         case nextStep
         case previousStep
         case skipStep
         case goToStep(VerificationStep)
         
-        // Verification completion
+        // MARK: - Verification Completion
         case verificationCompleted(UserVerification)
         case verificationFailed(String)
-        case dismissErrorAlert
         
-        // Child feature actions
+        // MARK: - Child Feature Actions
         case emailVerification(EmailVerificationFeature.Action)
         case phoneVerification(PhoneVerificationFeature.Action)
         case documentVerification(DocumentVerificationFeature.Action)
         
-        // Delegate
+        // MARK: - Navigation
         case delegate(Delegate)
         
+        // MARK: - Error Handling
+        case dismissErrorAlert
+        
+        // MARK: - Delegate
         public enum Delegate: Equatable {
             case verificationCompleted(UserVerification)
             case verificationCancelled
@@ -155,6 +159,9 @@ public struct VerificationFeature {
             // MARK: - Lifecycle
             case .onAppear:
                 print("📋 VerificationFeature inicializado - começando com etapa de email")
+                return .none
+            
+            case .onDisappear:
                 return .none
                 
             case .dismiss:

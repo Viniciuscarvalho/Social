@@ -24,12 +24,17 @@ struct MyTicketsFeature {
         }
     }
     
-    enum Action {
+    enum Action: Equatable {
+        // MARK: - Lifecycle
         case onAppear
         case onDisappear
+        
+        // MARK: - Data Loading
         case refresh
         case loadMyTickets
         case loadMyTicketsResponse(Result<(tickets: [Ticket], total: Int), NetworkError>)
+        
+        // MARK: - User Interactions
         case ticketSelected(String)
         case deleteTicket(String)
         case deleteTicketResponse(Result<Void, NetworkError>)
@@ -37,11 +42,17 @@ struct MyTicketsFeature {
         case updateTicket(String, UpdateTicketRequest)
         case updateTicketResponse(Result<Ticket, NetworkError>)
         case ticketUpdated(Ticket)
-        case dismissError
+        case tabChanged(TicketTab)
+        
+        // MARK: - Sync
         case syncFromGlobal([Ticket])
         case syncTicketDeleted(String)
-        case tabChanged(TicketTab)
+        
+        // MARK: - Navigation
         case navigateToEvents
+        
+        // MARK: - Error Handling
+        case dismissError
     }
     
     @Dependency(\.ticketsClient) var ticketsClient

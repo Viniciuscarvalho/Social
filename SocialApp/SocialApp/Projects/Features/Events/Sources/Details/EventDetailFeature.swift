@@ -19,11 +19,17 @@ public struct EventDetailFeature {
     }
     
     public enum Action: Equatable {
+        // MARK: - Lifecycle
         case onAppear(UUID, Event?) // ✅ Agora recebe o evento opcional
+        case onDisappear
+        
+        // MARK: - Data Loading
         case loadEvent(UUID)
         case eventResponse(Result<Event, NetworkError>)
         case loadRecommendedEvents
         case recommendedEventsResponse(Result<[Event], NetworkError>)
+        
+        // MARK: - User Interactions
         case viewAvailableTickets
         case negotiateTicket // ✅ Botão de negociação
         case sellTicketForEvent // ✅ Nova action para vender ingresso para este evento
@@ -171,6 +177,9 @@ public struct EventDetailFeature {
             case let .favoriteStatusLoaded(isFavorited):
                 print("✅ Atualizando estado de favorito para: \(isFavorited)")
                 state.isFavorited = isFavorited
+                return .none
+            
+            case .onDisappear:
                 return .none
             }
         }

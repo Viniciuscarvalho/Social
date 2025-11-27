@@ -11,6 +11,23 @@ public struct SearchFeature {
         public var isLoading: Bool = false
         public var errorMessage: String?
         
+        // MARK: - Derived State
+        public var hasSearchText: Bool {
+            !searchText.isEmpty
+        }
+        
+        public var hasResults: Bool {
+            !searchResults.isEmpty
+        }
+        
+        public var hasRecentSearches: Bool {
+            !recentSearches.isEmpty
+        }
+        
+        public var isSearching: Bool {
+            hasSearchText && isLoading
+        }
+        
         public init() {
             // Load recent searches from UserDefaults
             if let saved = UserDefaults.standard.stringArray(forKey: "recentSearches") {
@@ -20,15 +37,29 @@ public struct SearchFeature {
     }
     
     public enum Action: Equatable {
+        // MARK: - Lifecycle
         case onAppear
+        case onDisappear
+        
+        // MARK: - Search
         case searchTextChanged(String)
         case searchResponse(Result<[Event], NetworkError>)
-        case eventSelected(UUID)
+        case performSearch(String)
         case clearSearch
         case cancelSearch
-        case performSearch(String)
+        
+        // MARK: - Recent Searches
         case removeRecentSearch(String)
         case selectRecentSearch(String)
+        
+        // MARK: - Navigation
+        case eventSelected(UUID)
+        case delegate(Delegate)
+        
+        // MARK: - Delegate
+        public enum Delegate: Equatable {
+            case navigateToEventDetail(UUID)
+        }
     }
     
     @Dependency(\.eventsClient) var eventsClient
@@ -92,7 +123,15 @@ public struct SearchFeature {
                 state.isLoading = false
                 return .cancel(id: SearchID.search)
                 
-            case .eventSelected:
+            case let .eventSelected(eventId):
+                return .run { send in
+                    await send(.delegate(.navigateToEventDetail(eventId)))
+                }
+            
+            case .onDisappear:
+                return .none
+            
+            case .delegate:
                 return .none
                 
             case .cancelSearch:

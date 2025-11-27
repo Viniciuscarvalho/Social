@@ -1,5 +1,6 @@
 import SwiftUI
 import ComposableArchitecture
+import DesignSystem
 
 // MARK: - Ticket Validity Step View (Etapa 3)
 
@@ -60,7 +61,7 @@ struct TicketValidityStepView: View {
                             .font(.headline)
                     } icon: {
                         Image(systemName: "calendar")
-                            .foregroundColor(AppColors.primary)
+                            .foregroundColor(DSColors.primary)
                     }
                     
                     DatePicker(
@@ -85,7 +86,7 @@ struct TicketValidityStepView: View {
                 VStack(alignment: .leading, spacing: 12) {
                     HStack(spacing: 12) {
                         Image(systemName: "clock")
-                            .foregroundColor(AppColors.primary)
+                            .foregroundColor(DSColors.primary)
                             .font(.title3)
                         
                         VStack(alignment: .leading, spacing: 4) {
@@ -101,7 +102,7 @@ struct TicketValidityStepView: View {
                         Spacer()
                     }
                     .padding()
-                    .background(AppColors.primary.opacity(0.1))
+                    .background(DSColors.primary.opacity(0.1))
                     .cornerRadius(12)
                     
                     if store.validUntil <= Date() {
@@ -186,7 +187,7 @@ struct QuickDurationButton: View {
             .padding(.vertical, 20)
             .background(
                 selectedDays == days
-                    ? AppColors.primary
+                    ? DSColors.primary
                     : Color(.secondarySystemBackground)
             )
             .foregroundColor(

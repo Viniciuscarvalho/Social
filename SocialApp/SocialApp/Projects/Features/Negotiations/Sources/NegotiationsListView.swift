@@ -1,5 +1,6 @@
 import SwiftUI
 import ComposableArchitecture
+import DesignSystem
 
 public struct NegotiationsListView: View {
     @Bindable var store: StoreOf<NegotiationsListFeature>
@@ -10,13 +11,12 @@ public struct NegotiationsListView: View {
     
     public var body: some View {
         ZStack {
-            AppColors.background
+            DSGradients.backgroundMain
                 .ignoresSafeArea()
             
-            if store.isLoading && store.negotiations.isEmpty {
-                ProgressView()
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-            } else if store.negotiations.isEmpty {
+            if store.isLoading && !store.hasNegotiations {
+                DSFullScreenLoading(message: "Carregando conversas...")
+            } else if !store.hasNegotiations {
                 emptyStateView
             } else {
                 negotiationsList
@@ -26,6 +26,9 @@ public struct NegotiationsListView: View {
         .navigationBarTitleDisplayMode(.large)
         .onAppear {
             store.send(.onAppear)
+        }
+        .onDisappear {
+            store.send(.onDisappear)
         }
         .refreshable {
             await store.send(.refreshRequested).finish()
@@ -47,65 +50,37 @@ public struct NegotiationsListView: View {
     // MARK: - Empty State
     
     private var emptyStateView: some View {
-        VStack(spacing: 24) {
-            Spacer()
-            
-            // Ícone de calendário com grid (como na imagem)
-            ZStack {
-                Circle()
-                    .fill(Color(red: 0.96, green: 0.94, blue: 0.89))
-                    .frame(width: 120, height: 120)
-                
-                Image(systemName: "calendar")
-                    .font(.system(size: 60))
-                    .foregroundColor(Color(red: 0.85, green: 0.75, blue: 0.65))
-            }
-            .padding(.bottom, 8)
-            
-            Text("Nenhuma Conversa Ainda")
-                .font(.system(size: 22, weight: .bold))
-                .foregroundColor(AppColors.primaryText)
-            
-            Text("Inicie uma nova conversa para conectar e obter respostas instantaneamente.")
-                .font(.system(size: 15))
-                .foregroundColor(AppColors.secondaryText)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 40)
-            
-            Button {
+        DSEmptyState(
+            icon: "message.fill",
+            title: "Nenhuma Conversa Ainda",
+            message: "Inicie uma nova conversa para conectar e obter respostas instantaneamente.",
+            actionTitle: "Iniciar Conversa",
+            action: {
                 // TODO: Navegar para iniciar negociação
-            } label: {
-                Text("Iniciar Conversa")
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 50)
-                    .background(
-                        RoundedRectangle(cornerRadius: 12)
-                            .fill(Color(red: 0.5, green: 0.3, blue: 0.9)) // Purple como na imagem
-                    )
             }
-            .padding(.horizontal, 40)
-            .padding(.top, 8)
-            
-            Spacer()
-        }
+        )
     }
     
     // MARK: - Negotiations List
     
     private var negotiationsList: some View {
         List {
-            ForEach(store.negotiations) { negotiation in
+            ForEach(Array(store.negotiations.enumerated()), id: \.element.id) { index, negotiation in
                 NegotiationCard(
                     negotiation: negotiation,
                     onTap: {
                         store.send(.negotiationSelected(negotiation.id))
                     }
                 )
-                .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+                .listRowInsets(EdgeInsets(
+                    top: DSSpacing.xxs,
+                    leading: DSSpacing.m,
+                    bottom: DSSpacing.xxs,
+                    trailing: DSSpacing.m
+                ))
                 .listRowSeparator(.hidden)
                 .listRowBackground(Color.clear)
+                .dsEnterAnimation(isVisible: true, delay: Double(index) * 0.05)
             }
         }
         .listStyle(.plain)
@@ -120,61 +95,62 @@ struct NegotiationCard: View {
     let onTap: () -> Void
     
     var body: some View {
-        Button(action: onTap) {
-            HStack(spacing: 12) {
-                // Profile Picture
-                AsyncImage(url: URL(string: otherPerson.profileImageURL ?? "")) { image in
-                    image
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                } placeholder: {
-                    Circle()
-                        .fill(Color.gray.opacity(0.2))
-                        .overlay(
-                            Text(String(otherPerson.name.prefix(1)))
-                                .font(.system(size: 20, weight: .bold))
-                                .foregroundColor(.gray)
-                        )
-                }
-                .frame(width: 56, height: 56)
-                .clipShape(Circle())
-                
-                // Content
-                VStack(alignment: .leading, spacing: 4) {
-                    HStack {
-                        Text(otherPerson.name)
-                            .font(.system(size: 16, weight: .semibold))
-                            .foregroundColor(.primary)
-                        
-                        Spacer()
-                        
-                        // Timestamp
-                        Text(timeAgo)
-                            .font(.system(size: 13))
-                            .foregroundColor(.secondary)
-                        
-                        // Unread indicator (blue dot como na imagem)
-                        if hasUnread {
-                            Circle()
-                                .fill(Color.blue)
-                                .frame(width: 8, height: 8)
-                                .padding(.leading, 4)
+        DSCard {
+            Button(action: onTap) {
+                HStack(spacing: DSSpacing.sm) {
+                    // Profile Picture
+                    AsyncImage(url: URL(string: otherPerson.profileImageURL ?? "")) { image in
+                        image
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                    } placeholder: {
+                        Circle()
+                            .fill(DSColors.backgroundSecondary)
+                            .overlay(
+                                Text(String(otherPerson.name.prefix(1)))
+                                    .font(DSTypography.title3(weight: .bold))
+                                    .foregroundColor(DSColors.textSecondary)
+                            )
+                    }
+                    .frame(width: 56, height: 56)
+                    .clipShape(Circle())
+                    
+                    // Content
+                    VStack(alignment: .leading, spacing: DSSpacing.xxs) {
+                        HStack {
+                            Text(otherPerson.name)
+                                .font(DSTypography.body(weight: .semibold))
+                                .foregroundColor(DSColors.textPrimary)
+                            
+                            Spacer()
+                            
+                            // Timestamp
+                            Text(timeAgo)
+                                .font(DSTypography.caption1())
+                                .foregroundColor(DSColors.textSecondary)
+                            
+                            // Unread indicator
+                            if hasUnread {
+                                Circle()
+                                    .fill(DSColors.primary)
+                                    .frame(width: 8, height: 8)
+                                    .padding(.leading, DSSpacing.xxs)
+                            }
                         }
+                        
+                        // Last message preview
+                        Text(lastMessagePreview)
+                            .font(DSTypography.footnote())
+                            .foregroundColor(DSColors.textSecondary)
+                            .lineLimit(1)
                     }
                     
-                    // Last message preview
-                    Text(lastMessagePreview)
-                        .font(.system(size: 14))
-                        .foregroundColor(.secondary)
-                        .lineLimit(1)
+                    Spacer()
                 }
-                
-                Spacer()
+                .padding(.vertical, DSSpacing.xs)
             }
-            .padding(.vertical, 8)
-            .contentShape(Rectangle())
+            .buttonStyle(.plain)
         }
-        .buttonStyle(PlainButtonStyle())
     }
     
     private var otherPerson: User {

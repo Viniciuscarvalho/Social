@@ -1,5 +1,6 @@
 import SwiftUI
 import ComposableArchitecture
+import DesignSystem
 
 public struct EventDetailView: View {
     @Bindable var store: StoreOf<EventDetailFeature>
@@ -37,16 +38,13 @@ public struct EventDetailView: View {
             print("🎪 EventDetailView apareceu para evento: \(eventId)")
             store.send(.onAppear(eventId, event)) // ✅ Passa o evento se tiver
         }
+        .onDisappear {
+            store.send(.onDisappear)
+        }
     }
     
     private var loadingView: some View {
-        ScrollView {
-            VStack(spacing: 0) {
-                // Hero image skeleton
-                Rectangle()
-                    .fill(Color(.systemGray5))
-                    .frame(height: 300)
-                    .shimmer()
+        DSFullScreenLoading(message: "Carregando detalhes do evento...")
                 
                 VStack(alignment: .leading, spacing: 20) {
                     // Badge skeleton
@@ -155,22 +153,22 @@ public struct EventDetailView: View {
                                         .font(.system(size: 13, weight: .medium))
                                         .foregroundColor(.white)
                                 }
-                                .padding(.horizontal, 16)
-                                .padding(.vertical, 8)
+                                .padding(.horizontal, DSSpacing.m)
+                                .padding(.vertical, DSSpacing.xs)
                                 .background(
                                     Capsule()
-                                        .fill(Color.blue)
+                                        .fill(DSColors.primary)
                                 )
                                 
                                 // Nome do evento
                                 Text(event.name)
-                                    .font(.system(size: 28, weight: .bold))
-                                    .foregroundColor(.primary)
+                                    .font(DSTypography.title1(weight: .bold))
+                                    .foregroundColor(DSColors.textPrimary)
                                     .lineLimit(3)
                             }
-                            .padding(.horizontal, 20)
-                            .padding(.top, 24)
-                            .padding(.bottom, 20)
+                            .padding(.horizontal, DSSpacing.m)
+                            .padding(.top, DSSpacing.xl)
+                            .padding(.bottom, DSSpacing.m)
                             
                             // Cards de informação
                             infoCards(event: event)
@@ -203,7 +201,7 @@ public struct EventDetailView: View {
                             dismiss()
                         } label: {
                             Image(systemName: "arrow.left")
-                                .font(.system(size: 18, weight: .semibold))
+                                .font(DSTypography.body(weight: .semibold))
                                 .foregroundColor(.white)
                                 .frame(width: 44, height: 44)
                                 .background(
@@ -216,8 +214,9 @@ public struct EventDetailView: View {
                                         .stroke(Color.white.opacity(0.3), lineWidth: 1)
                                 )
                         }
-                        .padding(.leading, 16)
-                        .padding(.top, 8)
+                        .padding(.leading, DSSpacing.m)
+                        .padding(.top, DSSpacing.xs)
+                        .dsTapFeedback()
                         
                         Spacer()
                     }
@@ -233,120 +232,105 @@ public struct EventDetailView: View {
     
     @ViewBuilder
     private func infoCards(event: Event) -> some View {
-        VStack(spacing: 16) {
+        VStack(spacing: DSSpacing.m) {
             // Card de Preço
-            HStack(spacing: 12) {
-                ZStack {
-                    Circle()
-                        .fill(Color.blue.opacity(0.1))
-                        .frame(width: 48, height: 48)
+            DSCard {
+                HStack(spacing: DSSpacing.sm) {
+                    ZStack {
+                        Circle()
+                            .fill(DSColors.primary.opacity(0.1))
+                            .frame(width: 48, height: 48)
+                        
+                        Image(systemName: "ticket.fill")
+                            .font(.system(size: 20))
+                            .foregroundColor(DSColors.primary)
+                    }
                     
-                    Image(systemName: "ticket.fill")
-                        .font(.system(size: 20))
-                        .foregroundColor(.blue)
-                }
-                
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(formatPrice(event.startPrice))
-                        .font(.system(size: 18, weight: .bold))
-                        .foregroundColor(.primary)
+                    VStack(alignment: .leading, spacing: DSSpacing.xxs) {
+                        Text(formatPrice(event.startPrice))
+                            .font(DSTypography.title3(weight: .bold))
+                            .foregroundColor(DSColors.textPrimary)
+                        
+                        Text(String(localized: "events.detail.price.subtitle"))
+                            .font(DSTypography.caption1())
+                            .foregroundColor(DSColors.textSecondary)
+                    }
                     
-                    Text(String(localized: "events.detail.price.subtitle"))
-                        .font(.system(size: 13))
-                        .foregroundColor(.secondary)
+                    Spacer()
                 }
-                
-                Spacer()
             }
-            .padding()
-            .frame(maxWidth: .infinity)
-            .background(
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(Color(.systemBackground))
-                    .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 2)
-            )
             
             // Card de Data e Hora
-            HStack(spacing: 12) {
-                ZStack {
-                    Circle()
-                        .fill(Color.blue.opacity(0.1))
-                        .frame(width: 48, height: 48)
+            DSCard {
+                HStack(spacing: DSSpacing.sm) {
+                    ZStack {
+                        Circle()
+                            .fill(DSColors.primary.opacity(0.1))
+                            .frame(width: 48, height: 48)
+                        
+                        Image(systemName: "calendar")
+                            .font(.system(size: 20))
+                            .foregroundColor(DSColors.primary)
+                    }
                     
-                    Image(systemName: "calendar")
-                        .font(.system(size: 20))
-                        .foregroundColor(.blue)
-                }
-                
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(event.dateFormatted)
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundColor(.primary)
+                    VStack(alignment: .leading, spacing: DSSpacing.xxs) {
+                        Text(event.dateFormatted)
+                            .font(DSTypography.body(weight: .semibold))
+                            .foregroundColor(DSColors.textPrimary)
+                        
+                        Text(event.timeRange)
+                            .font(DSTypography.caption1())
+                            .foregroundColor(DSColors.textSecondary)
+                    }
                     
-                    Text(event.timeRange)
-                        .font(.system(size: 13))
-                        .foregroundColor(.secondary)
+                    Spacer()
                 }
-                
-                Spacer()
             }
-            .padding()
-            .frame(maxWidth: .infinity)
-            .background(
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(Color(.systemBackground))
-                    .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 2)
-            )
             
             // Card de Localização
-            HStack(spacing: 12) {
-                ZStack {
-                    Circle()
-                        .fill(Color.blue.opacity(0.1))
-                        .frame(width: 48, height: 48)
+            DSCard {
+                HStack(spacing: DSSpacing.sm) {
+                    ZStack {
+                        Circle()
+                            .fill(DSColors.primary.opacity(0.1))
+                            .frame(width: 48, height: 48)
+                        
+                        Image(systemName: "location.fill")
+                            .font(.system(size: 20))
+                            .foregroundColor(DSColors.primary)
+                    }
                     
-                    Image(systemName: "location.fill")
-                        .font(.system(size: 20))
-                        .foregroundColor(.blue)
-                }
-                
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("\(event.location.city), \(event.location.state)")
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundColor(.primary)
+                    VStack(alignment: .leading, spacing: DSSpacing.xxs) {
+                        Text("\(event.location.city), \(event.location.state)")
+                            .font(DSTypography.body(weight: .semibold))
+                            .foregroundColor(DSColors.textPrimary)
+                        
+                        Text(event.location.name)
+                            .font(DSTypography.caption1())
+                            .foregroundColor(DSColors.textSecondary)
+                            .lineLimit(1)
+                    }
                     
-                    Text(event.location.name)
-                        .font(.system(size: 13))
-                        .foregroundColor(.secondary)
-                        .lineLimit(1)
+                    Spacer()
                 }
-                
-                Spacer()
             }
-            .padding()
-            .frame(maxWidth: .infinity)
-            .background(
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(Color(.systemBackground))
-                    .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 2)
-            )
         }
-        .padding(.horizontal, 20)
+        .padding(.horizontal, DSSpacing.m)
     }
     
     // MARK: - About Section
     
     @ViewBuilder
     private func aboutSection(event: Event) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: DSSpacing.sm) {
             Text(String(localized: "events.detail.about.title"))
-                .font(.system(size: 20, weight: .bold))
-                .foregroundColor(.primary)
+                .font(DSTypography.title2(weight: .bold))
+                .foregroundColor(DSColors.textPrimary)
             
             if let description = event.description {
                 Text(description)
-                    .font(.system(size: 15))
-                    .foregroundColor(.secondary)
+                    .font(DSTypography.body())
+                    .foregroundColor(DSColors.textSecondary)
                     .lineSpacing(6)
             } else {
                 Text(String(localized: "events.detail.about.placeholder"))
@@ -364,30 +348,24 @@ public struct EventDetailView: View {
     private func locationSection(event: Event) -> some View {
         VStack(alignment: .leading, spacing: 16) {
             Text(String(localized: "events.detail.location.title"))
-                .font(.system(size: 20, weight: .bold))
-                .foregroundColor(.primary)
+                .font(DSTypography.title2(weight: .bold))
+                .foregroundColor(DSColors.textPrimary)
             
             // Mapa placeholder com pin
             ZStack {
                 Rectangle()
-                    .fill(
-                        LinearGradient(
-                            colors: [Color.blue.opacity(0.1), Color.purple.opacity(0.1)],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
+                    .fill(DSGradients.primary.opacity(0.1))
                     .frame(height: 180)
-                    .cornerRadius(12)
+                    .dsCornerRadius(DSRadius.medium)
                 
-                VStack(spacing: 8) {
+                VStack(spacing: DSSpacing.xs) {
                     Image(systemName: "map.fill")
                         .font(.system(size: 40))
-                        .foregroundColor(.blue.opacity(0.3))
+                        .foregroundColor(DSColors.primary.opacity(0.3))
                     
                     ZStack {
                         Circle()
-                            .fill(Color.blue)
+                            .fill(DSColors.primary)
                             .frame(width: 40, height: 40)
                         
                         Image(systemName: "mappin.circle.fill")
@@ -397,7 +375,7 @@ public struct EventDetailView: View {
                 }
             }
         }
-        .padding(.horizontal, 20)
+        .padding(.horizontal, DSSpacing.m)
     }
     
     private func formatPrice(_ price: Double) -> String {
@@ -414,21 +392,22 @@ public struct EventDetailView: View {
     
     @ViewBuilder
     private var recommendedEventsSection: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: DSSpacing.m) {
             Text("Outros eventos recomendados")
-                .font(.system(size: 18, weight: .bold))
-                .foregroundColor(.primary)
-                .padding(.horizontal, 20)
+                .font(DSTypography.title3(weight: .bold))
+                .foregroundColor(DSColors.textPrimary)
+                .padding(.horizontal, DSSpacing.m)
             
             ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 16) {
-                    ForEach(store.recommendedEvents) { event in
+                HStack(spacing: DSSpacing.m) {
+                    ForEach(Array(store.recommendedEvents.enumerated()), id: \.element.id) { index, event in
                         RecommendedEventSmallCard(event: event) {
                             store.send(.recommendedEventSelected(event.id))
                         }
+                        .dsEnterAnimation(isVisible: true, delay: Double(index) * 0.05)
                     }
                 }
-                .padding(.horizontal, 20)
+                .padding(.horizontal, DSSpacing.m)
             }
         }
     }
@@ -439,49 +418,29 @@ public struct EventDetailView: View {
         Button {
             store.send(.viewAvailableTickets)
         } label: {
-            HStack(spacing: 8) {
+            HStack(spacing: DSSpacing.xs) {
                 Image(systemName: "bubble.left.and.bubble.right.fill")
                     .font(.system(size: 16))
                 Text("Negociar Ingresso")
-                    .font(.system(size: 16, weight: .semibold))
+                    .font(DSTypography.body(weight: .semibold))
             }
             .foregroundColor(.white)
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 16)
-            .background(
-                LinearGradient(
-                    colors: [Color.blue, Color.purple],
-                    startPoint: .leading,
-                    endPoint: .trailing
-                )
-            )
-            .cornerRadius(12)
+            .padding(.vertical, DSSpacing.m)
+            .background(DSGradients.primary)
+            .dsCornerRadius(DSRadius.medium)
         }
+        .dsTapFeedback()
     }
     
     private var errorView: some View {
-        VStack(spacing: 20) {
-            Image(systemName: "exclamationmark.triangle")
-                .font(.system(size: 60))
-                .foregroundColor(.orange)
-            
-            Text("Erro ao carregar evento")
-                .font(.title2)
-                .fontWeight(.semibold)
-            
-            if let errorMessage = store.errorMessage {
-                Text(errorMessage)
-                    .font(.body)
-                    .foregroundColor(.secondary)
-                    .multilineTextAlignment(.center)
+        DSErrorState(
+            title: "Erro ao carregar evento",
+            message: store.errorMessage ?? "Não foi possível carregar os detalhes do evento.",
+            retryAction: {
+                store.send(.loadEvent(store.eventId))
             }
-            
-            Button("Tentar Novamente") {
-                store.send(.onAppear(eventId, event))
-            }
-            .buttonStyle(.borderedProminent)
-        }
-        .padding()
+        )
     }
 }
 
@@ -516,51 +475,51 @@ struct RecommendedEventSmallCard: View {
                     
                     // Price badge
                     Text(getPriceText())
-                        .font(.system(size: 12, weight: .bold))
+                        .font(DSTypography.caption1(weight: .bold))
                         .foregroundColor(.white)
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 5)
+                        .padding(.horizontal, DSSpacing.sm)
+                        .padding(.vertical, DSSpacing.xxs)
                         .background(
                             Capsule()
                                 .fill(getPriceColor())
                         )
-                        .padding(10)
+                        .padding(DSSpacing.sm)
                 }
                 .frame(width: 160, height: 120)
                 
                 // Event info
-                VStack(alignment: .leading, spacing: 6) {
+                VStack(alignment: .leading, spacing: DSSpacing.xs) {
                     Text(event.name)
-                        .font(.system(size: 13, weight: .semibold))
-                        .foregroundColor(.primary)
+                        .font(DSTypography.caption1(weight: .semibold))
+                        .foregroundColor(DSColors.textPrimary)
                         .lineLimit(2)
                     
-                    HStack(spacing: 4) {
+                    HStack(spacing: DSSpacing.xxs) {
                         Image(systemName: "calendar")
                             .font(.system(size: 10))
-                            .foregroundColor(.secondary)
+                            .foregroundColor(DSColors.textSecondary)
                         
                         Text(event.dateFormatted)
-                            .font(.system(size: 11))
-                            .foregroundColor(.secondary)
+                            .font(DSTypography.caption2())
+                            .foregroundColor(DSColors.textSecondary)
                     }
                     
-                    HStack(spacing: 4) {
+                    HStack(spacing: DSSpacing.xxs) {
                         Image(systemName: "location.fill")
                             .font(.system(size: 10))
-                            .foregroundColor(.secondary)
+                            .foregroundColor(DSColors.textSecondary)
                         
                         Text(event.location.city)
-                            .font(.system(size: 11))
-                            .foregroundColor(.secondary)
+                            .font(DSTypography.caption2())
+                            .foregroundColor(DSColors.textSecondary)
                             .lineLimit(1)
                     }
                 }
-                .padding(10)
+                .padding(DSSpacing.sm)
             }
             .frame(width: 160)
-            .background(Color(.systemBackground))
-            .cornerRadius(12)
+            .background(DSColors.cardBackground)
+            .dsCornerRadius(DSRadius.medium)
             .shadow(color: .black.opacity(0.08), radius: 6, x: 0, y: 2)
         }
         .buttonStyle(.plain)
@@ -575,9 +534,9 @@ struct RecommendedEventSmallCard: View {
     
     private func getPriceColor() -> Color {
         if event.startPrice == 0 {
-            return Color.green
+            return DSColors.success
         }
-        return Color.blue
+        return DSColors.primary
     }
 }
 

@@ -14,27 +14,67 @@ public struct TicketsListFeature {
         
         public init() {}
         
+        // MARK: - Derived State
         public var displayTickets: [Ticket] {
             filteredTickets.isEmpty ? tickets : filteredTickets
+        }
+        
+        public var hasTickets: Bool {
+            !tickets.isEmpty
+        }
+        
+        public var hasFilteredTickets: Bool {
+            !displayTickets.isEmpty
+        }
+        
+        public var isFiltered: Bool {
+            selectedFilter.eventId != nil || 
+            selectedFilter.ticketType != nil ||
+            selectedFilter.priceRange != nil ||
+            selectedFilter.status != nil ||
+            selectedFilter.showFavoritesOnly
         }
     }
     
     public enum Action: Equatable {
+        // MARK: - Lifecycle
         case onAppear
+        case onDisappear
+        
+        // MARK: - Data Loading
         case loadTickets
         case ticketsResponse(Result<[Ticket], NetworkError>)
+        case refreshRequested
+        
+        // MARK: - User Interactions
         case ticketSelected(UUID)
         case favoriteToggled(UUID)
+        
+        // MARK: - Filtering
         case filterChanged(TicketsListFilter)
-        case filterByEvent(String?) // Nova action para filtrar por evento específico
-        case refreshRequested
-        case addNewTicket(Ticket) // Nova action para adicionar ticket criado
-        case deleteTicket(String) // Nova action para deletar ticket
-        case deleteTicketSuccess // Sucesso na deletação
-        case deleteTicketFailure(String) // Falha na deletação com mensagem
-        case syncTicketDeleted(String) // Sincronização: ticket foi deletado em outra feature
-        case syncTicketUpdated(Ticket) // Sincronização: ticket foi atualizado em outra feature
-        case syncTicketCreated(Ticket) // Sincronização: ticket foi criado em outra feature
+        case filterByEvent(String?)
+        
+        // MARK: - Ticket Management
+        case addNewTicket(Ticket)
+        case deleteTicket(String)
+        case deleteTicketSuccess
+        case deleteTicketFailure(String)
+        
+        // MARK: - Synchronization
+        case syncTicketDeleted(String)
+        case syncTicketUpdated(Ticket)
+        case syncTicketCreated(Ticket)
+        
+        // MARK: - Navigation
+        case delegate(Delegate)
+        
+        // MARK: - Error Handling
+        case dismissError
+        
+        // MARK: - Delegate
+        public enum Delegate: Equatable {
+            case navigateToTicketDetail(UUID)
+        }
     }
     
     @Dependency(\.ticketsClient) var ticketsClient
@@ -98,7 +138,19 @@ public struct TicketsListFeature {
                 state.errorMessage = error.localizedDescription
                 return .none
                 
-            case .ticketSelected:
+            case let .ticketSelected(ticketId):
+                return .run { send in
+                    await send(.delegate(.navigateToTicketDetail(ticketId)))
+                }
+            
+            case .onDisappear:
+                return .none
+            
+            case .delegate:
+                return .none
+            
+            case .dismissError:
+                state.errorMessage = nil
                 return .none
                 
             case let .favoriteToggled(ticketId):

@@ -1,5 +1,6 @@
 import ComposableArchitecture
 import SwiftUI
+import DesignSystem
 
 public struct SellerProfileView: View {
     @Bindable var store: StoreOf<SellerProfileFeature>
@@ -11,10 +12,10 @@ public struct SellerProfileView: View {
     
     public var body: some View {
         ZStack {
-            Color(.systemBackground)
+            DSGradients.backgroundMain
                 .ignoresSafeArea()
             
-            if store.isLoading && store.seller == nil {
+            if store.isLoading && !store.hasSeller {
                 // Loading inicial
                 loadingView
             } else if let seller = store.seller {
@@ -65,6 +66,9 @@ public struct SellerProfileView: View {
         .onAppear {
             store.send(.onAppear)
         }
+        .onDisappear {
+            store.send(.onDisappear)
+        }
     }
     
     // MARK: - Profile Header
@@ -79,13 +83,7 @@ public struct SellerProfileView: View {
                         .aspectRatio(contentMode: .fill)
                 } placeholder: {
                     Circle()
-                        .fill(
-                            LinearGradient(
-                                colors: [Color.blue.opacity(0.6), Color.purple.opacity(0.6)],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                        )
+                        .fill(DSGradients.primary)
                         .overlay(
                             Image(systemName: "person.fill")
                                 .font(.system(size: 40))
@@ -96,7 +94,7 @@ public struct SellerProfileView: View {
                 .clipShape(Circle())
                 .overlay(
                     Circle()
-                        .stroke(Color.blue.opacity(0.3), lineWidth: 4)
+                        .stroke(DSColors.primary.opacity(0.3), lineWidth: 4)
                 )
                 
                 // Badge de certificação  
@@ -119,15 +117,15 @@ public struct SellerProfileView: View {
             .padding(.top, 24)
             
             // Nome
-            HStack(spacing: 8) {
+            HStack(spacing: DSSpacing.xs) {
                 Text(seller.name)
-                    .font(.system(size: 24, weight: .bold))
-                    .foregroundColor(.primary)
+                    .font(DSTypography.title1(weight: .bold))
+                    .foregroundColor(DSColors.textPrimary)
                 
                 if seller.isVerified {
                     Image(systemName: "checkmark.seal.fill")
                         .font(.system(size: 20))
-                        .foregroundColor(.blue)
+                        .foregroundColor(DSColors.primary)
                 }
             }
         }
@@ -148,13 +146,13 @@ public struct SellerProfileView: View {
     }
     
     private func statItem(value: String, label: String) -> some View {
-        VStack(spacing: 4) {
+        VStack(spacing: DSSpacing.xxs) {
             Text(value)
-                .font(.system(size: 20, weight: .bold))
-                .foregroundColor(.primary)
+                .font(DSTypography.title3(weight: .bold))
+                .foregroundColor(DSColors.textPrimary)
             Text(label)
-                .font(.system(size: 14))
-                .foregroundColor(.secondary)
+                .font(DSTypography.footnote())
+                .foregroundColor(DSColors.textSecondary)
         }
     }
     
@@ -173,17 +171,18 @@ public struct SellerProfileView: View {
                     store.send(.toggleFollow)
                 } label: {
                     Text(store.isFollowing ? "Seguindo" : "Seguir")
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundColor(store.isFollowing ? .blue : .white)
+                        .font(DSTypography.body(weight: .semibold))
+                        .foregroundColor(store.isFollowing ? DSColors.primary : .white)
                         .frame(maxWidth: .infinity)
                         .frame(height: 48)
-                        .background(store.isFollowing ? Color.blue.opacity(0.1) : Color.blue)
-                        .cornerRadius(12)
+                        .background(store.isFollowing ? DSColors.primary.opacity(0.1) : DSColors.primary)
+                        .dsCornerRadius(DSRadius.medium)
                         .overlay(
-                            RoundedRectangle(cornerRadius: 12)
-                                .stroke(Color.blue, lineWidth: store.isFollowing ? 1 : 0)
+                            RoundedRectangle(cornerRadius: DSRadius.medium)
+                                .stroke(DSColors.primary, lineWidth: store.isFollowing ? 1 : 0)
                         )
                 }
+                .dsTapFeedback()
             }
             
             // Botão Negociar - não aparece no próprio perfil
@@ -192,19 +191,14 @@ public struct SellerProfileView: View {
                     store.send(.negotiateTapped)
                 } label: {
                     Text("Negociar")
-                        .font(.system(size: 16, weight: .semibold))
+                        .font(DSTypography.body(weight: .semibold))
                         .foregroundColor(.white)
                         .frame(maxWidth: .infinity)
                         .frame(height: 48)
-                        .background(
-                            LinearGradient(
-                                colors: [Color.purple, Color.blue],
-                                startPoint: .leading,
-                                endPoint: .trailing
-                            )
-                        )
-                        .cornerRadius(12)
+                        .background(DSGradients.primary)
+                        .dsCornerRadius(DSRadius.medium)
                 }
+                .dsTapFeedback()
             }
         }
         .padding(.horizontal, 24)
@@ -219,23 +213,23 @@ public struct SellerProfileView: View {
                 Button {
                     store.send(.tabSelected(tab))
                 } label: {
-                    VStack(spacing: 8) {
+                    VStack(spacing: DSSpacing.xs) {
                         Text(tab.rawValue)
-                            .font(.system(size: 16, weight: .semibold))
-                            .foregroundColor(store.selectedTab == tab ? .primary : .secondary)
+                            .font(DSTypography.body(weight: .semibold))
+                            .foregroundColor(store.selectedTab == tab ? DSColors.textPrimary : DSColors.textSecondary)
                         
                         Rectangle()
-                            .fill(store.selectedTab == tab ? Color.blue : Color.clear)
+                            .fill(store.selectedTab == tab ? DSColors.primary : Color.clear)
                             .frame(height: 2)
                     }
                     .frame(maxWidth: .infinity)
                 }
             }
         }
-        .background(Color(.systemBackground))
+        .background(DSColors.background)
         .overlay(
             Rectangle()
-                .fill(Color(.systemGray5))
+                .fill(DSColors.border)
                 .frame(height: 1),
             alignment: .bottom
         )
@@ -247,13 +241,13 @@ public struct SellerProfileView: View {
         VStack(alignment: .leading, spacing: 20) {
             if let bio = seller.bio, !bio.isEmpty {
                 Text(bio)
-                    .font(.system(size: 15))
-                    .foregroundColor(.secondary)
+                    .font(DSTypography.body())
+                    .foregroundColor(DSColors.textSecondary)
                     .fixedSize(horizontal: false, vertical: true)
             } else {
                 Text("Este vendedor ainda não adicionou uma biografia.")
-                    .font(.system(size: 15))
-                    .foregroundColor(.secondary)
+                    .font(DSTypography.body())
+                    .foregroundColor(DSColors.textSecondary)
                     .italic()
             }
         }
@@ -266,13 +260,12 @@ public struct SellerProfileView: View {
     private var ticketsSection: some View {
         VStack(spacing: 16) {
             if store.isLoadingTickets {
-                ProgressView()
-                    .padding(40)
-            } else if store.sellerTickets.isEmpty {
+                DSFullScreenLoading(message: "Carregando ingressos...")
+            } else if !store.hasTickets {
                 emptyTicketsView
             } else {
-                LazyVStack(spacing: 16) {
-                    ForEach(store.sellerTickets) { ticketWithEvent in
+                LazyVStack(spacing: DSSpacing.m) {
+                    ForEach(Array(store.sellerTickets.enumerated()), id: \.element.id) { index, ticketWithEvent in
                         NavigationLink {
                             TicketDetailView(
                                 store: Store(initialState: TicketDetailFeature.State()) {
@@ -285,10 +278,11 @@ public struct SellerProfileView: View {
                             SellerTicketCard(ticketWithEvent: ticketWithEvent)
                         }
                         .buttonStyle(PlainButtonStyle())
+                        .dsEnterAnimation(isVisible: true, delay: Double(index) * 0.05)
                     }
                 }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 16)
+                .padding(.horizontal, DSSpacing.m)
+                .padding(.vertical, DSSpacing.m)
             }
         }
     }
@@ -296,66 +290,31 @@ public struct SellerProfileView: View {
     // MARK: - Empty State
     
     private var emptyTicketsView: some View {
-        VStack(spacing: 20) {
-            Image("empty_ticket")
-                .resizable()
-                .scaledToFit()
-                .frame(width: 200, height: 200)
-                .foregroundColor(.gray.opacity(0.5))
-            
-            Text("Nenhum Ingresso Disponível")
-                .font(.system(size: 20, weight: .bold))
-                .foregroundColor(.primary)
-            
-            Text("Este vendedor não possui ingressos disponíveis no momento")
-                .font(.system(size: 15))
-                .foregroundColor(.secondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 40)
-        }
+        DSEmptyState(
+            icon: "ticket.fill",
+            title: "Nenhum Ingresso Disponível",
+            message: "Este vendedor não possui ingressos disponíveis no momento"
+        )
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 60)
+        .padding(.vertical, DSSpacing.xxl)
     }
     
     // MARK: - Loading View
     
     private var loadingView: some View {
-        VStack(spacing: 20) {
-            ProgressView()
-                .scaleEffect(1.5)
-            Text("Carregando perfil...")
-                .font(.headline)
-                .foregroundColor(.secondary)
-        }
+        DSFullScreenLoading(message: "Carregando perfil...")
     }
     
     // MARK: - Error View
     
     private var errorView: some View {
-        VStack(spacing: 20) {
-            Image(systemName: "exclamationmark.triangle")
-                .font(.system(size: 60))
-                .foregroundColor(.orange)
-            
-            Text("Erro ao carregar perfil")
-                .font(.title2)
-                .fontWeight(.semibold)
-                .foregroundColor(.primary)
-            
-            if let errorMessage = store.errorMessage {
-                Text(errorMessage)
-                    .font(.body)
-                    .foregroundColor(.secondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 40)
-            }
-            
-            Button("Tentar Novamente") {
+        DSErrorState(
+            title: "Erro ao carregar perfil",
+            message: store.errorMessage ?? "Ocorreu um erro ao carregar o perfil do vendedor.",
+            retryAction: {
                 store.send(.onAppear)
             }
-            .buttonStyle(.borderedProminent)
-        }
-        .padding()
+        )
     }
 }
 

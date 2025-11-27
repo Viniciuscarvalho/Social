@@ -74,20 +74,53 @@ public struct EventsFeature {
             return nil
         }
         
+        // MARK: - Derived State
+        public var hasEvents: Bool {
+            !events.isEmpty
+        }
+        
+        public var hasPopularEvents: Bool {
+            !popularEvents.isEmpty
+        }
+        
+        public var hasCategories: Bool {
+            !eventsByCategory.isEmpty
+        }
+        
         public init() {}
     }
     
     public enum Action: Equatable {
+        // MARK: - Lifecycle
         case onAppear
+        case onDisappear
+        
+        // MARK: - Data Loading
         case loadEvents
         case eventsResponse(Result<[Event], APIError>)
+        case refreshRequested
+        
+        // MARK: - User Interactions
         case searchTextChanged(String)
         case searchTapped
         case categorySelected(EventCategory?)
         case eventSelected(UUID)
-        case refreshRequested
+        
+        // MARK: - Filtering
         case showFilterSheetChanged(Bool)
         case filterApplied(FilterState)
+        
+        // MARK: - Navigation
+        case delegate(Delegate)
+        
+        // MARK: - Error Handling
+        case dismissError
+        
+        // MARK: - Delegate
+        public enum Delegate: Equatable {
+            case navigateToEventDetail(UUID)
+            case navigateToSearch
+        }
     }
     
     @Dependency(\.eventsClient) var eventsClient
@@ -181,9 +214,23 @@ public struct EventsFeature {
                 }
                 
             case .searchTapped:
-                return .none
+                return .run { send in
+                    await send(.delegate(.navigateToSearch))
+                }
                 
-            case .eventSelected:
+            case let .eventSelected(eventId):
+                return .run { send in
+                    await send(.delegate(.navigateToEventDetail(eventId)))
+                }
+            
+            case .onDisappear:
+                return .none
+            
+            case .delegate:
+                return .none
+            
+            case .dismissError:
+                state.errorMessage = nil
                 return .none
                 
             case .refreshRequested:

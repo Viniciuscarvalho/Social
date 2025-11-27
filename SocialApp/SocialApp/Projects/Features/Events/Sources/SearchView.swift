@@ -1,5 +1,6 @@
 import ComposableArchitecture
 import SwiftUI
+import DesignSystem
 
 public struct SearchView: View {
     @Bindable var store: StoreOf<SearchFeature>
@@ -41,30 +42,30 @@ public struct SearchView: View {
                             }
                         }
                     }
-                    .padding(.horizontal, 14)
-                    .padding(.vertical, 10)
-                    .background(Color(.systemGray6))
-                    .cornerRadius(10)
+                    .padding(.horizontal, DSSpacing.sm)
+                    .padding(.vertical, DSSpacing.xs)
+                    .background(DSColors.backgroundSecondary)
+                    .dsCornerRadius(DSRadius.small)
                 }
-                .padding(.horizontal, 20)
-                .padding(.vertical, 12)
+                .padding(.horizontal, DSSpacing.m)
+                .padding(.vertical, DSSpacing.sm)
                 
                 Divider()
                 
                 // Content
                 ScrollView {
-                    VStack(alignment: .leading, spacing: 20) {
-                        if store.isLoading {
+                    VStack(alignment: .leading, spacing: DSSpacing.l) {
+                        if store.isSearching {
                             loadingView
-                        } else if !store.searchText.isEmpty && store.searchResults.isEmpty {
+                        } else if store.hasSearchText && !store.hasResults {
                             noResultsView
-                        } else if !store.searchResults.isEmpty {
+                        } else if store.hasResults {
                             searchResultsView
                         } else {
                             recentSearchesView
                         }
                     }
-                    .padding(.top, 20)
+                    .padding(.top, DSSpacing.l)
                     .padding(.bottom, 100)
                 }
             }
@@ -94,21 +95,24 @@ public struct SearchView: View {
                 store.send(.onAppear)
                 isSearchFocused = true
             }
+            .onDisappear {
+                store.send(.onDisappear)
+            }
         }
     }
     
     // MARK: - Recent Searches View
     
     private var recentSearchesView: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            if !store.recentSearches.isEmpty {
+        VStack(alignment: .leading, spacing: DSSpacing.m) {
+            if store.hasRecentSearches {
                 Text(String(localized: "events.search.recentTitle"))
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundColor(.primary)
-                    .padding(.horizontal, 20)
+                    .font(DSTypography.body(weight: .semibold))
+                    .foregroundColor(DSColors.textPrimary)
+                    .padding(.horizontal, DSSpacing.m)
                 
-                VStack(spacing: 12) {
-                    ForEach(store.recentSearches, id: \.self) { search in
+                VStack(spacing: DSSpacing.sm) {
+                    ForEach(Array(store.recentSearches.enumerated()), id: \.element) { index, search in
                         RecentSearchRow(
                             searchText: search,
                             onTap: {
@@ -118,26 +122,18 @@ public struct SearchView: View {
                                 store.send(.removeRecentSearch(search))
                             }
                         )
-                        .padding(.horizontal, 20)
+                        .padding(.horizontal, DSSpacing.m)
+                        .dsEnterAnimation(isVisible: true, delay: Double(index) * 0.05)
                     }
                 }
             } else {
-                VStack(spacing: 16) {
-                    Image(systemName: "magnifyingglass")
-                        .font(.system(size: 50))
-                        .foregroundColor(.secondary)
-                    
-                    Text(String(localized: "events.search.empty.title"))
-                        .font(.system(size: 18, weight: .semibold))
-                        .foregroundColor(.primary)
-                    
-                    Text(String(localized: "events.search.empty.subtitle"))
-                        .font(.system(size: 14))
-                        .foregroundColor(.secondary)
-                        .multilineTextAlignment(.center)
-                }
+                DSEmptyState(
+                    icon: "magnifyingglass",
+                    title: String(localized: "events.search.empty.title"),
+                    message: String(localized: "events.search.empty.subtitle")
+                )
                 .frame(maxWidth: .infinity)
-                .padding(.top, 60)
+                .padding(.top, DSSpacing.xxl)
             }
         }
     }
@@ -145,14 +141,15 @@ public struct SearchView: View {
     // MARK: - Search Results View
     
     private var searchResultsView: some View {
-        VStack(spacing: 16) {
-            ForEach(store.searchResults) { event in
+        VStack(spacing: DSSpacing.m) {
+            ForEach(Array(store.searchResults.enumerated()), id: \.element.id) { index, event in
                 EventSearchResultCard(event: event) {
                     if let eventId = UUID(uuidString: event.id) {
                         store.send(.eventSelected(eventId))
                     }
                 }
-                .padding(.horizontal, 20)
+                .padding(.horizontal, DSSpacing.m)
+                .dsEnterAnimation(isVisible: true, delay: Double(index) * 0.05)
             }
         }
     }
@@ -160,43 +157,15 @@ public struct SearchView: View {
     // MARK: - Loading View
     
     private var loadingView: some View {
-        VStack(spacing: 16) {
-            ProgressView()
-                .scaleEffect(1.2)
-            
-            Text(String(localized: "events.search.loading"))
-                .font(.system(size: 15))
-                .foregroundColor(.secondary)
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.top, 60)
+        DSFullScreenLoading(message: String(localized: "events.search.loading"))
     }
     
     // MARK: - No Results View
     
     private var noResultsView: some View {
-        VStack(spacing: 16) {
-            ZStack {
-                Circle()
-                    .fill(Color(.systemGray5))
-                    .frame(width: 80, height: 80)
-                
-                Image(systemName: "magnifyingglass")
-                    .font(.system(size: 40))
-                    .foregroundColor(AppColors.secondary)
-            }
-            
-            Text(String(localized: "empty_state.search.no_results.title"))
-                .font(.system(size: 18, weight: .semibold))
-                .foregroundColor(AppColors.primaryText)
-            
-            Text(String(localized: "empty_state.search.no_results.message"))
-                .font(.system(size: 14))
-                .foregroundColor(AppColors.secondaryText)
-                .multilineTextAlignment(.center)
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.top, 60)
+        DSSearchEmptyState(searchTerm: store.searchText)
+            .frame(maxWidth: .infinity)
+            .padding(.top, DSSpacing.xxl)
     }
 }
 
@@ -208,27 +177,30 @@ struct RecentSearchRow: View {
     let onRemove: () -> Void
     
     var body: some View {
-        Button(action: onTap) {
-            HStack(spacing: 12) {
-                Image(systemName: "clock")
-                    .font(.system(size: 16))
-                    .foregroundColor(.secondary)
-                
-                Text(searchText)
-                    .font(.system(size: 15))
-                    .foregroundColor(.primary)
-                
-                Spacer()
-                
-                Button(action: onRemove) {
-                    Image(systemName: "xmark")
-                        .font(.system(size: 14))
-                        .foregroundColor(.secondary)
+        DSCard {
+            Button(action: onTap) {
+                HStack(spacing: DSSpacing.sm) {
+                    Image(systemName: "clock")
+                        .font(.system(size: 16))
+                        .foregroundColor(DSColors.textSecondary)
+                    
+                    Text(searchText)
+                        .font(DSTypography.body())
+                        .foregroundColor(DSColors.textPrimary)
+                    
+                    Spacer()
+                    
+                    Button(action: onRemove) {
+                        Image(systemName: "xmark")
+                            .font(.system(size: 14))
+                            .foregroundColor(DSColors.textSecondary)
+                    }
+                    .dsTapFeedback()
                 }
+                .padding(.vertical, DSSpacing.xs)
             }
-            .padding(.vertical, 8)
+            .buttonStyle(.plain)
         }
-        .buttonStyle(.plain)
     }
 }
 
@@ -249,13 +221,7 @@ struct EventSearchResultCard: View {
                             .aspectRatio(contentMode: .fill)
                     } placeholder: {
                         Rectangle()
-                            .fill(
-                                LinearGradient(
-                                    colors: [Color.blue.opacity(0.3), Color.purple.opacity(0.3)],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                )
-                            )
+                            .fill(DSGradients.primary.opacity(0.3))
                     }
                     .frame(height: 180)
                     .frame(maxWidth: .infinity)
@@ -324,8 +290,8 @@ struct EventSearchResultCard: View {
                 .padding(14)
             }
             .frame(maxWidth: .infinity)
-            .background(Color(.systemBackground))
-            .cornerRadius(16)
+            .background(DSColors.background)
+            .dsCornerRadius(DSRadius.large)
             .shadow(color: .black.opacity(0.08), radius: 8, x: 0, y: 2)
         }
         .buttonStyle(.plain)

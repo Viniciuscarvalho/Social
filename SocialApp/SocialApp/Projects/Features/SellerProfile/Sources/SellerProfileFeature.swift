@@ -30,29 +30,49 @@ public struct SellerProfileFeature {
             case error(String)
         }
         
+        // MARK: - Derived State
+        public var hasSeller: Bool {
+            seller != nil
+        }
+        
+        public var hasTickets: Bool {
+            !sellerTickets.isEmpty
+        }
+        
         public init(sellerId: String? = nil) {
             self.sellerId = sellerId
             print("📍 SellerProfileFeature.State inicializado com sellerId: \(sellerId ?? "nil")")
         }
     }
     
-    public enum Action {
+    public enum Action: Equatable {
+        // MARK: - Lifecycle
         case onAppear
+        case onDisappear
+        
+        // MARK: - Data Loading
         case loadSeller(String)
         case sellerResponse(Result<User, NetworkError>)
         case loadSellerTickets
         case sellerTicketsResponse(Result<[TicketWithEvent], NetworkError>)
+        case refresh
+        case loadFromCache
+        case cacheLoaded(User, [TicketWithEvent])
+        
+        // MARK: - User Interactions
         case toggleFollow
         case tabSelected(State.Tab)
         case ticketTapped(String)
         case negotiateTapped
-        case refresh
-        case loadFromCache
-        case cacheLoaded(User, [TicketWithEvent])
-        case syncTicketDeleted(String) // Sincronização: ticket foi deletado
-        case syncTicketUpdated(Ticket) // Sincronização: ticket foi atualizado
+        
+        // MARK: - Synchronization
+        case syncTicketDeleted(String)
+        case syncTicketUpdated(Ticket)
+        
+        // MARK: - Navigation
         case delegate(Delegate)
         
+        // MARK: - Delegate
         public enum Delegate: Equatable {
             case navigateToNegotiations(String) // sellerId
         }
@@ -307,6 +327,9 @@ public struct SellerProfileFeature {
                 print("💬 Negociar tapped - enviando delegate para navegar às negociações com: \(sellerId)")
                 return .send(.delegate(.navigateToNegotiations(sellerId)))
                 
+            case .onDisappear:
+                return .none
+            
             case .delegate:
                 // Handled by parent
                 return .none

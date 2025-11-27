@@ -1,5 +1,6 @@
 import SwiftUI
 import ComposableArchitecture
+import DesignSystem
 
 // MARK: - Ticket Pricing Step View (Etapa 2)
 
@@ -29,7 +30,7 @@ struct TicketPricingStepView: View {
                             .font(.headline)
                     } icon: {
                         Image(systemName: "dollarsign.circle")
-                            .foregroundColor(AppColors.primary)
+                            .foregroundColor(DSColors.primary)
                     }
                     
                     Picker("Moeda", selection: $store.currencyCode) {
@@ -50,7 +51,7 @@ struct TicketPricingStepView: View {
                             .font(.headline)
                     } icon: {
                         Image(systemName: "brazilianrealsign.circle")
-                            .foregroundColor(AppColors.primary)
+                            .foregroundColor(DSColors.primary)
                     }
                     
                     HStack {
@@ -88,7 +89,7 @@ struct TicketPricingStepView: View {
                             .font(.headline)
                     } icon: {
                         Image(systemName: "tag")
-                            .foregroundColor(AppColors.primary)
+                            .foregroundColor(DSColors.primary)
                     }
                     
                     Text("Para mostrar desconto")
@@ -136,7 +137,7 @@ struct TicketPricingStepView: View {
                             .font(.headline)
                     } icon: {
                         Image(systemName: "number")
-                            .foregroundColor(AppColors.primary)
+                            .foregroundColor(DSColors.primary)
                     }
                     
                     Stepper(value: $store.quantity, in: 1...999) {
@@ -170,7 +171,7 @@ struct TicketPricingStepView: View {
                                 Text(formatCurrency(priceValue * Double(store.quantity)))
                                     .font(.title2)
                                     .fontWeight(.bold)
-                                    .foregroundColor(AppColors.primary)
+                                    .foregroundColor(DSColors.primary)
                             }
                             
                             Spacer()
@@ -186,7 +187,7 @@ struct TicketPricingStepView: View {
                             }
                         }
                         .padding()
-                        .background(AppColors.primary.opacity(0.1))
+                        .background(DSColors.primary.opacity(0.1))
                         .cornerRadius(12)
                     }
                     .padding(.top, 8)

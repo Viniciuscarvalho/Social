@@ -1,5 +1,6 @@
 import SwiftUI
 import ComposableArchitecture
+import DesignSystem
 
 public struct NegotiationDetailsView: View {
     @Bindable var store: StoreOf<NegotiationDetailsFeature>
@@ -12,9 +13,7 @@ public struct NegotiationDetailsView: View {
     public var body: some View {
         ScrollView {
             if store.isLoading {
-                ProgressView()
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .padding(.top, 100)
+                DSFullScreenLoading(message: "Carregando negociação...")
             } else if let negotiation = store.negotiation {
                 VStack(spacing: 24) {
                     // Status Badge
@@ -49,14 +48,17 @@ public struct NegotiationDetailsView: View {
                     // Botões de ação
                     actionButtons(negotiation)
                 }
-                .padding()
+                .padding(DSSpacing.m)
             }
         }
-        .background(AppColors.background.ignoresSafeArea())
+        .background(DSGradients.backgroundMain.ignoresSafeArea())
         .navigationTitle("Detalhes da Negociação")
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {
             store.send(.onAppear)
+        }
+        .onDisappear {
+            store.send(.onDisappear)
         }
         .sheet(isPresented: $store.showingRejectSheet) {
             rejectSheet
@@ -84,16 +86,16 @@ public struct NegotiationDetailsView: View {
         HStack {
             Spacer()
             
-            HStack(spacing: 8) {
+            HStack(spacing: DSSpacing.xs) {
                 Image(systemName: negotiation.status.iconName)
-                    .font(.system(size: 16, weight: .semibold))
+                    .font(DSTypography.body(weight: .semibold))
                 
                 Text(negotiation.status.displayName)
-                    .font(.system(size: 15, weight: .semibold))
+                    .font(DSTypography.footnote(weight: .semibold))
             }
             .foregroundColor(.white)
-            .padding(.horizontal, 20)
-            .padding(.vertical, 10)
+            .padding(.horizontal, DSSpacing.m)
+            .padding(.vertical, DSSpacing.sm)
             .background(
                 Capsule()
                     .fill(statusColor(negotiation.status))
@@ -118,211 +120,195 @@ public struct NegotiationDetailsView: View {
     // MARK: - Ticket Info Section
     
     private func ticketInfoSection(_ ticket: Ticket, negotiation: Negotiation) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text(ticket.name)
-                .font(.system(size: 18, weight: .bold))
-                .foregroundColor(AppColors.primaryText)
-            
-            Divider()
-            
-            HStack {
-                VStack(alignment: .leading) {
-                    Text("Preço do Ingresso")
-                        .font(.system(size: 13))
-                        .foregroundColor(AppColors.tertiaryText)
-                    
-                    Text("R$ \(String(format: "%.2f", ticket.price))")
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundColor(AppColors.primaryText)
-                }
+        DSCard {
+            VStack(alignment: .leading, spacing: DSSpacing.sm) {
+                Text(ticket.name)
+                    .font(DSTypography.title3(weight: .bold))
+                    .foregroundColor(DSColors.textPrimary)
                 
-                Spacer()
+                Divider()
                 
-                if let proposedPrice = negotiation.proposedPrice {
-                    VStack(alignment: .trailing) {
-                        Text("Preço Proposto")
-                            .font(.system(size: 13))
-                            .foregroundColor(AppColors.tertiaryText)
+                HStack {
+                    VStack(alignment: .leading) {
+                        Text("Preço do Ingresso")
+                            .font(DSTypography.caption1())
+                            .foregroundColor(DSColors.textTertiary)
                         
-                        Text("R$ \(String(format: "%.2f", proposedPrice))")
-                            .font(.system(size: 16, weight: .semibold))
-                            .foregroundColor(AppColors.primary)
+                        Text("R$ \(String(format: "%.2f", ticket.price))")
+                            .font(DSTypography.body(weight: .semibold))
+                            .foregroundColor(DSColors.textPrimary)
+                    }
+                    
+                    Spacer()
+                    
+                    if let proposedPrice = negotiation.proposedPrice {
+                        VStack(alignment: .trailing) {
+                            Text("Preço Proposto")
+                                .font(DSTypography.caption1())
+                                .foregroundColor(DSColors.textTertiary)
+                            
+                            Text("R$ \(String(format: "%.2f", proposedPrice))")
+                                .font(DSTypography.body(weight: .semibold))
+                                .foregroundColor(DSColors.primary)
+                        }
                     }
                 }
             }
         }
-        .padding()
-        .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(AppColors.cardBackground)
-        )
-        .shadow(color: AppColors.cardShadow.opacity(0.1), radius: 8, x: 0, y: 4)
     }
     
     // MARK: - Negotiation Details Section
     
     private func negotiationDetailsSection(_ negotiation: Negotiation) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Informações da Negociação")
-                .font(.system(size: 16, weight: .semibold))
-                .foregroundColor(AppColors.primaryText)
-            
-            VStack(alignment: .leading, spacing: 8) {
-                detailRow(icon: "clock.fill", title: "Criada em", value: negotiation.createdAt.formatted(date: .abbreviated, time: .shortened))
+        DSCard {
+            VStack(alignment: .leading, spacing: DSSpacing.sm) {
+                Text("Informações da Negociação")
+                    .font(DSTypography.body(weight: .semibold))
+                    .foregroundColor(DSColors.textPrimary)
                 
-                if let approvedAt = negotiation.approvedAt {
-                    detailRow(icon: "checkmark.circle.fill", title: "Aprovada em", value: approvedAt.formatted(date: .abbreviated, time: .shortened))
-                }
-                
-                if let validUntil = negotiation.validUntil {
-                    detailRow(icon: "hourglass", title: "Válida até", value: validUntil.formatted(date: .abbreviated, time: .shortened))
-                }
-                
-                if let rejectionReason = negotiation.rejectionReason {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Motivo da Recusa:")
-                            .font(.system(size: 13, weight: .semibold))
-                            .foregroundColor(AppColors.secondaryText)
-                        
-                        Text(rejectionReason)
-                            .font(.system(size: 14))
-                            .foregroundColor(AppColors.primaryText)
-                            .padding(12)
-                            .background(
-                                RoundedRectangle(cornerRadius: 8)
-                                    .fill(Color.red.opacity(0.1))
-                            )
+                VStack(alignment: .leading, spacing: DSSpacing.xs) {
+                    detailRow(icon: "clock.fill", title: "Criada em", value: negotiation.createdAt.formatted(date: .abbreviated, time: .shortened))
+                    
+                    if let approvedAt = negotiation.approvedAt {
+                        detailRow(icon: "checkmark.circle.fill", title: "Aprovada em", value: approvedAt.formatted(date: .abbreviated, time: .shortened))
+                    }
+                    
+                    if let validUntil = negotiation.validUntil {
+                        detailRow(icon: "hourglass", title: "Válida até", value: validUntil.formatted(date: .abbreviated, time: .shortened))
+                    }
+                    
+                    if let rejectionReason = negotiation.rejectionReason {
+                        VStack(alignment: .leading, spacing: DSSpacing.xxs) {
+                            Text("Motivo da Recusa:")
+                                .font(DSTypography.caption1(weight: .semibold))
+                                .foregroundColor(DSColors.textSecondary)
+                            
+                            Text(rejectionReason)
+                                .font(DSTypography.footnote())
+                                .foregroundColor(DSColors.textPrimary)
+                                .padding(DSSpacing.sm)
+                                .background(
+                                    RoundedRectangle(cornerRadius: DSRadius.small)
+                                        .fill(Color.red.opacity(0.1))
+                                )
+                        }
                     }
                 }
             }
         }
-        .padding()
-        .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(AppColors.cardBackground)
-        )
-        .shadow(color: AppColors.cardShadow.opacity(0.1), radius: 8, x: 0, y: 4)
     }
     
     private func detailRow(icon: String, title: String, value: String) -> some View {
         HStack {
             Image(systemName: icon)
                 .font(.system(size: 14))
-                .foregroundColor(AppColors.primary)
+                .foregroundColor(DSColors.primary)
                 .frame(width: 20)
             
             Text(title)
-                .font(.system(size: 14))
-                .foregroundColor(AppColors.secondaryText)
+                .font(DSTypography.footnote())
+                .foregroundColor(DSColors.textSecondary)
             
             Spacer()
             
             Text(value)
-                .font(.system(size: 14, weight: .medium))
-                .foregroundColor(AppColors.primaryText)
+                .font(DSTypography.footnote(weight: .medium))
+                .foregroundColor(DSColors.textPrimary)
         }
     }
     
     // MARK: - User Info Section
     
     private func userInfoSection(_ user: User, role: String) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text(role)
-                .font(.system(size: 16, weight: .semibold))
-                .foregroundColor(AppColors.primaryText)
-            
-            HStack(spacing: 12) {
-                // Avatar
-                Circle()
-                    .fill(AppColors.primary.opacity(0.2))
-                    .frame(width: 50, height: 50)
-                    .overlay(
-                        Text(String(user.name.prefix(1)))
-                            .font(.system(size: 20, weight: .bold))
-                            .foregroundColor(AppColors.primary)
-                    )
+        DSCard {
+            VStack(alignment: .leading, spacing: DSSpacing.sm) {
+                Text(role)
+                    .font(DSTypography.body(weight: .semibold))
+                    .foregroundColor(DSColors.textPrimary)
                 
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(user.name)
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundColor(AppColors.primaryText)
+                HStack(spacing: DSSpacing.sm) {
+                    // Avatar
+                    Circle()
+                        .fill(DSColors.primary.opacity(0.2))
+                        .frame(width: 50, height: 50)
+                        .overlay(
+                            Text(String(user.name.prefix(1)))
+                                .font(DSTypography.title3(weight: .bold))
+                                .foregroundColor(DSColors.primary)
+                        )
                     
-                    if user.isVerified {
-                        HStack(spacing: 4) {
-                            Image(systemName: "checkmark.seal.fill")
-                                .font(.system(size: 12))
-                                .foregroundColor(.green)
-                            Text("Verificado")
-                                .font(.system(size: 12))
-                                .foregroundColor(AppColors.secondaryText)
+                    VStack(alignment: .leading, spacing: DSSpacing.xxs) {
+                        Text(user.name)
+                            .font(DSTypography.body(weight: .semibold))
+                            .foregroundColor(DSColors.textPrimary)
+                        
+                        if user.isVerified {
+                            HStack(spacing: DSSpacing.xxs) {
+                                Image(systemName: "checkmark.seal.fill")
+                                    .font(.system(size: 12))
+                                    .foregroundColor(DSColors.success)
+                                Text("Verificado")
+                                    .font(DSTypography.caption1())
+                                    .foregroundColor(DSColors.textSecondary)
+                            }
                         }
                     }
+                    
+                    Spacer()
                 }
-                
-                Spacer()
             }
         }
-        .padding()
-        .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(AppColors.cardBackground)
-        )
-        .shadow(color: AppColors.cardShadow.opacity(0.1), radius: 8, x: 0, y: 4)
     }
     
     // MARK: - Questions Section
     
     private var questionsSection: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            HStack {
-                Text("Perguntas e Respostas")
-                    .font(.system(size: 18, weight: .bold))
-                    .foregroundColor(AppColors.primaryText)
-                
-                Spacer()
-                
-                if !store.questions.isEmpty {
-                    Text("\(store.questions.count)")
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundColor(.white)
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 4)
-                        .background(
-                            Capsule()
-                                .fill(AppColors.primary)
-                        )
+        DSCard {
+            VStack(alignment: .leading, spacing: DSSpacing.m) {
+                HStack {
+                    Text("Perguntas e Respostas")
+                        .font(DSTypography.title3(weight: .bold))
+                        .foregroundColor(DSColors.textPrimary)
+                    
+                    Spacer()
+                    
+                    if !store.questions.isEmpty {
+                        Text("\(store.questions.count)")
+                            .font(DSTypography.footnote(weight: .semibold))
+                            .foregroundColor(.white)
+                            .padding(.horizontal, DSSpacing.sm)
+                            .padding(.vertical, DSSpacing.xxs)
+                            .background(
+                                Capsule()
+                                    .fill(DSColors.primary)
+                            )
+                    }
                 }
-            }
-            
-            // Seção de perguntas pendentes (apenas para vendedor)
-            if store.isSeller {
-                let unansweredQuestions = store.questions.filter { !$0.isAnswered }
-                if !unansweredQuestions.isEmpty {
-                    unansweredQuestionsSection(unansweredQuestions)
+                
+                // Seção de perguntas pendentes (apenas para vendedor)
+                if store.isSeller {
+                    let unansweredQuestions = store.questions.filter { !$0.isAnswered }
+                    if !unansweredQuestions.isEmpty {
+                        unansweredQuestionsSection(unansweredQuestions)
+                    }
                 }
-            }
-            
-            if store.isLoadingQuestions {
-                ProgressView()
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 20)
-            } else if store.questions.isEmpty {
-                emptyQuestionsState
-            } else {
-                VStack(spacing: 12) {
-                    ForEach(store.questions) { question in
-                        QuestionCard(question: question)
-                            .transition(.opacity.combined(with: .move(edge: .top)))
+                
+                if store.isLoadingQuestions {
+                    ProgressView()
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, DSSpacing.m)
+                } else if store.questions.isEmpty {
+                    emptyQuestionsState
+                } else {
+                    VStack(spacing: DSSpacing.sm) {
+                        ForEach(Array(store.questions.enumerated()), id: \.element.id) { index, question in
+                            QuestionCard(question: question)
+                                .dsEnterAnimation(isVisible: true, delay: Double(index) * 0.05)
+                        }
                     }
                 }
             }
         }
-        .padding()
-        .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(AppColors.cardBackground)
-        )
-        .shadow(color: AppColors.cardShadow.opacity(0.1), radius: 8, x: 0, y: 4)
     }
     
     // MARK: - Unanswered Questions Section
@@ -332,14 +318,14 @@ public struct NegotiationDetailsView: View {
     private func unansweredQuestionsSection(_ questions: [NegotiationQuestion]) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                HStack(spacing: 6) {
+                HStack(spacing: DSSpacing.xs) {
                     Image(systemName: "exclamationmark.circle.fill")
                         .font(.system(size: 14))
                         .foregroundColor(.orange)
                     
                     Text("Perguntas Pendentes")
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundColor(AppColors.primaryText)
+                        .font(DSTypography.body(weight: .semibold))
+                        .foregroundColor(DSColors.textPrimary)
                 }
                 
                 Spacer()
@@ -379,36 +365,37 @@ public struct NegotiationDetailsView: View {
         Button {
             selectedQuestionForAnswer = question
         } label: {
-            HStack(spacing: 12) {
-                VStack(alignment: .leading, spacing: 4) {
+            HStack(spacing: DSSpacing.sm) {
+                VStack(alignment: .leading, spacing: DSSpacing.xxs) {
                     Text(question.questionText)
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundColor(AppColors.primaryText)
+                        .font(DSTypography.footnote(weight: .medium))
+                        .foregroundColor(DSColors.textPrimary)
                         .lineLimit(2)
                         .multilineTextAlignment(.leading)
                     
-                    HStack(spacing: 4) {
+                    HStack(spacing: DSSpacing.xxs) {
                         Image(systemName: "clock")
                             .font(.system(size: 10))
                         Text(formatDate(question.createdAt))
-                            .font(.system(size: 11))
+                            .font(DSTypography.caption1())
                     }
-                    .foregroundColor(AppColors.tertiaryText)
+                    .foregroundColor(DSColors.textTertiary)
                 }
                 
                 Spacer()
                 
                 Image(systemName: "arrow.right.circle.fill")
                     .font(.system(size: 20))
-                    .foregroundColor(AppColors.primary)
+                    .foregroundColor(DSColors.primary)
             }
-            .padding(12)
+            .padding(DSSpacing.sm)
             .background(
-                RoundedRectangle(cornerRadius: 8)
-                    .fill(AppColors.cardBackground)
+                RoundedRectangle(cornerRadius: DSRadius.small)
+                    .fill(DSColors.cardBackground)
             )
         }
-        .buttonStyle(PlainButtonStyle())
+        .buttonStyle(.plain)
+        .dsTapFeedback()
     }
     
     private func formatDate(_ date: Date) -> String {
@@ -438,74 +425,54 @@ public struct NegotiationDetailsView: View {
     // MARK: - Documents Section
     
     private var documentsSection: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            HStack {
-                Text("Documentos")
-                    .font(.system(size: 18, weight: .bold))
-                    .foregroundColor(AppColors.primaryText)
+        DSCard {
+            VStack(alignment: .leading, spacing: DSSpacing.m) {
+                HStack {
+                    Text("Documentos")
+                        .font(DSTypography.title3(weight: .bold))
+                        .foregroundColor(DSColors.textPrimary)
+                    
+                    Spacer()
+                    
+                    if !store.documents.isEmpty {
+                        Text("\(store.documents.count)")
+                            .font(DSTypography.footnote(weight: .semibold))
+                            .foregroundColor(.white)
+                            .padding(.horizontal, DSSpacing.sm)
+                            .padding(.vertical, DSSpacing.xxs)
+                            .background(
+                                Capsule()
+                                    .fill(DSColors.primary)
+                            )
+                    }
+                }
                 
-                Spacer()
-                
-                if !store.documents.isEmpty {
-                    Text("\(store.documents.count)")
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundColor(.white)
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 4)
-                        .background(
-                            Capsule()
-                                .fill(AppColors.primary)
-                        )
+                if store.isLoadingDocuments {
+                    ProgressView()
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, DSSpacing.m)
+                } else {
+                    DocumentGalleryView(
+                        documents: store.documents,
+                        onDelete: store.isSeller ? { document in
+                            store.send(.deleteDocument(document.id))
+                        } : nil
+                    )
                 }
             }
-            
-            if store.isLoadingDocuments {
-                ProgressView()
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 20)
-            } else {
-                DocumentGalleryView(
-                    documents: store.documents,
-                    onDelete: store.isSeller ? { document in
-                        store.send(.deleteDocument(document.id))
-                    } : nil
-                )
-            }
         }
-        .padding()
-        .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(AppColors.cardBackground)
-        )
-        .shadow(color: AppColors.cardShadow.opacity(0.1), radius: 8, x: 0, y: 4)
     }
     
     // MARK: - Empty Questions State
     
     private var emptyQuestionsState: some View {
-        VStack(spacing: 12) {
-            Image(systemName: "questionmark.circle")
-                .font(.system(size: 40))
-                .foregroundColor(AppColors.secondaryText.opacity(0.5))
-            
-            Text("Nenhuma pergunta ainda")
-                .font(.system(size: 15, weight: .medium))
-                .foregroundColor(AppColors.secondaryText)
-            
-            if store.isBuyer {
-                Text("Faça perguntas sobre o ingresso para obter mais informações")
-                    .font(.system(size: 13))
-                    .foregroundColor(AppColors.tertiaryText)
-                    .multilineTextAlignment(.center)
-            } else {
-                Text("O comprador ainda não fez perguntas")
-                    .font(.system(size: 13))
-                    .foregroundColor(AppColors.tertiaryText)
-                    .multilineTextAlignment(.center)
-            }
-        }
+        DSEmptyState(
+            icon: "questionmark.circle",
+            title: "Nenhuma pergunta ainda",
+            message: store.isBuyer ? "Faça perguntas sobre o ingresso para obter mais informações" : "O comprador ainda não fez perguntas"
+        )
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 30)
+        .padding(.vertical, DSSpacing.xxl)
     }
     
     // MARK: - Action Buttons
@@ -526,17 +493,16 @@ public struct NegotiationDetailsView: View {
                         }
                         Image(systemName: "checkmark.circle.fill")
                         Text("Aprovar Negociação")
-                            .font(.system(size: 16, weight: .semibold))
+                            .font(DSTypography.body(weight: .semibold))
                     }
                     .frame(maxWidth: .infinity)
                     .frame(height: 50)
                     .foregroundColor(.white)
-                    .background(
-                        RoundedRectangle(cornerRadius: 12)
-                            .fill(Color.green)
-                    )
+                    .background(DSColors.success)
+                    .dsCornerRadius(DSRadius.medium)
                 }
                 .disabled(store.isUpdating)
+                .dsTapFeedback()
             }
             
             if store.canReject {
@@ -546,17 +512,16 @@ public struct NegotiationDetailsView: View {
                     HStack {
                         Image(systemName: "xmark.circle.fill")
                         Text("Recusar Negociação")
-                            .font(.system(size: 16, weight: .semibold))
+                            .font(DSTypography.body(weight: .semibold))
                     }
                     .frame(maxWidth: .infinity)
                     .frame(height: 50)
                     .foregroundColor(.white)
-                    .background(
-                        RoundedRectangle(cornerRadius: 12)
-                            .fill(Color.red)
-                    )
+                    .background(DSColors.error)
+                    .dsCornerRadius(DSRadius.medium)
                 }
                 .disabled(store.isUpdating)
+                .dsTapFeedback()
             }
             
             // Botão para comprador revelar contato
@@ -572,17 +537,16 @@ public struct NegotiationDetailsView: View {
                         }
                         Image(systemName: "lock.open.fill")
                         Text("Revelar Dados de Contato")
-                            .font(.system(size: 16, weight: .semibold))
+                            .font(DSTypography.body(weight: .semibold))
                     }
                     .frame(maxWidth: .infinity)
                     .frame(height: 50)
                     .foregroundColor(.white)
-                    .background(
-                        RoundedRectangle(cornerRadius: 12)
-                            .fill(AppColors.primary)
-                    )
+                    .background(DSColors.primary)
+                    .dsCornerRadius(DSRadius.medium)
                 }
                 .disabled(store.isRevealingContact)
+                .dsTapFeedback()
             }
             
             // Botão de cancelar
@@ -593,17 +557,18 @@ public struct NegotiationDetailsView: View {
                     HStack {
                         Image(systemName: "slash.circle")
                         Text("Cancelar Negociação")
-                            .font(.system(size: 16, weight: .medium))
+                            .font(DSTypography.body(weight: .medium))
                     }
                     .frame(maxWidth: .infinity)
                     .frame(height: 50)
-                    .foregroundColor(.red)
+                    .foregroundColor(DSColors.error)
                     .background(
-                        RoundedRectangle(cornerRadius: 12)
-                            .stroke(Color.red, lineWidth: 1.5)
+                        RoundedRectangle(cornerRadius: DSRadius.medium)
+                            .stroke(DSColors.error, lineWidth: 1.5)
                     )
                 }
                 .disabled(store.isUpdating)
+                .dsTapFeedback()
             }
         }
     }
@@ -614,35 +579,34 @@ public struct NegotiationDetailsView: View {
         NavigationView {
             VStack(spacing: 20) {
                 Text("Informe o motivo da recusa para que o comprador possa entender melhor.")
-                    .font(.system(size: 14))
-                    .foregroundColor(AppColors.secondaryText)
+                    .font(DSTypography.footnote())
+                    .foregroundColor(DSColors.textSecondary)
                     .multilineTextAlignment(.center)
-                    .padding(.horizontal)
+                    .padding(.horizontal, DSSpacing.m)
                 
                 TextEditor(text: $store.rejectionReason)
                     .frame(height: 150)
-                    .padding(12)
+                    .padding(DSSpacing.sm)
                     .background(
-                        RoundedRectangle(cornerRadius: 12)
-                            .stroke(AppColors.border, lineWidth: 1)
+                        RoundedRectangle(cornerRadius: DSRadius.medium)
+                            .stroke(DSColors.border, lineWidth: 1)
                     )
-                    .padding(.horizontal)
+                    .padding(.horizontal, DSSpacing.m)
                 
                 Button {
                     store.send(.rejectNegotiation)
                 } label: {
                     Text("Confirmar Recusa")
-                        .font(.system(size: 16, weight: .semibold))
+                        .font(DSTypography.body(weight: .semibold))
                         .frame(maxWidth: .infinity)
                         .frame(height: 50)
                         .foregroundColor(.white)
-                        .background(
-                            RoundedRectangle(cornerRadius: 12)
-                                .fill(Color.red)
-                        )
+                        .background(DSColors.error)
+                        .dsCornerRadius(DSRadius.medium)
                 }
-                .padding(.horizontal)
+                .padding(.horizontal, DSSpacing.m)
                 .disabled(store.rejectionReason.isEmpty)
+                .dsTapFeedback()
                 
                 Spacer()
             }
@@ -672,16 +636,16 @@ public struct NegotiationDetailsView: View {
                         .padding(.top, 40)
                     
                     Text("Dados de Contato Revelados")
-                        .font(.system(size: 22, weight: .bold))
-                        .foregroundColor(AppColors.primaryText)
+                        .font(DSTypography.title2(weight: .bold))
+                        .foregroundColor(DSColors.textPrimary)
                     
                     Text("Entre em contato com o vendedor para finalizar a negociação.")
-                        .font(.system(size: 14))
-                        .foregroundColor(AppColors.secondaryText)
+                        .font(DSTypography.footnote())
+                        .foregroundColor(DSColors.textSecondary)
                         .multilineTextAlignment(.center)
-                        .padding(.horizontal)
+                        .padding(.horizontal, DSSpacing.m)
                     
-                    VStack(spacing: 16) {
+                    VStack(spacing: DSSpacing.m) {
                         // Nome
                         contactInfoRow(icon: "person.fill", title: "Nome", value: seller.name)
                         
@@ -690,13 +654,13 @@ public struct NegotiationDetailsView: View {
                         
                         // TODO: Adicionar telefone quando disponível
                     }
-                    .padding()
+                    .padding(DSSpacing.m)
                     .background(
-                        RoundedRectangle(cornerRadius: 16)
-                            .fill(AppColors.cardBackground)
+                        RoundedRectangle(cornerRadius: DSRadius.large)
+                            .fill(DSColors.cardBackground)
                     )
-                    .shadow(color: AppColors.cardShadow.opacity(0.1), radius: 8, x: 0, y: 4)
-                    .padding(.horizontal)
+                    .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 4)
+                    .padding(.horizontal, DSSpacing.m)
                     
                     Spacer()
                     
@@ -704,17 +668,16 @@ public struct NegotiationDetailsView: View {
                         store.showingContactReveal = false
                     } label: {
                         Text("Fechar")
-                            .font(.system(size: 16, weight: .semibold))
+                            .font(DSTypography.body(weight: .semibold))
                             .frame(maxWidth: .infinity)
                             .frame(height: 50)
                             .foregroundColor(.white)
-                            .background(
-                                RoundedRectangle(cornerRadius: 12)
-                                    .fill(AppColors.primary)
-                            )
+                            .background(DSColors.primary)
+                            .dsCornerRadius(DSRadius.medium)
                     }
-                    .padding(.horizontal)
-                    .padding(.bottom)
+                    .padding(.horizontal, DSSpacing.m)
+                    .padding(.bottom, DSSpacing.m)
+                    .dsTapFeedback()
                 }
                 .navigationTitle("Contato")
                 .navigationBarTitleDisplayMode(.inline)
@@ -726,31 +689,32 @@ public struct NegotiationDetailsView: View {
         HStack {
             Image(systemName: icon)
                 .font(.system(size: 16))
-                .foregroundColor(AppColors.primary)
+                .foregroundColor(DSColors.primary)
                 .frame(width: 24)
             
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: DSSpacing.xxs) {
                 Text(title)
-                    .font(.system(size: 12))
-                    .foregroundColor(AppColors.tertiaryText)
+                    .font(DSTypography.caption1())
+                    .foregroundColor(DSColors.textTertiary)
                 
                 Text(value)
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundColor(AppColors.primaryText)
+                    .font(DSTypography.footnote(weight: .medium))
+                    .foregroundColor(DSColors.textPrimary)
             }
             
             Spacer()
             
             // Action buttons based on contact type
-            HStack(spacing: 12) {
+            HStack(spacing: DSSpacing.sm) {
                 // Copy button
                 Button {
                     DeepLinkService.shared.copyToClipboard(value)
                 } label: {
                     Image(systemName: "doc.on.doc")
                         .font(.system(size: 14))
-                        .foregroundColor(AppColors.primary)
+                        .foregroundColor(DSColors.primary)
                 }
+                .dsTapFeedback()
                 
                 // Deep link buttons
                 if title == "Telefone" || title == "Phone" {
@@ -775,7 +739,7 @@ public struct NegotiationDetailsView: View {
                     } label: {
                         Image(systemName: "ellipsis.circle")
                             .font(.system(size: 14))
-                            .foregroundColor(AppColors.primary)
+                            .foregroundColor(DSColors.primary)
                     }
                 } else if title == "E-mail" || title == "Email" {
                     Button {
@@ -783,12 +747,13 @@ public struct NegotiationDetailsView: View {
                     } label: {
                         Image(systemName: "envelope.fill")
                             .font(.system(size: 14))
-                            .foregroundColor(AppColors.primary)
+                            .foregroundColor(DSColors.primary)
                     }
+                    .dsTapFeedback()
                 }
             }
         }
-        .padding(.vertical, 8)
+        .padding(.vertical, DSSpacing.xs)
     }
 }
 

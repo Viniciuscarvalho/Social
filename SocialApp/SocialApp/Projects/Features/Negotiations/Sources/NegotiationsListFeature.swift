@@ -19,22 +19,38 @@ public struct NegotiationsListFeature {
             !negotiations.isEmpty
         }
         
+        // MARK: - Derived State
         public var unreadCount: Int {
             negotiations.reduce(0) { count, negotiation in
                 count + negotiation.unreadQuestionsCount
             }
         }
+        
+        public var hasUnread: Bool {
+            unreadCount > 0
+        }
     }
     
     public enum Action: Equatable {
+        // MARK: - Lifecycle
         case onAppear
+        case onDisappear
+        
+        // MARK: - Data Loading
         case loadNegotiations
         case negotiationsResponse(Result<[Negotiation], NetworkError>)
         case refreshRequested
+        
+        // MARK: - User Interactions
         case negotiationSelected(String)
-        case dismissErrorAlert
+        
+        // MARK: - Navigation
         case delegate(Delegate)
         
+        // MARK: - Error Handling
+        case dismissErrorAlert
+        
+        // MARK: - Delegate
         public enum Delegate: Equatable {
             case negotiationSelected(String)
             case negotiationRead(String) // negotiationId
@@ -104,6 +120,9 @@ public struct NegotiationsListFeature {
                 state.errorMessage = nil
                 return .none
                 
+            case .onDisappear:
+                return .none
+            
             case .delegate:
                 return .none
             }

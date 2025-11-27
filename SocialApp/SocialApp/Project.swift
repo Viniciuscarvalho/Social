@@ -43,6 +43,7 @@ let project = Project(
             ]),
             sources: [
                 "./SocialApp/Sources/**",
+                "./Data/Sources/**",
                 "./Domain/Sources/**",
                 "./Projects/Features/Login/**",
                 "./Projects/Features/Negotiations/**",
